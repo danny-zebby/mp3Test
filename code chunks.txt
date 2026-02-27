@@ -1,0 +1,13 @@
+val navController = rememberNavController()
+            NaviHost(
+                navController = navController,
+                startDestination = "home",
+                modifier = Modifier.padding(5.dp)
+            ){
+                composable(route = "home"){
+                    HomeScreen()
+                }
+                composable(route = "tours"){
+                    ToursScreen()
+                }
+            }
