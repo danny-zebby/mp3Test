@@ -1,5 +1,6 @@
 package com.example.temp
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
@@ -26,61 +28,53 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.LineHeightStyle
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.temp.ui.theme.TempTheme
 
 class MainActivity : ComponentActivity() {
+    @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             TempTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
+                Scaffold(modifier = Modifier.fillMaxSize()) {
+                    MP3()
                 }
             }
         }
     }
 }
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
+fun MP3() {
         // The Column arranges the Rows vertically
         Column(
             modifier = Modifier
                 .fillMaxSize() // Make the column fill the entire screen
         ) {
+            // Make some space between the notifaction bar and app
             Spacer(modifier = Modifier.height(50.dp))
 
+            // First row with Home, Profile, and music bar
             Row(
                 modifier = Modifier
-                    // .align(Alignment.TopCenter)
                     .fillMaxWidth()
                     .padding(6.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-
                 // 🔹 Home Button
                 Surface(
                     onClick = { },
-                    shape = CircleShape,
-                    color = Color.Transparent,
-                    border = BorderStroke(2.dp, Color.Black)
                 ) {
                     Image(
                         painter = painterResource(R.drawable.home),
                         contentDescription = "Home",
                         modifier = Modifier
                             .size(90.dp)
-                            .padding(5.dp)
                     )
                 }
-
                 // 🔹 Music Button
                 Button(
                     onClick = { },
@@ -89,14 +83,12 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
                 ) {
                     Text("Music Play Here")
                 }
-                /*
-                    * Change
-                    * To
-                    * Profile
-                    * Instead
-                    * of
-                    * Settings
-                    * */
+    /*  * Change    ******************************
+        * To        ******************************
+        * Profile   ******************************
+        * Instead   ******************************
+        * of        ******************************
+        * Settings  ******************************  */
                 // 🔹 Settings Button
                 Surface(
                     onClick = { },
@@ -114,12 +106,8 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
                 }
             }
 
+            //  Navagation Controller for App Funtioncs: View Songs, Drive Mode, Podcast Mode
             Spacer(modifier = Modifier.height(16.dp))
-
-            /*      Navagation Controller for App Funtioncs:
-                    View Song
-                    Drive Mode
-                    Podcast Mode    */
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -129,51 +117,53 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
             )
 
             {
+                Spacer(modifier = Modifier.width(10.dp))
+                // View Songs
                 Button(
                     onClick = {},
                     modifier = Modifier
                             .size(125.dp)
                 ) {
                     Text(
-                        text = "View Song"
+                        text = "View Songs",
+                        textAlign = TextAlign.Center
 
                     )
                 }
+                // Drive Mode
                 Button(
                     onClick = {},
                     modifier = Modifier
                         .size(125.dp)
                 ) {
                     Text(
-                        text = "Drive Mode"
+                        text = "Drive Mode",
+                        textAlign = TextAlign.Center
 
                     )
                 }
+                // Podcast Mode
                 Button(
                     onClick = {},
                     modifier = Modifier
                         .size(125.dp)
                 ) {
                     Text(
-                        text = "Podcast Mode"
+                        text = "Podcas Mode",
+                        textAlign = TextAlign.Center
 
                     )
                 }
+                Spacer(modifier = Modifier.width(10.dp))
             }
-
-
-            /*      Bottom Row of Buttons:
-                    Previous Playlist
-                    Previous Song
-                    Pause/Play
-                    Next Song
-                    Next Playlist       */
+            // Bottom Row of Buttons: Previous Playlist , Previous Song , Pause/Play , Next Song ,Next Playlist
             Spacer(modifier = Modifier.weight(1f))
             Row(
                 modifier = Modifier
                     .fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                // Previous Playlist
                 Button(
                     onClick = {},
                     shape = RectangleShape,
@@ -184,6 +174,7 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
                         text = "<<"
                     )
                 }
+                // Previous Song
                 Button(
                     onClick = {},
                     shape = RectangleShape,
@@ -194,6 +185,7 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
                         text = "<"
                     )
                 }
+                // Pause/Play
                 Button(
                     onClick = {},
                     shape = RectangleShape,
@@ -204,6 +196,7 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
                         text = "||"
                     )
                 }
+                // Next Song
                 Button(
                     onClick = {},
                     shape = RectangleShape,
@@ -214,6 +207,7 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
                         text = ">"
                     )
                 }
+                // Next Playlist
                 Button(
                     onClick = {},
                     shape = RectangleShape,
@@ -225,15 +219,7 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
                     )
                 }
             }
-
+            // Space between google home buttons and app
             Spacer(modifier = Modifier.height(50.dp))
         }
     }
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    TempTheme {
-        Greeting("Android")
-    }
-}
