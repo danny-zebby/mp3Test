@@ -83,25 +83,19 @@ fun MP3() {
                 ) {
                     Text("Music Play Here")
                 }
-    /*  * Change    ******************************
-        * To        ******************************
-        * Profile   ******************************
-        * Instead   ******************************
-        * of        ******************************
-        * Settings  ******************************  */
-                // 🔹 Settings Button
+                // 🔹 Profile Button
                 Surface(
                     onClick = { },
                     shape = CircleShape,
                     color = Color.Transparent,
-                    border = BorderStroke(2.dp, Color.Black)
+                    border = BorderStroke(5.dp, Color.Black)
                 ) {
                     Image(
-                        painter = painterResource(R.drawable.settings),
-                        contentDescription = "Settings",
+                        painter = painterResource(R.drawable.profile),
+                        contentDescription = "Profile",
                         modifier = Modifier
                             .size(90.dp)
-                            .padding(5.dp)
+                           .padding(5.dp)
                     )
                 }
             }
