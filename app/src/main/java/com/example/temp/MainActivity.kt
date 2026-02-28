@@ -1,5 +1,6 @@
 package com.example.temp
 
+import android.R.color.black
 import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -17,18 +18,26 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import com.example.temp.ui.theme.TempTheme
 
@@ -48,6 +57,8 @@ class MainActivity : ComponentActivity() {
 }
 @Composable
 fun MP3() {
+    var itemList by remember{ mutableStateOf(mutableListOf<String>()) }
+    var newItem by remember { mutableStateOf(TextFieldValue()) }
         // The Column arranges the Rows vertically
         Column(
             modifier = Modifier
@@ -109,7 +120,6 @@ fun MP3() {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             )
-
             {
                 Spacer(modifier = Modifier.width(10.dp))
                 // View Songs
@@ -150,6 +160,46 @@ fun MP3() {
                 }
                 Spacer(modifier = Modifier.width(10.dp))
             }
+
+            //List of Playlist
+            //Spacer(modifier = Modifier.height(16.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth()
+                   .height(400.dp)
+                // verticalAlignment = Alignment.CenterVertically
+            ) {
+                //textField
+                OutlinedTextField(
+                    value = newItem,
+                    onValueChange = {newItem = it},
+                    modifier = Modifier.size(100.dp),
+                    label = {
+                        Text(
+                            text = "Enter Item"
+                        )
+                    }
+                )
+                // Button to add item to the list
+                Button(
+                    onClick = {
+                        if(newItem.text.isNotBlank()){
+                            itemList.add(newItem.text)
+                            newItem = TextFieldValue("") // Clear text field after use
+                        }
+                    },
+                    modifier = Modifier.size(100.dp)
+                ){
+                    Text("Add Item")
+                }
+                LazyColumn(modifier = Modifier.size(200.dp)) {
+                    items(itemList){ item ->
+                        Text(text = item,
+                            modifier = Modifier.padding(8.dp),
+                            color = Color(0xFF000000))
+                    }
+                }
+            }
+
             // Bottom Row of Buttons: Previous Playlist , Previous Song , Pause/Play , Next Song ,Next Playlist
             Spacer(modifier = Modifier.weight(1f))
             Row(
@@ -175,9 +225,7 @@ fun MP3() {
                     modifier = Modifier
                         .size(100.dp)
                 ) {
-                    Text(
-                        text = "<"
-                    )
+                    Text(text = "<")
                 }
                 // Pause/Play
                 Button(
