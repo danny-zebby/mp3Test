@@ -1,5 +1,6 @@
 package com.example.temp
 
+import android.R.attr.top
 import android.R.color.black
 import android.annotation.SuppressLint
 import android.os.Bundle
@@ -9,6 +10,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -28,6 +30,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -57,8 +60,9 @@ class MainActivity : ComponentActivity() {
 }
 @Composable
 fun MP3() {
-    var itemList by remember{ mutableStateOf(mutableListOf<String>()) }
+    var itemList = remember { mutableStateListOf<String>() }
     var newItem by remember { mutableStateOf(TextFieldValue()) }
+    var createPlaylist by remember { mutableStateOf(false) }
         // The Column arranges the Rows vertically
         Column(
             modifier = Modifier
@@ -116,12 +120,12 @@ fun MP3() {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .padding(horizontal = 30.dp)
                     .padding(6.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             )
             {
-                Spacer(modifier = Modifier.width(10.dp))
                 // View Songs
                 Button(
                     onClick = {},
@@ -158,50 +162,75 @@ fun MP3() {
 
                     )
                 }
-                Spacer(modifier = Modifier.width(10.dp))
             }
 
-            //List of Playlist
-            //Spacer(modifier = Modifier.height(16.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth()
-                   .height(400.dp)
-                // verticalAlignment = Alignment.CenterVertically
+            // Playlist Area
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f) // This makes it fill available vertical space
+                    .padding(horizontal = 16.dp)
             ) {
-                //textField
-                OutlinedTextField(
-                    value = newItem,
-                    onValueChange = {newItem = it},
-                    modifier = Modifier.size(100.dp),
-                    label = {
+
+                // Playlist list
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    items(itemList) { item ->
                         Text(
-                            text = "Enter Item"
+                            text = item,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 12.dp),
+                            color = Color.Black
+                        )
+                    }
+                }
+
+                // Floating Add Button
+                Button(
+                    onClick = {createPlaylist = true},
+                    modifier = Modifier.align ( Alignment.BottomEnd )
+                ) {
+                    Text(
+                        text = "+"
+                    )
+                }
+            }
+
+            if (createPlaylist) {
+                androidx.compose.material3.AlertDialog(
+                    onDismissRequest = { createPlaylist = false },
+                    confirmButton = {
+                        Button(
+                            onClick = {
+                                if (newItem.text.isNotBlank()) {
+                                    itemList.add(newItem.text)
+                                    newItem = TextFieldValue("")
+                                }
+                                createPlaylist = false
+                            }
+                        ) {
+                            Text("Add")
+                        }
+                    },
+                    dismissButton = {
+                        Button(onClick = { createPlaylist = false }) {
+                            Text("Cancel")
+                        }
+                    },
+                    text = {
+                        OutlinedTextField(
+                            value = newItem,
+                            onValueChange = { newItem = it },
+                            label = { Text("Enter Song") }
                         )
                     }
                 )
-                // Button to add item to the list
-                Button(
-                    onClick = {
-                        if(newItem.text.isNotBlank()){
-                            itemList.add(newItem.text)
-                            newItem = TextFieldValue("") // Clear text field after use
-                        }
-                    },
-                    modifier = Modifier.size(100.dp)
-                ){
-                    Text("Add Item")
-                }
-                LazyColumn(modifier = Modifier.size(200.dp)) {
-                    items(itemList){ item ->
-                        Text(text = item,
-                            modifier = Modifier.padding(8.dp),
-                            color = Color(0xFF000000))
-                    }
-                }
             }
 
             // Bottom Row of Buttons: Previous Playlist , Previous Song , Pause/Play , Next Song ,Next Playlist
-            Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.height(16.dp))
             Row(
                 modifier = Modifier
                     .fillMaxWidth(),
