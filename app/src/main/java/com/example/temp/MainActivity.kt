@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
@@ -28,6 +29,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -44,13 +47,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.temp.ui.theme.TempTheme
-
+data class Song(
+    val title: String,
+)
+data class Playlist(
+    val name: String,
+    val label: Color,
+    val songs: List<Song> = emptyList()
+)
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -68,9 +79,12 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun MP3(modifier: Modifier = Modifier) {
-    val itemList = remember { mutableStateListOf<String>() }
+
+    val itemList = remember { mutableStateListOf<Playlist>() }
     var newItem by remember { mutableStateOf(TextFieldValue()) }
+    var selectedColor by remember { mutableStateOf(Color.Transparent) }
     var createPlaylist by remember { mutableStateOf(false) }
+    var playlistLabel by remember { mutableStateOf(false) }
 
     Column(
         modifier = modifier.fillMaxSize()
@@ -205,13 +219,14 @@ fun MP3(modifier: Modifier = Modifier) {
                             textAlign = TextAlign.Start)
                     }
                 }
-                items(itemList) { item ->
+                items(itemList) { playlist ->
                     Button(
                         onClick = {},
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth() .padding(horizontal = 5.dp),
                         contentPadding = PaddingValues(start= 10.dp)
                     ) {
-                        Text(text = item,
+                        Text(text = playlist.name,
+                            color = playlist.label,
                             modifier = Modifier.fillMaxWidth(),
                             textAlign = TextAlign.Start)
                     }
@@ -231,7 +246,7 @@ fun MP3(modifier: Modifier = Modifier) {
                 confirmButton = {
                     Button(onClick = {
                         if (newItem.text.isNotBlank()) {
-                            itemList.add(newItem.text)
+                            itemList.add(Playlist(name = newItem.text, label = selectedColor))
                             newItem = TextFieldValue("")
                         }
                         createPlaylist = false
@@ -241,11 +256,48 @@ fun MP3(modifier: Modifier = Modifier) {
                     Button(onClick = { createPlaylist = false }) { Text("Cancel") }
                 },
                 text = {
-                    OutlinedTextField(
-                        value = newItem,
-                        onValueChange = { newItem = it },
-                        label = { Text("Enter Song") }
-                    )
+                    Column {
+                        OutlinedTextField(
+                            value = newItem,
+                            onValueChange = { newItem = it },
+                            label = { Text("Playlist Name") }
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row (
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Button(
+                                onClick = { playlistLabel = true },
+                                shape = RectangleShape,
+                                colors = ButtonDefaults.buttonColors(containerColor = Color.LightGray)
+                            ) {
+                                if (playlistLabel)
+                                    Text("Label Color V")
+                                else
+                                    Text("Label Color ^")
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .background(selectedColor)
+                                    .border(1.dp, Color.Black)
+
+                            ){}
+                            DropdownMenu(expanded = playlistLabel, onDismissRequest = { playlistLabel = false }) {
+                                DropdownMenuItem(text = { Text("None") }, onClick = { selectedColor = Color.Transparent; playlistLabel = false })
+                                DropdownMenuItem(text = { Text("Red") }, onClick = { selectedColor = Color.Red; playlistLabel = false })
+                                DropdownMenuItem(text = { Text("Blue") }, onClick = { selectedColor = Color.Blue; playlistLabel = false })
+                                DropdownMenuItem(text = { Text("Green") }, onClick = { selectedColor = Color.Green; playlistLabel = false })
+                                DropdownMenuItem(text = { Text("Cyan") }, onClick = { selectedColor = Color.Cyan; playlistLabel = false })
+                                DropdownMenuItem(text = { Text("Gray") }, onClick = { selectedColor = Color.Gray; playlistLabel = false })
+                                DropdownMenuItem(text = { Text("Magenta") }, onClick = { selectedColor = Color.Magenta; playlistLabel = false })
+                                DropdownMenuItem(text = { Text("Yellow") }, onClick = { selectedColor = Color.Yellow; playlistLabel = false })
+                                DropdownMenuItem(text = { Text("White") }, onClick = { selectedColor = Color.White; playlistLabel = false })
+                                DropdownMenuItem(text = { Text("Blsck") }, onClick = { selectedColor = Color.Black; playlistLabel = false })
+
+                            }
+                        }
+                    }
                 }
             )
         }
