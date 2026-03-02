@@ -54,14 +54,17 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.temp.ui.theme.TempTheme
+
 data class Song(
     val title: String,
 )
+
 data class Playlist(
     val name: String,
     val label: Color,
     val songs: List<Song> = emptyList()
 )
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -85,6 +88,7 @@ fun MP3(modifier: Modifier = Modifier) {
     var selectedColor by remember { mutableStateOf(Color.Transparent) }
     var createPlaylist by remember { mutableStateOf(false) }
     var playlistLabel by remember { mutableStateOf(false) }
+    var ALlSongs by remember { mutableStateOf(Playlist("All Songs", Color.Transparent)) }
 
     Column(
         modifier = modifier.fillMaxSize()
@@ -214,7 +218,7 @@ fun MP3(modifier: Modifier = Modifier) {
                         modifier = Modifier.fillMaxWidth() .padding(horizontal = 5.dp),
                         contentPadding = PaddingValues(start= 10.dp)
                     ) {
-                        Text(text = "All Songs",
+                        Text(text = ALlSongs.name,
                             modifier = Modifier.fillMaxWidth(),
                             textAlign = TextAlign.Start)
                     }
@@ -223,12 +227,23 @@ fun MP3(modifier: Modifier = Modifier) {
                     Button(
                         onClick = {},
                         modifier = Modifier.fillMaxWidth() .padding(horizontal = 5.dp),
-                        contentPadding = PaddingValues(start= 10.dp)
+                        contentPadding = PaddingValues(start= 10.dp, end = 10.dp)
                     ) {
-                        Text(text = playlist.name,
-                            color = playlist.label,
+                        Row(
                             modifier = Modifier.fillMaxWidth(),
-                            textAlign = TextAlign.Start)
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(text = playlist.name)
+                            if(playlist.label != Color.Transparent) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(20.dp)
+                                        .background(playlist.label)
+                                        .border(1.dp, Color.Black)
+                                ) {}
+                            }
+                        }
                     }
                 }
             }
@@ -263,22 +278,21 @@ fun MP3(modifier: Modifier = Modifier) {
                             label = { Text("Playlist Name") }
                         )
                         Spacer(modifier = Modifier.height(8.dp))
-                        Row (
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
+                        Row () {
                             Button(
                                 onClick = { playlistLabel = true },
                                 shape = RectangleShape,
-                                colors = ButtonDefaults.buttonColors(containerColor = Color.LightGray)
+                                colors = ButtonDefaults.buttonColors(containerColor = Color.DarkGray)
                             ) {
                                 if (playlistLabel)
                                     Text("Label Color V")
                                 else
                                     Text("Label Color ^")
                             }
+                            Spacer(modifier = Modifier.width(55.dp))
                             Box(
                                 modifier = Modifier
-                                    .size(40.dp)
+                                    .size(50.dp)
                                     .background(selectedColor)
                                     .border(1.dp, Color.Black)
 
@@ -293,7 +307,7 @@ fun MP3(modifier: Modifier = Modifier) {
                                 DropdownMenuItem(text = { Text("Magenta") }, onClick = { selectedColor = Color.Magenta; playlistLabel = false })
                                 DropdownMenuItem(text = { Text("Yellow") }, onClick = { selectedColor = Color.Yellow; playlistLabel = false })
                                 DropdownMenuItem(text = { Text("White") }, onClick = { selectedColor = Color.White; playlistLabel = false })
-                                DropdownMenuItem(text = { Text("Blsck") }, onClick = { selectedColor = Color.Black; playlistLabel = false })
+                                DropdownMenuItem(text = { Text("Black") }, onClick = { selectedColor = Color.Black; playlistLabel = false })
 
                             }
                         }
