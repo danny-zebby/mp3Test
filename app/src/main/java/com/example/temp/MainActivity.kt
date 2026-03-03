@@ -64,7 +64,7 @@ data class Song(
 data class Playlist(
     val id: Int,
     val name: String,
-    val label: Color,
+    val labels: List<Color> = emptyList(),
     val songs: List<Song> = emptyList()
 )
 
@@ -86,12 +86,16 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MP3(modifier: Modifier = Modifier) {
 
-    val itemList = remember { mutableStateListOf(Playlist(1,"All Songs", Color.Transparent)) }
+    val itemList = remember { mutableStateListOf(Playlist(id = 1, name = "All Songs",labels = listOf(Color.Transparent)))}
     var nextPlaylistId by remember { mutableStateOf(2) }
     var newItem by remember { mutableStateOf(TextFieldValue()) }
-    var selectedColor by remember { mutableStateOf(Color.Transparent) }
+    var selectedColors by remember { mutableStateOf(listOf<Color>()) }
     var createPlaylist by remember { mutableStateOf(false) }
     var playlistLabel by remember { mutableStateOf(false) }
+
+    val colorNames = listOf(
+        "Red", "Yellow", "Green", "Cyan", "Blue", "Magenta", "White", "Gray", "Black"
+    )
 
     Column(
         modifier = modifier.fillMaxSize()
@@ -251,16 +255,20 @@ fun MP3(modifier: Modifier = Modifier) {
                                 Text(playlist.name)
                                 // Only show drag handle if NOT All Songs
                                 Spacer(modifier = Modifier.weight(1f))
-                                if(playlist.label != Color.Transparent) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(20.dp)
-                                            .background(playlist.label)
-                                            .border(1.dp, Color.Black)
-                                    ) {}
-                                }
+
                                 Spacer(modifier = Modifier.width(10.dp))
                                 if (playlist.id != 1) {
+                                    if(playlist.labels.isNotEmpty()) {
+                                        for(i in playlist.labels.indices){
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(20.dp)
+                                                    .background(playlist.labels[i])
+                                                    .border(1.dp, Color.Black)
+
+                                            ){}
+                                        }
+                                    }
                                     Box(
                                         modifier = Modifier
                                             .size(24.dp)
@@ -290,11 +298,12 @@ fun MP3(modifier: Modifier = Modifier) {
                                 Playlist(
                                     id = nextPlaylistId,
                                     name = newItem.text,
-                                    label = selectedColor
+                                    labels = selectedColors
                                 )
                             )
                             nextPlaylistId++
                             newItem = TextFieldValue("")
+                            selectedColors = emptyList()
                         }
                         createPlaylist = false
                     }) { Text("Add") }
@@ -321,26 +330,75 @@ fun MP3(modifier: Modifier = Modifier) {
                                 else
                                     Text("Label Color ^")
                             }
-                            Spacer(modifier = Modifier.width(58.dp))
-                            Box(
-                                modifier = Modifier
-                                    .size(48.dp)
-                                    .background(selectedColor)
-                                    .border(1.dp, Color.Black)
+                            Spacer(modifier = Modifier.weight(1f))
+                            selectedColors = selectedColors.sortedBy { color: Color -> colorNames[color] ?: "" }
+                            for(i in selectedColors.indices){
+                                Box(
+                                    modifier = Modifier
+                                        .size(48.dp)
+                                        .background(selectedColors[i])
+                                        .border(1.dp, Color.Black)
 
-                            ){}
+                                ){}
+                            }
+                            // "Red", "Yellow", "Green", "Cyan", "Blue", "Magenta", "White", "Gray", "Black"
                             DropdownMenu(expanded = playlistLabel, onDismissRequest = { playlistLabel = false }) {
-                                DropdownMenuItem(text = { Text("None") }, onClick = { selectedColor = Color.Transparent; playlistLabel = false })
-                                DropdownMenuItem(text = { Text("Red") }, onClick = { selectedColor = Color.Red; playlistLabel = false })
-                                DropdownMenuItem(text = { Text("Blue") }, onClick = { selectedColor = Color.Blue; playlistLabel = false })
-                                DropdownMenuItem(text = { Text("Green") }, onClick = { selectedColor = Color.Green; playlistLabel = false })
-                                DropdownMenuItem(text = { Text("Cyan") }, onClick = { selectedColor = Color.Cyan; playlistLabel = false })
-                                DropdownMenuItem(text = { Text("Gray") }, onClick = { selectedColor = Color.Gray; playlistLabel = false })
-                                DropdownMenuItem(text = { Text("Magenta") }, onClick = { selectedColor = Color.Magenta; playlistLabel = false })
-                                DropdownMenuItem(text = { Text("Yellow") }, onClick = { selectedColor = Color.Yellow; playlistLabel = false })
-                                DropdownMenuItem(text = { Text("White") }, onClick = { selectedColor = Color.White; playlistLabel = false })
-                                DropdownMenuItem(text = { Text("Black") }, onClick = { selectedColor = Color.Black; playlistLabel = false })
-
+                                DropdownMenuItem(text = { Text("None") }, onClick = {
+                                    selectedColors = emptyList(); playlistLabel = false })
+                                DropdownMenuItem(text = { Text("Red") }, onClick = {
+                                    if(!selectedColors.contains(Color.Red))
+                                    {selectedColors = selectedColors +  Color.Red}
+                                    else
+                                    {selectedColors = selectedColors - Color.Red}
+                                    playlistLabel = false})
+                                DropdownMenuItem(text = { Text("Yellow") }, onClick = {
+                                    if(!selectedColors.contains(Color.Yellow))
+                                    {selectedColors = selectedColors +  Color.Yellow}
+                                    else
+                                    {selectedColors = selectedColors - Color.Yellow}
+                                    playlistLabel = false})
+                                DropdownMenuItem(text = { Text("Green") }, onClick = {
+                                    if(!selectedColors.contains(Color.Green))
+                                    {selectedColors = selectedColors +  Color.Green; }
+                                    else
+                                    {selectedColors = selectedColors - Color.Green}
+                                    playlistLabel = false})
+                                DropdownMenuItem(text = { Text("Cyan") }, onClick = {
+                                    if(!selectedColors.contains(Color.Cyan))
+                                    {selectedColors = selectedColors +  Color.Cyan}
+                                    else
+                                    {selectedColors = selectedColors - Color.Cyan}
+                                    playlistLabel = false})
+                                DropdownMenuItem(text = { Text("Blue") }, onClick = {
+                                    if(!selectedColors.contains(Color.Blue))
+                                    {selectedColors = selectedColors +  Color.Blue}
+                                    else
+                                    {selectedColors = selectedColors - Color.Blue}
+                                    playlistLabel = false})
+                                DropdownMenuItem(text = { Text("Magenta") }, onClick = {
+                                    if(!selectedColors.contains(Color.Magenta))
+                                    {selectedColors = selectedColors +  Color.Magenta}
+                                    else
+                                    {selectedColors = selectedColors - Color.Magenta}
+                                    playlistLabel = false})
+                                DropdownMenuItem(text = { Text("White") }, onClick = {
+                                    if(!selectedColors.contains(Color.White))
+                                    {selectedColors = selectedColors +  Color.White}
+                                    else
+                                    {selectedColors = selectedColors - Color.White}
+                                    playlistLabel = false})
+                                DropdownMenuItem(text = { Text("Gray") }, onClick = {
+                                    if(!selectedColors.contains(Color.Gray))
+                                    {selectedColors = selectedColors +  Color.Gray}
+                                    else
+                                    {selectedColors = selectedColors - Color.Gray}
+                                    playlistLabel = false})
+                                DropdownMenuItem(text = { Text("Black") }, onClick = {
+                                    if(!selectedColors.contains(Color.Black))
+                                    {selectedColors = selectedColors +  Color.Black}
+                                    else
+                                    {selectedColors = selectedColors - Color.Black}
+                                    playlistLabel = false})
                             }
                         }
                     }
@@ -371,6 +429,7 @@ fun MP3(modifier: Modifier = Modifier) {
 
      */
 }
+
 
 @Preview(showBackground = true, showSystemUi = true) // Added showSystemUi to match phone
 @Composable
