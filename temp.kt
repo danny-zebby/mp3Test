@@ -31,9 +31,13 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ElevatedButton
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MultiChoiceSegmentedButtonRow
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -52,17 +56,12 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.temp.ui.theme.TempTheme
-import org.burnoutcrew.reorderable.ReorderableItem
-import org.burnoutcrew.reorderable.detectReorder
-import org.burnoutcrew.reorderable.rememberReorderableLazyListState
-import org.burnoutcrew.reorderable.reorderable
 
 data class Song(
     val title: String,
 )
 
 data class Playlist(
-    val id: Int,
     val name: String,
     val label: Color,
     val songs: List<Song> = emptyList()
@@ -83,15 +82,48 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MP3(modifier: Modifier = Modifier) {
 
-    val itemList = remember { mutableStateListOf(Playlist(1,"All Songs", Color.Transparent)) }
-    var nextPlaylistId by remember { mutableStateOf(2) }
+    val itemList = remember { mutableStateListOf<Playlist>() }
     var newItem by remember { mutableStateOf(TextFieldValue()) }
     var selectedColor by remember { mutableStateOf(Color.Transparent) }
     var createPlaylist by remember { mutableStateOf(false) }
     var playlistLabel by remember { mutableStateOf(false) }
+    val allSongsPlaylist = remember { Playlist("All Songs", Color.Transparent) }
+
+    // Sorting state
+    var sortIndex by remember { mutableStateOf(0) } // 0: Custom, 1: Alpha, 2: Label
+    var isAlphaAsc by remember { mutableStateOf(true) }
+    var labelFilterColor by remember { mutableStateOf(Color.Transparent) }
+    var showColorMenu by remember { mutableStateOf(false) }
+
+    val colors = listOf(
+        Color.Transparent, Color.Red, Color.Blue, Color.Green,
+        Color.Cyan, Color.Gray, Color.Magenta, Color.Yellow,
+        Color.White, Color.Black
+    )
+    val colorNames = listOf(
+        "None", "Red", "Blue", "Green", "Cyan", "Gray", "Magenta", "Yellow", "White", "Black"
+    )
+
+    // Derived list for display based on sorting selection
+    val displayList = remember(itemList.toList(), sortIndex, isAlphaAsc, labelFilterColor) {
+        when (sortIndex) {
+            0 -> itemList.toList() // Custom (original order)
+            1 -> if (isAlphaAsc) itemList.sortedBy { it.name } else itemList.sortedByDescending { it.name }
+            2 -> {
+                // Group by label, placing selected color at top
+                itemList.sortedWith(
+                    compareByDescending<Playlist> { it.label == labelFilterColor }
+                        .thenBy { it.label.toString() }
+                        .thenBy { it.name }
+                )
+            }
+            else -> itemList.toList()
+        }
+    }
 
     Column(
         modifier = modifier.fillMaxSize()
@@ -211,46 +243,100 @@ fun MP3(modifier: Modifier = Modifier) {
                     shape = RoundedCornerShape(12.dp)
                 )
         ) {
-            val reorderState = rememberReorderableLazyListState(
-                onMove = { from, to ->
-                    // Prevent "All Songs" from moving
-                    if (from.index == 0 || to.index == 0) return@rememberReorderableLazyListState
-                    itemList.add(to.index, itemList.removeAt(from.index))
+            Column(modifier = Modifier.fillMaxSize()) {
+                // Sorting Header with MultiChoiceSegmentedButtonRow
+                MultiChoiceSegmentedButtonRow(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp)
+                ) {
+                    // Custom Sorting
+                    SegmentedButton(
+                        checked = sortIndex == 0,
+                        onCheckedChange = { if (it) sortIndex = 0 },
+                        shape = SegmentedButtonDefaults.itemShape(index = 0, count = 3),
+                        label = { Text("Custom") }
+                    )
+                    // Alphabetical Sorting
+                    SegmentedButton(
+                        checked = sortIndex == 1,
+                        onCheckedChange = {
+                            if (it) {
+                                if (sortIndex == 1) isAlphaAsc = !isAlphaAsc
+                                sortIndex = 1
+                            }
+                        },
+                        shape = SegmentedButtonDefaults.itemShape(index = 1, count = 3),
+                        label = { Text(if (sortIndex == 1) (if (isAlphaAsc) "A-Z" else "Z-A") else "Alpha") }
+                    )
+                    // Label Grouping
+                    SegmentedButton(
+                        checked = sortIndex == 2,
+                        onCheckedChange = {
+                            if (it) {
+                                sortIndex = 2
+                                showColorMenu = true
+                            }
+                        },
+                        shape = SegmentedButtonDefaults.itemShape(index = 2, count = 3),
+                        label = {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text("Label")
+                                if (sortIndex == 2 && labelFilterColor != Color.Transparent) {
+                                    Spacer(Modifier.width(4.dp))
+                                    Box(Modifier.size(12.dp).background(labelFilterColor).border(0.5.dp, Color.Black))
+                                }
+                                DropdownMenu(
+                                    expanded = showColorMenu,
+                                    onDismissRequest = { showColorMenu = false }
+                                ) {
+                                    colors.forEachIndexed { index, color ->
+                                        DropdownMenuItem(
+                                            text = {
+                                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                                    Box(Modifier.size(16.dp).background(color).border(1.dp, Color.Black))
+                                                    Spacer(Modifier.width(8.dp))
+                                                    Text(colorNames[index])
+                                                }
+                                            },
+                                            onClick = {
+                                                labelFilterColor = color
+                                                showColorMenu = false
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    )
                 }
-            )
-            LazyColumn(
-                state = reorderState.listState,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .reorderable(reorderState)
-            ) {
-                items(
-                    items = itemList,
-                    key = { it.id }
-                ) { playlist ->
 
-                    ReorderableItem(
-                        state = reorderState,
-                        key = playlist.id
-                    ) { isDragging ->
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    item {
                         Button(
                             onClick = {},
-                            contentPadding = PaddingValues(start= 10.dp, end = 10.dp),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 5.dp)
-                                .background(
-                                    if (isDragging) Color.LightGray
-                                    else Color.Transparent
-                                )
+                            modifier = Modifier.fillMaxWidth() .padding(horizontal = 5.dp),
+                            contentPadding = PaddingValues(0.dp)
+                        ) {
+                            Text(text = allSongsPlaylist.name,
+                                modifier = Modifier.fillMaxWidth(),
+                                textAlign = TextAlign.Center)
+                        }
+                    }
+                    items(displayList) { playlist ->
+                        Button(
+                            onClick = {},
+                            modifier = Modifier.fillMaxWidth() .padding(horizontal = 5.dp),
+                            contentPadding = PaddingValues(start= 10.dp, end = 10.dp)
                         ) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Text(playlist.name)
-                                // Only show drag handle if NOT All Songs
-                                Spacer(modifier = Modifier.weight(1f))
+                                Text(text = playlist.name)
                                 if(playlist.label != Color.Transparent) {
                                     Box(
                                         modifier = Modifier
@@ -259,19 +345,12 @@ fun MP3(modifier: Modifier = Modifier) {
                                             .border(1.dp, Color.Black)
                                     ) {}
                                 }
-                                Spacer(modifier = Modifier.width(10.dp))
-                                if (playlist.id != 1) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(24.dp)
-                                            .detectReorder(reorderState)
-                                    ){Text("=")}
-                                }
                             }
                         }
                     }
                 }
             }
+
             ElevatedButton(
                 onClick = { createPlaylist = true },
                 modifier = Modifier.align(Alignment.BottomEnd) .padding(5.dp)
@@ -284,64 +363,67 @@ fun MP3(modifier: Modifier = Modifier) {
             androidx.compose.material3.AlertDialog(
                 onDismissRequest = { createPlaylist = false },
                 confirmButton = {
-                    Button(onClick = {
-                        if (newItem.text.isNotBlank()) {
-                            itemList.add(
-                                Playlist(
-                                    id = nextPlaylistId,
-                                    name = newItem.text,
-                                    label = selectedColor
-                                )
-                            )
-                            nextPlaylistId++
-                            newItem = TextFieldValue("")
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally)
+                    ) {
+                        Button(onClick = { createPlaylist = false }) {
+                            Text("Cancel")
                         }
-                        createPlaylist = false
-                    }) { Text("Add") }
+                        Button(onClick = {
+                            if (newItem.text.isNotBlank()) {
+                                itemList.add(Playlist(name = newItem.text, label = selectedColor))
+                                newItem = TextFieldValue("")
+                            }
+                            createPlaylist = false
+                        }) {
+                            Text("Add")
+                        }
+                    }
                 },
-                dismissButton = {
-                    Button(onClick = { createPlaylist = false }) { Text("Cancel") }
-                },
+                dismissButton = null,
                 text = {
-                    Column {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
                         OutlinedTextField(
                             value = newItem,
                             onValueChange = { newItem = it },
                             label = { Text("Playlist Name") }
                         )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Row () {
-                            Button(
-                                onClick = { playlistLabel = true },
-                                shape = RectangleShape,
-                                colors = ButtonDefaults.buttonColors(containerColor = Color.DarkGray)
-                            ) {
-                                if (playlistLabel)
-                                    Text("Label Color V")
-                                else
-                                    Text("Label Color ^")
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box {
+                                Button(
+                                    onClick = { playlistLabel = true },
+                                    shape = RectangleShape,
+                                    colors = ButtonDefaults.buttonColors(containerColor = Color.LightGray)
+                                ) {
+                                    Text(if (playlistLabel) "Label Color V" else "Label Color ^")
+                                }
+                                DropdownMenu(expanded = playlistLabel, onDismissRequest = { playlistLabel = false }) {
+                                    DropdownMenuItem(text = { Text("None") }, onClick = { selectedColor = Color.Transparent; playlistLabel = false })
+                                    DropdownMenuItem(text = { Text("Red") }, onClick = { selectedColor = Color.Red; playlistLabel = false })
+                                    DropdownMenuItem(text = { Text("Blue") }, onClick = { selectedColor = Color.Blue; playlistLabel = false })
+                                    DropdownMenuItem(text = { Text("Green") }, onClick = { selectedColor = Color.Green; playlistLabel = false })
+                                    DropdownMenuItem(text = { Text("Cyan") }, onClick = { selectedColor = Color.Cyan; playlistLabel = false })
+                                    DropdownMenuItem(text = { Text("Gray") }, onClick = { selectedColor = Color.Gray; playlistLabel = false })
+                                    DropdownMenuItem(text = { Text("Magenta") }, onClick = { selectedColor = Color.Magenta; playlistLabel = false })
+                                    DropdownMenuItem(text = { Text("Yellow") }, onClick = { selectedColor = Color.Yellow; playlistLabel = false })
+                                    DropdownMenuItem(text = { Text("White") }, onClick = { selectedColor = Color.White; playlistLabel = false })
+                                    DropdownMenuItem(text = { Text("Black") }, onClick = { selectedColor = Color.Black; playlistLabel = false })
+                                }
                             }
-                            Spacer(modifier = Modifier.width(58.dp))
                             Box(
                                 modifier = Modifier
-                                    .size(48.dp)
+                                    .size(40.dp)
                                     .background(selectedColor)
                                     .border(1.dp, Color.Black)
-
-                            ){}
-                            DropdownMenu(expanded = playlistLabel, onDismissRequest = { playlistLabel = false }) {
-                                DropdownMenuItem(text = { Text("None") }, onClick = { selectedColor = Color.Transparent; playlistLabel = false })
-                                DropdownMenuItem(text = { Text("Red") }, onClick = { selectedColor = Color.Red; playlistLabel = false })
-                                DropdownMenuItem(text = { Text("Blue") }, onClick = { selectedColor = Color.Blue; playlistLabel = false })
-                                DropdownMenuItem(text = { Text("Green") }, onClick = { selectedColor = Color.Green; playlistLabel = false })
-                                DropdownMenuItem(text = { Text("Cyan") }, onClick = { selectedColor = Color.Cyan; playlistLabel = false })
-                                DropdownMenuItem(text = { Text("Gray") }, onClick = { selectedColor = Color.Gray; playlistLabel = false })
-                                DropdownMenuItem(text = { Text("Magenta") }, onClick = { selectedColor = Color.Magenta; playlistLabel = false })
-                                DropdownMenuItem(text = { Text("Yellow") }, onClick = { selectedColor = Color.Yellow; playlistLabel = false })
-                                DropdownMenuItem(text = { Text("White") }, onClick = { selectedColor = Color.White; playlistLabel = false })
-                                DropdownMenuItem(text = { Text("Black") }, onClick = { selectedColor = Color.Black; playlistLabel = false })
-
-                            }
+                            )
                         }
                     }
                 }
@@ -366,10 +448,6 @@ fun MP3(modifier: Modifier = Modifier) {
             }
         }
     }
-
-    /*
-
-     */
 }
 
 @Preview(showBackground = true, showSystemUi = true) // Added showSystemUi to match phone
