@@ -1,6 +1,5 @@
 package com.example.temp
 
-import android.R.attr.fontWeight
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -32,7 +31,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ElevatedButton
-import androidx.compose.material3.MultiChoiceSegmentedButtonRow
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -93,37 +91,39 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun MP3(modifier: Modifier = Modifier) {
-    // Values use to ceate playlist
-    val playlistOfPlaylist = remember { mutableStateListOf(Playlist(id = 1, name = "All Songs",labels = listOf(Color.Transparent)))}
-    var nextPlaylistId by remember { mutableStateOf(2) }
-    var newItem by remember { mutableStateOf(TextFieldValue()) }
-    var selectedColors by remember { mutableStateOf(listOf<Color>()) }
-    var createPlaylist by remember { mutableStateOf(false) }
-    var playlistLabel by remember { mutableStateOf(false) }
+    // Values use to create playlist
+    val playlistOfPlaylist = remember { mutableStateListOf(Playlist(id = 1, name = "All Songs"))}  // The main list
+    var nextPlaylistId by remember { mutableStateOf(2) }                                    // This increments the playlist id
+    var newItem by remember { mutableStateOf(TextFieldValue()) }                            // This stores text field text
+    var selectedColors by remember { mutableStateOf(listOf<Color>()) }                      // Temporary placement for labels
+    var createPlaylist by remember { mutableStateOf(false) }                                // Tigger for create playlist
+    var playlistLabel by remember { mutableStateOf(false) }                                 // Tigger for label dropdown (create)
     // Values used to create color sorting
-    val colorNames = linkedMapOf(Color.Red to "Red", Color.Yellow to "Yellow", Color.Green to "Green", Color.Cyan to "Cyan", Color.Blue to "Blue", Color.Magenta to "Magenta", Color.White to "White", Color.Gray to "Gray", Color.Black to "Black")
-    val colorOrder = colorNames.keys
+    val colorNames = linkedMapOf(Color.Red to "Red",    // Used to make colorOrder
+        Color.Yellow to "Yellow", Color.Green to "Green", Color.Cyan to "Cyan", Color.Blue to "Blue", Color.Magenta to "Magenta", Color.White to "White", Color.Gray to "Gray", Color.Black to "Black")
+    val colorOrder = colorNames.keys                    // Used to make sortColor
         .withIndex()
         .associate { it.value to it.index }
-    fun sortColors(colors: List<Color>): List<Color> {
+    fun sortColors(colors: List<Color>): List<Color> { // Sorts the color in the order I listed above in colorNames
         return colors.sortedBy{ color ->
             colorOrder[color] ?:
             Int.MAX_VALUE
         }
     }
     // Values used to create three playlist sorts
-    var sortIndex by remember { mutableStateOf(0) } // 0: Custom, 1: Alpha, 2: Label
-    var isAlphaAsc by remember { mutableStateOf(true) }
-    var labelFilterColor by remember { mutableStateOf(Color.Transparent) }
-    var showColorMenu by remember { mutableStateOf(false) }
-    val colors = listOf(
-        Color.Transparent, Color.Red, Color.Blue, Color.Green,
+    var sortIndex by remember { mutableStateOf(0) }                         // 0: Custom, 1: Alpha, 2: Label
+    var isAlphaAsc by remember { mutableStateOf(true) }                     // Alphabetical sort trigger
+    var labelFilterColor by remember { mutableStateOf(Color.Transparent) }  // Color to sort by
+    var showColorMenu by remember { mutableStateOf(false) }                 // Label sort trigger
+    val colors = listOf(                                                           // Color to make dropdown easier
+        Color.Red, Color.Blue, Color.Green,
         Color.Cyan, Color.Gray, Color.Magenta, Color.Yellow,
         Color.White, Color.Black
     )
-    val namesOfColors = listOf(
-        "None", "Red", "Blue", "Green", "Cyan", "Gray", "Magenta", "Yellow", "White", "Black"
+    val namesOfColors = listOf(                                                     // names of colors to make dropdown easier
+        "Red", "Blue", "Green", "Cyan", "Gray", "Magenta", "Yellow", "White", "Black"
     )
+    // How Playlist are sorted
     val displayList = remember(playlistOfPlaylist.toList(), sortIndex, isAlphaAsc, labelFilterColor) {
         when (sortIndex) {
             0 -> playlistOfPlaylist.toList()
@@ -138,11 +138,11 @@ fun MP3(modifier: Modifier = Modifier) {
             else -> playlistOfPlaylist.toList()
         }
     }
-
+    //The whole page
     Column(
         modifier = modifier.fillMaxSize()
     ) {
-        // First row: Using weight ensures the buttons fit any screen width
+        // First row: Home button, Music Playing, and Profile page
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -150,6 +150,7 @@ fun MP3(modifier: Modifier = Modifier) {
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            // Home Button
             Button(
                 onClick = { },
                 modifier = Modifier.size(60.dp),
@@ -160,15 +161,17 @@ fun MP3(modifier: Modifier = Modifier) {
                 Image(
                     painter = painterResource(R.drawable.home),
                     contentDescription = "Home",
-                    modifier = Modifier.size(60.dp) // Scaled down for better fit
+                    modifier = Modifier.size(60.dp)
                 )
             }
+            // Music Playing
             Button(
                 onClick = { },
                 modifier = Modifier.weight(1f).height(60.dp) // weight(1f) fills remaining space
             ) {
                 Text("Music Play Here", textAlign = TextAlign.Center)
             }
+            // Profile Button
             OutlinedButton(
                 onClick = { },
                 modifier = Modifier.size(60.dp),
@@ -182,9 +185,7 @@ fun MP3(modifier: Modifier = Modifier) {
                 )
             }
         }
-
         Spacer(modifier = Modifier.height(10.dp))
-
         // Navigation Row: Using HorizontalPager to swipe in groups of three
         val navButtons = listOf(
             "View Songs", "Drive Mode", "Podcast Mode",
@@ -218,7 +219,6 @@ fun MP3(modifier: Modifier = Modifier) {
                             )
                         }
                     } else {
-                        // Spacer to maintain layout consistency for incomplete pages
                         Spacer(modifier = Modifier.weight(1f))
                     }
                 }
@@ -245,11 +245,10 @@ fun MP3(modifier: Modifier = Modifier) {
         }
 
         // Playlist Area
-        // 🔹 Playlist Area Refactor
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(1f)   // take remaining vertical space
+                .weight(1f)
                 .padding(16.dp)
                 .clip(RoundedCornerShape(12.dp))
                 .border(
@@ -291,10 +290,11 @@ fun MP3(modifier: Modifier = Modifier) {
                     label = {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text("Label")
-                            if (sortIndex == 2 && labelFilterColor != Color.Transparent) {
+                            if (sortIndex == 2) {
                                 Spacer(Modifier.width(4.dp))
                                 Box(Modifier.size(12.dp).background(labelFilterColor).border(0.5.dp, Color.Black))
                             }
+                            // DropdownMenu to pick label to sort by
                             DropdownMenu(
                                 expanded = showColorMenu,
                                 onDismissRequest = { showColorMenu = false }
@@ -330,13 +330,12 @@ fun MP3(modifier: Modifier = Modifier) {
                     playlistOfPlaylist.add(to.index, playlistOfPlaylist.removeAt(from.index))
                 }
             )
-
             LazyColumn(
                 state = reorderState.listState,
                 contentPadding = PaddingValues(top = 0.dp),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f)  // take remaining vertical space
+                    .weight(1f)
                     .reorderable(reorderState),
             ) {
                 items(
@@ -361,40 +360,36 @@ fun MP3(modifier: Modifier = Modifier) {
                             ) {
                                 Text(
                                     text = playlist.name,
-                                    textAlign = TextAlign.Left,
-                                    maxLines = 1,
                                     overflow = TextOverflow.Ellipsis,
                                     modifier = Modifier.weight(1f)
                                 )
-                                if (playlist.id != 1) { // show drag handle for other playlists
-                                    if (playlist.labels.isNotEmpty()) {
-                                        Row {
-                                            playlist.labels.forEach { color ->
-                                                Box(
-                                                    modifier = Modifier
-                                                        .size(15.dp)
-                                                        .background(color)
-                                                        .border(1.dp, Color.Black)
-                                                )
-                                                Spacer(modifier = Modifier.width(4.dp))
-                                            }
+                                // This adds the labels and draggables
+                                if (playlist.labels.isNotEmpty()) { // Checking if playlist has labels
+                                    Row {
+                                        playlist.labels.forEach { color ->
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(15.dp)
+                                                    .background(color)
+                                                    .border(1.dp, Color.Black)
+                                            )
+                                            Spacer(modifier = Modifier.width(4.dp))
                                         }
                                     }
-                                    if(sortIndex == 0){
+                                }
+                                if(sortIndex == 0 && playlist.id != 1){ // Checking if the sort is custom and not for All Songs
                                     Box(
                                         modifier = Modifier
                                             .size(24.dp)
                                             .detectReorder(reorderState)
                                     ) { Text("=", fontWeight = FontWeight.Bold) }
-                                    }
                                 }
                             }
                         }
                     }
                 }
             }
-
-            // Bottom-end: Floating + button
+            // Floating + button: button selected to create a new playlist
             Box(modifier = Modifier.fillMaxWidth()
                 .padding(10.dp)
             ) {
@@ -406,9 +401,11 @@ fun MP3(modifier: Modifier = Modifier) {
                 }
             }
         }
+        // Dialog screen pop up to create a new playlist
         if (createPlaylist) {
             androidx.compose.material3.AlertDialog(
                 onDismissRequest = { createPlaylist = false },
+                // confirmButton
                 confirmButton = {
                     Button(onClick = {
                         if (newItem.text.isNotBlank()) {
@@ -426,9 +423,11 @@ fun MP3(modifier: Modifier = Modifier) {
                         createPlaylist = false
                     }) { Text("Add") }
                 },
+                // dismissButton
                 dismissButton = {
                     Button(onClick = { createPlaylist = false }) { Text("Cancel") }
                 },
+                // Text: text field, label dropdown, labels selected
                 text = {
                     Column {
                         OutlinedTextField(
@@ -503,7 +502,8 @@ fun MP3(modifier: Modifier = Modifier) {
     }
 }
 
-@Preview(showBackground = true, showSystemUi = true) // Added showSystemUi to match phone
+//Preview App
+@Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun MP3Preview() {
     TempTheme {
