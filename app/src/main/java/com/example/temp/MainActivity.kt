@@ -1,5 +1,6 @@
 package com.example.temp
 
+import android.R.attr.fontWeight
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -47,8 +48,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.temp.ui.theme.TempTheme
@@ -56,6 +59,7 @@ import org.burnoutcrew.reorderable.ReorderableItem
 import org.burnoutcrew.reorderable.detectReorder
 import org.burnoutcrew.reorderable.rememberReorderableLazyListState
 import org.burnoutcrew.reorderable.reorderable
+import kotlin.collections.sortedBy
 
 data class Song(
     val title: String,
@@ -92,10 +96,18 @@ fun MP3(modifier: Modifier = Modifier) {
     var selectedColors by remember { mutableStateOf(listOf<Color>()) }
     var createPlaylist by remember { mutableStateOf(false) }
     var playlistLabel by remember { mutableStateOf(false) }
+    val colorNames = linkedMapOf(Color.Red to "Red", Color.Yellow to "Yellow", Color.Green to "Green", Color.Cyan to "Cyan", Color.Blue to "Blue", Color.Magenta to "Magenta", Color.White to "White", Color.Gray to "Gray", Color.Black to "Black")
 
-    val colorNames = listOf(
-        "Red", "Yellow", "Green", "Cyan", "Blue", "Magenta", "White", "Gray", "Black"
-    )
+    val colorOrder = colorNames.keys
+        .withIndex()
+        .associate { it.value to it.index }
+
+    fun sortColors(colors: List<Color>): List<Color> {
+        return colors.sortedBy{ color ->
+            colorOrder[color] ?:
+            Int.MAX_VALUE
+        }
+    }
 
     Column(
         modifier = modifier.fillMaxSize()
@@ -250,30 +262,42 @@ fun MP3(modifier: Modifier = Modifier) {
                         ) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Absolute.SpaceEvenly,
                             ) {
-                                Text(playlist.name)
-                                // Only show drag handle if NOT All Songs
+                                Text(
+                                    text = playlist.name,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.width(250.dp)
+                                )
                                 Spacer(modifier = Modifier.weight(1f))
-
-                                Spacer(modifier = Modifier.width(10.dp))
+                                // Only show drag handle if NOT All Songs
                                 if (playlist.id != 1) {
                                     if(playlist.labels.isNotEmpty()) {
                                         for(i in playlist.labels.indices){
                                             Box(
                                                 modifier = Modifier
-                                                    .size(20.dp)
+                                                    .size(15.dp)
                                                     .background(playlist.labels[i])
                                                     .border(1.dp, Color.Black)
 
                                             ){}
                                         }
                                     }
+                                    Spacer(modifier = Modifier.width(10.dp))
                                     Box(
                                         modifier = Modifier
                                             .size(24.dp)
                                             .detectReorder(reorderState)
-                                    ){Text("=")}
+                /*
+                * NEED
+                * TO
+                * REPLACE
+                * WITH
+                * IMAGE
+                * */
+                                    ){Text("=", fontWeight = FontWeight.Bold)}
                                 }
                             }
                         }
@@ -287,7 +311,6 @@ fun MP3(modifier: Modifier = Modifier) {
                 Text("+")
             }
         }
-
         if (createPlaylist) {
             androidx.compose.material3.AlertDialog(
                 onDismissRequest = { createPlaylist = false },
@@ -321,7 +344,7 @@ fun MP3(modifier: Modifier = Modifier) {
                         Spacer(modifier = Modifier.height(8.dp))
                         Row () {
                             Button(
-                                onClick = { playlistLabel = true },
+                                onClick = { playlistLabel = true},
                                 shape = RectangleShape,
                                 colors = ButtonDefaults.buttonColors(containerColor = Color.DarkGray)
                             ) {
@@ -331,11 +354,11 @@ fun MP3(modifier: Modifier = Modifier) {
                                     Text("Label Color ^")
                             }
                             Spacer(modifier = Modifier.weight(1f))
-                            selectedColors = selectedColors.sortedBy { color: Color -> colorNames[color] ?: "" }
+                            selectedColors = sortColors(selectedColors)
                             for(i in selectedColors.indices){
                                 Box(
                                     modifier = Modifier
-                                        .size(48.dp)
+                                        .size(24.dp)
                                         .background(selectedColors[i])
                                         .border(1.dp, Color.Black)
 
@@ -351,54 +374,15 @@ fun MP3(modifier: Modifier = Modifier) {
                                     else
                                     {selectedColors = selectedColors - Color.Red}
                                     playlistLabel = false})
-                                DropdownMenuItem(text = { Text("Yellow") }, onClick = {
-                                    if(!selectedColors.contains(Color.Yellow))
-                                    {selectedColors = selectedColors +  Color.Yellow}
-                                    else
-                                    {selectedColors = selectedColors - Color.Yellow}
-                                    playlistLabel = false})
-                                DropdownMenuItem(text = { Text("Green") }, onClick = {
-                                    if(!selectedColors.contains(Color.Green))
-                                    {selectedColors = selectedColors +  Color.Green; }
-                                    else
-                                    {selectedColors = selectedColors - Color.Green}
-                                    playlistLabel = false})
-                                DropdownMenuItem(text = { Text("Cyan") }, onClick = {
-                                    if(!selectedColors.contains(Color.Cyan))
-                                    {selectedColors = selectedColors +  Color.Cyan}
-                                    else
-                                    {selectedColors = selectedColors - Color.Cyan}
-                                    playlistLabel = false})
-                                DropdownMenuItem(text = { Text("Blue") }, onClick = {
-                                    if(!selectedColors.contains(Color.Blue))
-                                    {selectedColors = selectedColors +  Color.Blue}
-                                    else
-                                    {selectedColors = selectedColors - Color.Blue}
-                                    playlistLabel = false})
-                                DropdownMenuItem(text = { Text("Magenta") }, onClick = {
-                                    if(!selectedColors.contains(Color.Magenta))
-                                    {selectedColors = selectedColors +  Color.Magenta}
-                                    else
-                                    {selectedColors = selectedColors - Color.Magenta}
-                                    playlistLabel = false})
-                                DropdownMenuItem(text = { Text("White") }, onClick = {
-                                    if(!selectedColors.contains(Color.White))
-                                    {selectedColors = selectedColors +  Color.White}
-                                    else
-                                    {selectedColors = selectedColors - Color.White}
-                                    playlistLabel = false})
-                                DropdownMenuItem(text = { Text("Gray") }, onClick = {
-                                    if(!selectedColors.contains(Color.Gray))
-                                    {selectedColors = selectedColors +  Color.Gray}
-                                    else
-                                    {selectedColors = selectedColors - Color.Gray}
-                                    playlistLabel = false})
-                                DropdownMenuItem(text = { Text("Black") }, onClick = {
-                                    if(!selectedColors.contains(Color.Black))
-                                    {selectedColors = selectedColors +  Color.Black}
-                                    else
-                                    {selectedColors = selectedColors - Color.Black}
-                                    playlistLabel = false})
+                                // Same as Red
+                                DropdownMenuItem(text = { Text("Yellow") }, onClick = { if(!selectedColors.contains(Color.Yellow)) {selectedColors = selectedColors +  Color.Yellow} else {selectedColors = selectedColors - Color.Yellow}; playlistLabel = false})
+                                DropdownMenuItem(text = { Text("Green") }, onClick = { if(!selectedColors.contains(Color.Green)) {selectedColors = selectedColors +  Color.Green; } else {selectedColors = selectedColors - Color.Green}; playlistLabel = false})
+                                DropdownMenuItem(text = { Text("Cyan") }, onClick = { if(!selectedColors.contains(Color.Cyan)) {selectedColors = selectedColors +  Color.Cyan} else {selectedColors = selectedColors - Color.Cyan}; playlistLabel = false})
+                                DropdownMenuItem(text = { Text("Blue") }, onClick = { if(!selectedColors.contains(Color.Blue)) {selectedColors = selectedColors +  Color.Blue} else {selectedColors = selectedColors - Color.Blue}; playlistLabel = false})
+                                DropdownMenuItem(text = { Text("Magenta") }, onClick = { if(!selectedColors.contains(Color.Magenta)) {selectedColors = selectedColors +  Color.Magenta} else {selectedColors = selectedColors - Color.Magenta}; playlistLabel = false})
+                                DropdownMenuItem(text = { Text("White") }, onClick = { if(!selectedColors.contains(Color.White)) {selectedColors = selectedColors +  Color.White} else {selectedColors = selectedColors - Color.White}; playlistLabel = false})
+                                DropdownMenuItem(text = { Text("Gray") }, onClick = { if(!selectedColors.contains(Color.Gray)) {selectedColors = selectedColors +  Color.Gray} else {selectedColors = selectedColors - Color.Gray}; playlistLabel = false})
+                                DropdownMenuItem(text = { Text("Black") }, onClick = { if(!selectedColors.contains(Color.Black)) {selectedColors = selectedColors +  Color.Black} else {selectedColors = selectedColors - Color.Black}; playlistLabel = false})
                             }
                         }
                     }
@@ -424,12 +408,7 @@ fun MP3(modifier: Modifier = Modifier) {
             }
         }
     }
-
-    /*
-
-     */
 }
-
 
 @Preview(showBackground = true, showSystemUi = true) // Added showSystemUi to match phone
 @Composable
