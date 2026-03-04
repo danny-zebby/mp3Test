@@ -94,7 +94,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MP3(modifier: Modifier = Modifier) {
     // Values use to ceate playlist
-    val itemList = remember { mutableStateListOf(Playlist(id = 1, name = "All Songs",labels = listOf(Color.Transparent)))}
+    val playlistOfPlaylist = remember { mutableStateListOf(Playlist(id = 1, name = "All Songs",labels = listOf(Color.Transparent)))}
     var nextPlaylistId by remember { mutableStateOf(2) }
     var newItem by remember { mutableStateOf(TextFieldValue()) }
     var selectedColors by remember { mutableStateOf(listOf<Color>()) }
@@ -114,6 +114,30 @@ fun MP3(modifier: Modifier = Modifier) {
     // Values used to create three playlist sorts
     var sortIndex by remember { mutableStateOf(0) } // 0: Custom, 1: Alpha, 2: Label
     var isAlphaAsc by remember { mutableStateOf(true) }
+    var labelFilterColor by remember { mutableStateOf(Color.Transparent) }
+    var showColorMenu by remember { mutableStateOf(false) }
+    val colors = listOf(
+        Color.Transparent, Color.Red, Color.Blue, Color.Green,
+        Color.Cyan, Color.Gray, Color.Magenta, Color.Yellow,
+        Color.White, Color.Black
+    )
+    val namesOfColors = listOf(
+        "None", "Red", "Blue", "Green", "Cyan", "Gray", "Magenta", "Yellow", "White", "Black"
+    )
+    val displayList = remember(playlistOfPlaylist.toList(), sortIndex, isAlphaAsc, labelFilterColor) {
+        when (sortIndex) {
+            0 -> playlistOfPlaylist.toList()
+            1 -> if (isAlphaAsc) playlistOfPlaylist.sortedBy { it.name } else playlistOfPlaylist.sortedByDescending { it.name }
+            2 -> {
+                playlistOfPlaylist.sortedWith(
+                    compareByDescending<Playlist> { it.labels.contains(labelFilterColor)}
+                        .thenBy { it.labels.toString() }
+                        .thenBy { it.name }
+                )
+            }
+            else -> playlistOfPlaylist.toList()
+        }
+    }
 
     Column(
         modifier = modifier.fillMaxSize()
@@ -221,10 +245,11 @@ fun MP3(modifier: Modifier = Modifier) {
         }
 
         // Playlist Area
-        Box(
+        // 🔹 Playlist Area Refactor
+        Column(
             modifier = Modifier
-                .fillMaxSize()
-                .weight(1f)
+                .fillMaxWidth()
+                .weight(1f)   // take remaining vertical space
                 .padding(16.dp)
                 .clip(RoundedCornerShape(12.dp))
                 .border(
@@ -233,117 +258,152 @@ fun MP3(modifier: Modifier = Modifier) {
                     shape = RoundedCornerShape(12.dp)
                 )
         ) {
-            Column(modifier = Modifier.fillMaxWidth()
-                .align(Alignment.TopCenter )){
-                SingleChoiceSegmentedButtonRow(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                ) {
-                    // Custom (Draggable)
-                    SegmentedButton(
-                        selected = sortIndex == 0,
-                        onClick = {sortIndex = 0},
-                        shape = SegmentedButtonDefaults.itemShape(index = 0, count = 3)
-                    ){Text("Custom")}
-                    // Alphabetical (A-Z & Z-A)
-                    SegmentedButton(
-                        selected = 1 == sortIndex,
-                        onClick = {if(sortIndex == 1){
-                            isAlphaAsc = !isAlphaAsc
-                        } else{ sortIndex = 1} },
-                        shape = SegmentedButtonDefaults.itemShape(index = 1, count = 3),
-                    ){Text(if (sortIndex == 1) (if (isAlphaAsc) "A-Z" else "Z-A") else "Alphabetical")}
-                    // Label Grouping
-                    SegmentedButton(
-                        selected = 2 == sortIndex,
-                        onClick = {sortIndex = 2},
-                        shape = SegmentedButtonDefaults.itemShape(index = 2, count = 3),
-                    ){Text("Label")}
-                }
+            // Top: Segmented buttons
+            SingleChoiceSegmentedButtonRow(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                // Custom (Draggable)
+                SegmentedButton(
+                    selected = sortIndex == 0,
+                    onClick = { sortIndex = 0 },
+                    shape = SegmentedButtonDefaults.itemShape(index = 0, count = 3)
+                ) { Text("Custom") }
+
+                // Alphabetical (A-Z & Z-A)
+                SegmentedButton(
+                    selected = sortIndex == 1,
+                    onClick = {
+                        if (sortIndex == 1) isAlphaAsc = !isAlphaAsc
+                        else sortIndex = 1
+                        playlistOfPlaylist.sortedBy { playlistOfPlaylist[0].name}
+                    },
+                    shape = SegmentedButtonDefaults.itemShape(index = 1, count = 3)
+                ) { Text(if (sortIndex == 1) if (isAlphaAsc) "A-Z" else "Z-A" else "Alphabetical") }
+
+                // Label Grouping
+                SegmentedButton(
+                    selected = sortIndex == 2,
+                    onClick = {
+                        sortIndex = 2
+                        showColorMenu = true
+                        },
+                    shape = SegmentedButtonDefaults.itemShape(index = 2, count = 3),
+                    label = {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("Label")
+                            if (sortIndex == 2 && labelFilterColor != Color.Transparent) {
+                                Spacer(Modifier.width(4.dp))
+                                Box(Modifier.size(12.dp).background(labelFilterColor).border(0.5.dp, Color.Black))
+                            }
+                            DropdownMenu(
+                                expanded = showColorMenu,
+                                onDismissRequest = { showColorMenu = false }
+                            ) {
+                                colors.forEachIndexed { index, color ->
+                                    DropdownMenuItem(
+                                        text = {
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Box(Modifier.size(16.dp).background(color).border(1.dp, Color.Black))
+                                                Spacer(Modifier.width(8.dp))
+                                                Text(namesOfColors[index])
+                                            }
+                                        },
+                                        onClick = {
+                                            labelFilterColor = color
+                                            showColorMenu = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
+                )
             }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Middle: LazyColumn for playlists
             val reorderState = rememberReorderableLazyListState(
                 onMove = { from, to ->
                     // Prevent "All Songs" from moving
                     if (from.index == 0 || to.index == 0) return@rememberReorderableLazyListState
-                    itemList.add(to.index, itemList.removeAt(from.index))
+                    playlistOfPlaylist.add(to.index, playlistOfPlaylist.removeAt(from.index))
                 }
             )
+
             LazyColumn(
                 state = reorderState.listState,
-                contentPadding = PaddingValues(top = 52.dp),
+                contentPadding = PaddingValues(top = 0.dp),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .reorderable(reorderState)
-                    ) {
+                    .weight(1f)  // take remaining vertical space
+                    .reorderable(reorderState),
+            ) {
                 items(
-                    items = itemList,
+                    items = displayList,
                     key = { it.id }
                 ) { playlist ->
-
                     ReorderableItem(
                         state = reorderState,
                         key = playlist.id
                     ) { isDragging ->
                         Button(
                             onClick = {},
-                            contentPadding = PaddingValues(start= 10.dp, end = 10.dp),
+                            contentPadding = PaddingValues(start = 10.dp, end = 10.dp),
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(horizontal = 5.dp)
-                                .background(
-                                    if (isDragging) Color.LightGray
-                                    else Color.Transparent
-                                )
+                                .background(if (isDragging) Color.LightGray else Color.Transparent)
                         ) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.Absolute.SpaceEvenly,
                             ) {
                                 Text(
                                     text = playlist.name,
+                                    textAlign = TextAlign.Left,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis,
-                                    modifier = Modifier.width(250.dp)
+                                    modifier = Modifier.weight(1f)
                                 )
-                                Spacer(modifier = Modifier.weight(1f))
-                                // Only show drag handle if NOT All Songs
-                                if (playlist.id != 1) {
-                                    if(playlist.labels.isNotEmpty()) {
-                                        for(i in playlist.labels.indices){
-                                            Box(
-                                                modifier = Modifier
-                                                    .size(15.dp)
-                                                    .background(playlist.labels[i])
-                                                    .border(1.dp, Color.Black)
-
-                                            ){}
+                                if (playlist.id != 1) { // show drag handle for other playlists
+                                    if (playlist.labels.isNotEmpty()) {
+                                        Row {
+                                            playlist.labels.forEach { color ->
+                                                Box(
+                                                    modifier = Modifier
+                                                        .size(15.dp)
+                                                        .background(color)
+                                                        .border(1.dp, Color.Black)
+                                                )
+                                                Spacer(modifier = Modifier.width(4.dp))
+                                            }
                                         }
                                     }
-                                    Spacer(modifier = Modifier.width(10.dp))
+                                    if(sortIndex == 0){
                                     Box(
                                         modifier = Modifier
                                             .size(24.dp)
                                             .detectReorder(reorderState)
-                /*
-                * NEED
-                * TO
-                * REPLACE
-                * WITH
-                * IMAGE
-                * */
-                                    ){Text("=", fontWeight = FontWeight.Bold)}
+                                    ) { Text("=", fontWeight = FontWeight.Bold) }
+                                    }
                                 }
                             }
                         }
                     }
                 }
             }
-            ElevatedButton(
-                onClick = { createPlaylist = true },
-                modifier = Modifier.align(Alignment.BottomEnd) .padding(5.dp)
+
+            // Bottom-end: Floating + button
+            Box(modifier = Modifier.fillMaxWidth()
+                .padding(10.dp)
             ) {
-                Text("+")
+                ElevatedButton(
+                    onClick = { createPlaylist = true },
+                    modifier = Modifier.align(Alignment.BottomEnd)
+                ) {
+                    Text("+")
+                }
             }
         }
         if (createPlaylist) {
@@ -352,7 +412,7 @@ fun MP3(modifier: Modifier = Modifier) {
                 confirmButton = {
                     Button(onClick = {
                         if (newItem.text.isNotBlank()) {
-                            itemList.add(
+                            playlistOfPlaylist.add(
                                 Playlist(
                                     id = nextPlaylistId,
                                     name = newItem.text,
