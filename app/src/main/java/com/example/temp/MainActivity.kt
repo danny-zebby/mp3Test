@@ -261,11 +261,13 @@ fun MP3(modifier: Modifier = Modifier) {
             SingleChoiceSegmentedButtonRow(
                 modifier = Modifier.fillMaxWidth()
             ) {
+                val count = 3
+                val theShape = RoundedCornerShape(0.dp)
                 // Custom (Draggable)
                 SegmentedButton(
                     selected = sortIndex == 0,
                     onClick = { sortIndex = 0 },
-                    shape = SegmentedButtonDefaults.itemShape(index = 0, count = 3)
+                    shape = SegmentedButtonDefaults.itemShape(index = 0, count, baseShape = theShape)
                 ) { Text("Custom") }
 
                 // Alphabetical (A-Z & Z-A)
@@ -276,7 +278,7 @@ fun MP3(modifier: Modifier = Modifier) {
                         else sortIndex = 1
                         playlistOfPlaylist.sortedBy { playlistOfPlaylist[0].name}
                     },
-                    shape = SegmentedButtonDefaults.itemShape(index = 1, count = 3)
+                    shape = SegmentedButtonDefaults.itemShape(index = 1, count, baseShape = theShape)
                 ) { Text(if (sortIndex == 1) if (isAlphaAsc) "A-Z" else "Z-A" else "Alphabetical") }
 
                 // Label Grouping
@@ -286,7 +288,7 @@ fun MP3(modifier: Modifier = Modifier) {
                         sortIndex = 2
                         showColorMenu = true
                         },
-                    shape = SegmentedButtonDefaults.itemShape(index = 2, count = 3),
+                    shape = SegmentedButtonDefaults.itemShape(index = 2, count, baseShape = theShape),
                     label = {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text("Label")
