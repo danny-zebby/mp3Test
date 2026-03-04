@@ -32,9 +32,13 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ElevatedButton
+import androidx.compose.material3.MultiChoiceSegmentedButtonRow
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -89,25 +93,27 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun MP3(modifier: Modifier = Modifier) {
-
+    // Values use to ceate playlist
     val itemList = remember { mutableStateListOf(Playlist(id = 1, name = "All Songs",labels = listOf(Color.Transparent)))}
     var nextPlaylistId by remember { mutableStateOf(2) }
     var newItem by remember { mutableStateOf(TextFieldValue()) }
     var selectedColors by remember { mutableStateOf(listOf<Color>()) }
     var createPlaylist by remember { mutableStateOf(false) }
     var playlistLabel by remember { mutableStateOf(false) }
+    // Values used to create color sorting
     val colorNames = linkedMapOf(Color.Red to "Red", Color.Yellow to "Yellow", Color.Green to "Green", Color.Cyan to "Cyan", Color.Blue to "Blue", Color.Magenta to "Magenta", Color.White to "White", Color.Gray to "Gray", Color.Black to "Black")
-
     val colorOrder = colorNames.keys
         .withIndex()
         .associate { it.value to it.index }
-
     fun sortColors(colors: List<Color>): List<Color> {
         return colors.sortedBy{ color ->
             colorOrder[color] ?:
             Int.MAX_VALUE
         }
     }
+    // Values used to create three playlist sorts
+    var sortIndex by remember { mutableStateOf(0) } // 0: Custom, 1: Alpha, 2: Label
+    var isAlphaAsc by remember { mutableStateOf(true) }
 
     Column(
         modifier = modifier.fillMaxSize()
@@ -217,7 +223,7 @@ fun MP3(modifier: Modifier = Modifier) {
         // Playlist Area
         Box(
             modifier = Modifier
-                .fillMaxWidth()
+                .fillMaxSize()
                 .weight(1f)
                 .padding(16.dp)
                 .clip(RoundedCornerShape(12.dp))
@@ -227,6 +233,34 @@ fun MP3(modifier: Modifier = Modifier) {
                     shape = RoundedCornerShape(12.dp)
                 )
         ) {
+            Column(modifier = Modifier.fillMaxWidth()
+                .align(Alignment.TopCenter )){
+                SingleChoiceSegmentedButtonRow(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                ) {
+                    // Custom (Draggable)
+                    SegmentedButton(
+                        selected = sortIndex == 0,
+                        onClick = {sortIndex = 0},
+                        shape = SegmentedButtonDefaults.itemShape(index = 0, count = 3)
+                    ){Text("Custom")}
+                    // Alphabetical (A-Z & Z-A)
+                    SegmentedButton(
+                        selected = 1 == sortIndex,
+                        onClick = {if(sortIndex == 1){
+                            isAlphaAsc = !isAlphaAsc
+                        } else{ sortIndex = 1} },
+                        shape = SegmentedButtonDefaults.itemShape(index = 1, count = 3),
+                    ){Text(if (sortIndex == 1) (if (isAlphaAsc) "A-Z" else "Z-A") else "Alphabetical")}
+                    // Label Grouping
+                    SegmentedButton(
+                        selected = 2 == sortIndex,
+                        onClick = {sortIndex = 2},
+                        shape = SegmentedButtonDefaults.itemShape(index = 2, count = 3),
+                    ){Text("Label")}
+                }
+            }
             val reorderState = rememberReorderableLazyListState(
                 onMove = { from, to ->
                     // Prevent "All Songs" from moving
@@ -236,10 +270,11 @@ fun MP3(modifier: Modifier = Modifier) {
             )
             LazyColumn(
                 state = reorderState.listState,
+                contentPadding = PaddingValues(top = 52.dp),
                 modifier = Modifier
-                    .fillMaxSize()
+                    .fillMaxWidth()
                     .reorderable(reorderState)
-            ) {
+                    ) {
                 items(
                     items = itemList,
                     key = { it.id }
@@ -348,10 +383,8 @@ fun MP3(modifier: Modifier = Modifier) {
                                 shape = RectangleShape,
                                 colors = ButtonDefaults.buttonColors(containerColor = Color.DarkGray)
                             ) {
-                                if (playlistLabel)
-                                    Text("Label Color V")
-                                else
-                                    Text("Label Color ^")
+                                if (playlistLabel) Text("Label Color V")
+                                else Text("Label Color ^")
                             }
                             Spacer(modifier = Modifier.weight(1f))
                             selectedColors = sortColors(selectedColors)

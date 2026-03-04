@@ -128,108 +128,6 @@ fun MP3(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier.fillMaxSize()
     ) {
-        // First row: Using weight ensures the buttons fit any screen width
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Button(
-                onClick = { },
-                modifier = Modifier.size(60.dp),
-                contentPadding = PaddingValues(0.dp),
-                shape = RectangleShape,
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent)
-            ) {
-                Image(
-                    painter = painterResource(R.drawable.home),
-                    contentDescription = "Home",
-                    modifier = Modifier.size(60.dp) // Scaled down for better fit
-                )
-            }
-            Button(
-                onClick = { },
-                modifier = Modifier.weight(1f).height(60.dp) // weight(1f) fills remaining space
-            ) {
-                Text("Music Play Here", textAlign = TextAlign.Center)
-            }
-            OutlinedButton(
-                onClick = { },
-                modifier = Modifier.size(60.dp),
-                border = BorderStroke(2.dp, Color.Black),
-                contentPadding = PaddingValues(0.dp)
-            ) {
-                Image(
-                    painter = painterResource(R.drawable.profile),
-                    contentDescription = "Profile",
-                    modifier = Modifier.padding(4.dp)
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(10.dp))
-
-        // Navigation Row: Using HorizontalPager to swipe in groups of three
-        val navButtons = listOf(
-            "View Songs", "Drive Mode", "Podcast Mode",
-            "Button 4", "Button 5", "Button 6",
-            "Button 7", "Button 8", "Button 9")
-        val pagerState = rememberPagerState(pageCount = { (navButtons.size + 2) / 3 })
-
-        HorizontalPager(
-            state = pagerState,
-            modifier = Modifier.fillMaxWidth()
-        ) { page ->
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                val startIndex = page * 3
-                for (i in 0 until 3) {
-                    val index = startIndex + i
-                    if (index < navButtons.size) {
-                        Button(
-                            onClick = {},
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(125.dp)
-                        ) {
-                            Text(
-                                text = navButtons[index],
-                                textAlign = TextAlign.Center
-                            )
-                        }
-                    } else {
-                        // Spacer to maintain layout consistency for incomplete pages
-                        Spacer(modifier = Modifier.weight(1f))
-                    }
-                }
-            }
-        }
-
-        // Pager Indicator
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 8.dp),
-            horizontalArrangement = Arrangement.Center
-        ) {
-            repeat(pagerState.pageCount) { iteration ->
-                val color = if (pagerState.currentPage == iteration) Color.DarkGray else Color.LightGray
-                Box(
-                    modifier = Modifier
-                        .padding(4.dp)
-                        .clip(CircleShape)
-                        .background(color)
-                        .size(8.dp)
-                )
-            }
-        }
-
         // Playlist Area
         Box(
             modifier = Modifier
@@ -428,24 +326,6 @@ fun MP3(modifier: Modifier = Modifier) {
                     }
                 }
             )
-        }
-
-        // Bottom Controls: Each button takes 1/5th of the width
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            val controlModifier = Modifier.weight(1f).height(100.dp)
-            val symbols = listOf("<<", "<", "||", ">", ">>")
-            symbols.forEach { symbol ->
-                Button(
-                    onClick = {},
-                    shape = RectangleShape,
-                    modifier = controlModifier
-                ) {
-                    Text(text = symbol)
-                }
-            }
         }
     }
 }
