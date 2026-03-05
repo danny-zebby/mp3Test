@@ -49,6 +49,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -56,12 +57,55 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.compose.AppTheme
+import com.example.compose.primaryContainerLight
+import com.example.compose.primaryLight
+import androidx.core.view.WindowCompat
+import com.example.compose.onPrimaryLight
 import com.example.temp.ui.theme.TempTheme
 import org.burnoutcrew.reorderable.ReorderableItem
 import org.burnoutcrew.reorderable.detectReorder
 import org.burnoutcrew.reorderable.rememberReorderableLazyListState
 import org.burnoutcrew.reorderable.reorderable
 import kotlin.collections.sortedBy
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.SideEffect
+import com.example.compose.onPrimaryContainerLight
+
+
+class MainActivity : ComponentActivity() {
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        setContent {
+            AppTheme {
+
+                val window = this.window
+                val background = Color(0xFFE0E0FF)
+                val bottomColor = Color(0xFF565992)
+
+                SideEffect {
+                    window.statusBarColor = background.toArgb()
+                    window.navigationBarColor = bottomColor.toArgb()
+                }
+
+                Scaffold(
+                    modifier = Modifier.fillMaxSize(),
+                    containerColor = background
+                ) { innerPadding ->
+
+                    MP3(
+                        modifier = Modifier
+                            .padding(innerPadding)
+                            .background(background)
+                    )
+                }
+            }
+        }
+    }
+}
+
 
 data class Song(
     val title: String,
@@ -73,21 +117,6 @@ data class Playlist(
     val labels: List<Color> = emptyList(),
     val songs: List<Song> = emptyList()
 )
-
-class MainActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        setContent {
-            TempTheme {
-                // Pass the inner padding to the MP3 composable to handle system bars
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    MP3(modifier = Modifier.padding(innerPadding))
-                }
-            }
-        }
-    }
-}
 
 @Composable
 fun MP3(modifier: Modifier = Modifier) {
@@ -140,7 +169,9 @@ fun MP3(modifier: Modifier = Modifier) {
     }
     //The whole page
     Column(
-        modifier = modifier.fillMaxSize()
+        modifier = modifier
+            .fillMaxSize()
+            .background(Color(0xFFE0E0FF))
     ) {
         // First row: Home button, Music Playing, and Profile page
         Row(
@@ -174,7 +205,9 @@ fun MP3(modifier: Modifier = Modifier) {
             // Profile Button
             OutlinedButton(
                 onClick = { },
-                modifier = Modifier.size(60.dp),
+                modifier = Modifier.size(60.dp)
+                        .clip(RoundedCornerShape(60.dp))
+                        .background(onPrimaryLight),
                 border = BorderStroke(2.dp, Color.Black),
                 contentPadding = PaddingValues(0.dp)
             ) {
@@ -260,6 +293,7 @@ fun MP3(modifier: Modifier = Modifier) {
             // Top: Segmented buttons
             SingleChoiceSegmentedButtonRow(
                 modifier = Modifier.fillMaxWidth()
+                    .background(onPrimaryLight)
             ) {
                 val count = 3
                 val theShape = RoundedCornerShape(0.dp)
@@ -322,7 +356,7 @@ fun MP3(modifier: Modifier = Modifier) {
                 )
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            // Spacer(modifier = Modifier.height(8.dp) .background(primaryContainerLight))
 
             // Middle: LazyColumn for playlists
             val reorderState = rememberReorderableLazyListState(
@@ -334,8 +368,9 @@ fun MP3(modifier: Modifier = Modifier) {
             )
             LazyColumn(
                 state = reorderState.listState,
-                contentPadding = PaddingValues(top = 0.dp),
+                contentPadding = PaddingValues(top = 8.dp),
                 modifier = Modifier
+                    .background(onPrimaryLight)
                     .fillMaxWidth()
                     .weight(1f)
                     .reorderable(reorderState),
@@ -393,11 +428,12 @@ fun MP3(modifier: Modifier = Modifier) {
             }
             // Floating + button: button selected to create a new playlist
             Box(modifier = Modifier.fillMaxWidth()
-                .padding(10.dp)
+                .background(onPrimaryLight)
             ) {
                 ElevatedButton(
                     onClick = { createPlaylist = true },
                     modifier = Modifier.align(Alignment.BottomEnd)
+                        .padding(10.dp)
                 ) {
                     Text("+")
                 }
@@ -508,7 +544,7 @@ fun MP3(modifier: Modifier = Modifier) {
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun MP3Preview() {
-    TempTheme {
+    AppTheme {
         MP3()
     }
 }
