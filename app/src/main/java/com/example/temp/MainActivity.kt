@@ -3,9 +3,6 @@ package com.example.temp
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -58,44 +55,34 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.compose.AppTheme
-import com.example.compose.primaryContainerLight
-import com.example.compose.primaryLight
-import androidx.core.view.WindowCompat
 import com.example.compose.onPrimaryLight
-import com.example.temp.ui.theme.TempTheme
 import org.burnoutcrew.reorderable.ReorderableItem
 import org.burnoutcrew.reorderable.detectReorder
 import org.burnoutcrew.reorderable.rememberReorderableLazyListState
 import org.burnoutcrew.reorderable.reorderable
 import kotlin.collections.sortedBy
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.SideEffect
-import com.example.compose.onPrimaryContainerLight
-
+import com.example.compose.primaryContainerLight
 
 class MainActivity : ComponentActivity() {
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         setContent {
             AppTheme {
-
                 val window = this.window
                 val background = Color(0xFFE0E0FF)
-                val bottomColor = Color(0xFF565992)
+                val navColor = Color(0xFF272b60)
 
                 SideEffect {
                     window.statusBarColor = background.toArgb()
-                    window.navigationBarColor = bottomColor.toArgb()
+                    window.navigationBarColor = navColor.toArgb()
                 }
-
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     containerColor = background
                 ) { innerPadding ->
 
-                    MP3(
+                    MP3Home(
                         modifier = Modifier
                             .padding(innerPadding)
                             .background(background)
@@ -105,7 +92,6 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-
 
 data class Song(
     val title: String,
@@ -119,7 +105,7 @@ data class Playlist(
 )
 
 @Composable
-fun MP3(modifier: Modifier = Modifier) {
+fun MP3Home(modifier: Modifier = Modifier) {
     // Values use to create playlist
     val playlistOfPlaylist = remember { mutableStateListOf(Playlist(id = 1, name = "All Songs"))}  // The main list
     var nextPlaylistId by remember { mutableStateOf(2) }                                    // This increments the playlist id
@@ -167,58 +153,17 @@ fun MP3(modifier: Modifier = Modifier) {
             else -> playlistOfPlaylist.toList()
         }
     }
+
     //The whole page
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(Color(0xFFE0E0FF))
+            .background(primaryContainerLight)
     ) {
         // First row: Home button, Music Playing, and Profile page
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Home Button
-            Button(
-                onClick = { },
-                modifier = Modifier.size(60.dp),
-                contentPadding = PaddingValues(0.dp),
-                shape = RectangleShape,
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent)
-            ) {
-                Image(
-                    painter = painterResource(R.drawable.home),
-                    contentDescription = "Home",
-                    modifier = Modifier.size(60.dp)
-                )
-            }
-            // Music Playing
-            Button(
-                onClick = { },
-                modifier = Modifier.weight(1f).height(60.dp) // weight(1f) fills remaining space
-            ) {
-                Text("Music Play Here", textAlign = TextAlign.Center)
-            }
-            // Profile Button
-            OutlinedButton(
-                onClick = { },
-                modifier = Modifier.size(60.dp)
-                        .clip(RoundedCornerShape(60.dp))
-                        .background(onPrimaryLight),
-                border = BorderStroke(2.dp, Color.Black),
-                contentPadding = PaddingValues(0.dp)
-            ) {
-                Image(
-                    painter = painterResource(R.drawable.profile),
-                    contentDescription = "Profile",
-                    modifier = Modifier.padding(4.dp)
-                )
-            }
-        }
+        HomeProfilePart()
         Spacer(modifier = Modifier.height(10.dp))
+
         // Navigation Row: Using HorizontalPager to swipe in groups of three
         val navButtons = listOf(
             "View Songs", "Drive Mode", "Podcast Mode",
@@ -355,9 +300,6 @@ fun MP3(modifier: Modifier = Modifier) {
                     }
                 )
             }
-
-            // Spacer(modifier = Modifier.height(8.dp) .background(primaryContainerLight))
-
             // Middle: LazyColumn for playlists
             val reorderState = rememberReorderableLazyListState(
                 onMove = { from, to ->
@@ -521,22 +463,7 @@ fun MP3(modifier: Modifier = Modifier) {
         }
 
         // Bottom Controls: Each button takes 1/5th of the width
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            val controlModifier = Modifier.weight(1f).height(100.dp)
-            val symbols = listOf("<<", "<", "||", ">", ">>")
-            symbols.forEach { symbol ->
-                Button(
-                    onClick = {},
-                    shape = RectangleShape,
-                    modifier = controlModifier
-                ) {
-                    Text(text = symbol)
-                }
-            }
-        }
+        BottomButtons()
     }
 }
 
@@ -545,6 +472,6 @@ fun MP3(modifier: Modifier = Modifier) {
 @Composable
 fun MP3Preview() {
     AppTheme {
-        MP3()
+        MP3Home()
     }
 }
