@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -30,10 +29,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.compose.AppTheme
+import com.example.compose.inversePrimaryLight
 import com.example.compose.onPrimaryLight
 
 @Composable
@@ -42,6 +41,7 @@ fun HomeProfilePart(modifier: Modifier = Modifier) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .background(inversePrimaryLight)
             .padding(8.dp),
         horizontalArrangement = Arrangement.spacedBy(32.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -65,11 +65,19 @@ fun HomeProfilePart(modifier: Modifier = Modifier) {
             modifier = Modifier.weight(1f).height(60.dp) // weight(1f) fills remaining space
         ) {
             var sliderPosition by remember { mutableFloatStateOf(0f) }
+
             Slider(
                 value = sliderPosition,
                 onValueChange = { sliderPosition = it }
             )
-            Text(text = sliderPosition.toString())
+            Text(
+                text = String.format("%.2f", sliderPosition),
+                modifier = Modifier.align(Alignment.BottomStart)
+            )
+            Text(
+                text = String.format("%.2f", (1-sliderPosition)),
+                modifier = Modifier.align(Alignment.BottomEnd)
+            )
         }
         // Profile Button
         OutlinedButton(
@@ -87,6 +95,11 @@ fun HomeProfilePart(modifier: Modifier = Modifier) {
             )
         }
     }
+    HorizontalDivider(
+        modifier = Modifier.fillMaxWidth(),
+        thickness = 3.dp,
+        color = Color.Black
+    )
 }
 
 //Preview App

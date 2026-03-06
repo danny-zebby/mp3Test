@@ -28,7 +28,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ElevatedButton
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButton
@@ -47,7 +46,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.input.TextFieldValue
@@ -70,22 +68,24 @@ class MainActivity : ComponentActivity() {
         setContent {
             AppTheme {
                 val window = this.window
+
                 val background = Color(0xFFE0E0FF)
+                val statColor = Color(0xFFBFC2FF)
                 val navColor = Color(0xFF272b60)
 
                 SideEffect {
-                    window.statusBarColor = background.toArgb()
+                    window.statusBarColor = statColor.toArgb()
                     window.navigationBarColor = navColor.toArgb()
                 }
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
-                    containerColor = background
+                    containerColor = statColor
                 ) { innerPadding ->
 
-                    MP3Home(
+                    PlaylistPage(
                         modifier = Modifier
                             .padding(innerPadding)
-                            .background(background)
+                            .background(statColor)
                     )
                 }
             }
@@ -94,6 +94,7 @@ class MainActivity : ComponentActivity() {
 }
 
 data class Song(
+    val id: Int,
     val title: String,
 )
 
@@ -115,7 +116,7 @@ fun MP3Home(modifier: Modifier = Modifier) {
     var playlistLabel by remember { mutableStateOf(false) }                                 // Tigger for label dropdown (create)
     // Values used to create color sorting
     val colorNames = linkedMapOf(Color.Red to "Red",    // Used to make colorOrder
-        Color.Yellow to "Yellow", Color.Green to "Green", Color.Cyan to "Cyan", Color.Blue to "Blue", Color.Magenta to "Magenta", Color.White to "White", Color.Gray to "Gray", Color.Black to "Black")
+        Color.Yellow to "Yellow", Color.Green to "Green", Color.Cyan to "Cyan", Color.Blue to "Blue", Color.Magenta to "Magenta")
     val colorOrder = colorNames.keys                    // Used to make sortColor
         .withIndex()
         .associate { it.value to it.index }
@@ -131,12 +132,10 @@ fun MP3Home(modifier: Modifier = Modifier) {
     var labelFilterColor by remember { mutableStateOf(Color.Transparent) }  // Color to sort by
     var showColorMenu by remember { mutableStateOf(false) }                 // Label sort trigger
     val colors = listOf(                                                           // Color to make dropdown easier
-        Color.Red, Color.Blue, Color.Green,
-        Color.Cyan, Color.Gray, Color.Magenta, Color.Yellow,
-        Color.White, Color.Black
+        Color.Red, Color.Yellow, Color.Green, Color.Cyan, Color.Blue, Color.Magenta,
     )
     val namesOfColors = listOf(                                                     // names of colors to make dropdown easier
-        "Red", "Blue", "Green", "Cyan", "Gray", "Magenta", "Yellow", "White", "Black"
+        "Red", "Yellow", "Green", "Cyan", "Blue", "Magenta",
     )
     // How Playlist are sorted
     val displayList = remember(playlistOfPlaylist.toList(), sortIndex, isAlphaAsc, labelFilterColor) {
@@ -339,8 +338,9 @@ fun MP3Home(modifier: Modifier = Modifier) {
                             ) {
                                 Text(
                                     text = playlist.name,
+                                    maxLines = 1,
                                     overflow = TextOverflow.Ellipsis,
-                                    modifier = Modifier.weight(1f)
+                                    modifier = Modifier.width(250.dp)
                                 )
                                 // This adds the labels and draggables
                                 if (playlist.labels.isNotEmpty()) { // Checking if playlist has labels
@@ -348,7 +348,7 @@ fun MP3Home(modifier: Modifier = Modifier) {
                                         playlist.labels.forEach { color ->
                                             Box(
                                                 modifier = Modifier
-                                                    .size(15.dp)
+                                                    .size(20.dp)
                                                     .background(color)
                                                     .border(1.dp, Color.Black)
                                             )
@@ -430,7 +430,7 @@ fun MP3Home(modifier: Modifier = Modifier) {
                             for(i in selectedColors.indices){
                                 Box(
                                     modifier = Modifier
-                                        .size(24.dp)
+                                        .size(35.dp)
                                         .background(selectedColors[i])
                                         .border(1.dp, Color.Black)
 
@@ -452,10 +452,7 @@ fun MP3Home(modifier: Modifier = Modifier) {
                                 DropdownMenuItem(text = { Text("Cyan") }, onClick = { if(!selectedColors.contains(Color.Cyan)) {selectedColors = selectedColors +  Color.Cyan} else {selectedColors = selectedColors - Color.Cyan}; playlistLabel = false})
                                 DropdownMenuItem(text = { Text("Blue") }, onClick = { if(!selectedColors.contains(Color.Blue)) {selectedColors = selectedColors +  Color.Blue} else {selectedColors = selectedColors - Color.Blue}; playlistLabel = false})
                                 DropdownMenuItem(text = { Text("Magenta") }, onClick = { if(!selectedColors.contains(Color.Magenta)) {selectedColors = selectedColors +  Color.Magenta} else {selectedColors = selectedColors - Color.Magenta}; playlistLabel = false})
-                                DropdownMenuItem(text = { Text("White") }, onClick = { if(!selectedColors.contains(Color.White)) {selectedColors = selectedColors +  Color.White} else {selectedColors = selectedColors - Color.White}; playlistLabel = false})
-                                DropdownMenuItem(text = { Text("Gray") }, onClick = { if(!selectedColors.contains(Color.Gray)) {selectedColors = selectedColors +  Color.Gray} else {selectedColors = selectedColors - Color.Gray}; playlistLabel = false})
-                                DropdownMenuItem(text = { Text("Black") }, onClick = { if(!selectedColors.contains(Color.Black)) {selectedColors = selectedColors +  Color.Black} else {selectedColors = selectedColors - Color.Black}; playlistLabel = false})
-                            }
+                                }
                         }
                     }
                 }

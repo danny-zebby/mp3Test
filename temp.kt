@@ -1,339 +1,69 @@
-package com.example.temp
-
-import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ElevatedButton
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MultiChoiceSegmentedButtonRow
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import com.example.temp.ui.theme.TempTheme
-
-data class Song(
-    val title: String,
-)
-
-data class Playlist(
-    val name: String,
-    val label: Color,
-    val songs: List<Song> = emptyList()
-)
-
-class MainActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        setContent {
-            TempTheme {
-                // Pass the inner padding to the MP3 composable to handle system bars
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    MP3(modifier = Modifier.padding(innerPadding))
-                }
-            }
-        }
-    }
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MP3(modifier: Modifier = Modifier) {
+fun CustomizableSearchBar(
+    query: String,
+    onQueryChange: (String) -> Unit,
+    onSearch: (String) -> Unit,
+    searchResults: List<String>,
+    onResultClick: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    // Customization options
+    placeholder: @Composable () -> Unit = { Text("Search") },
+    leadingIcon: @Composable (() -> Unit)? = { Icon(Icons.Default.Search, contentDescription = "Search") },
+    trailingIcon: @Composable (() -> Unit)? = null,
+    supportingContent: (@Composable (String) -> Unit)? = null,
+    leadingContent: (@Composable () -> Unit)? = null,
+) {
+    // Track expanded state of search bar
+    var expanded by rememberSaveable { mutableStateOf(false) }
 
-    val itemList = remember { mutableStateListOf<Playlist>() }
-    var newItem by remember { mutableStateOf(TextFieldValue()) }
-    var selectedColor by remember { mutableStateOf(Color.Transparent) }
-    var createPlaylist by remember { mutableStateOf(false) }
-    var playlistLabel by remember { mutableStateOf(false) }
-    val allSongsPlaylist = remember { Playlist("All Songs", Color.Transparent) }
-
-    // Sorting state
-    var sortIndex by remember { mutableStateOf(0) } // 0: Custom, 1: Alpha, 2: Label
-    var isAlphaAsc by remember { mutableStateOf(true) }
-    var labelFilterColor by remember { mutableStateOf(Color.Transparent) }
-    var showColorMenu by remember { mutableStateOf(false) }
-
-    val colors = listOf(
-        Color.Transparent, Color.Red, Color.Blue, Color.Green,
-        Color.Cyan, Color.Gray, Color.Magenta, Color.Yellow,
-        Color.White, Color.Black
-    )
-    val colorNames = listOf(
-        "None", "Red", "Blue", "Green", "Cyan", "Gray", "Magenta", "Yellow", "White", "Black"
-    )
-
-    // Derived list for display based on sorting selection
-    val displayList = remember(itemList.toList(), sortIndex, isAlphaAsc, labelFilterColor) {
-        when (sortIndex) {
-            0 -> itemList.toList() // Custom (original order)
-            1 -> if (isAlphaAsc) itemList.sortedBy { it.name } else itemList.sortedByDescending { it.name }
-            2 -> {
-                // Group by label, placing selected color at top
-                itemList.sortedWith(
-                    compareByDescending<Playlist> { it.label == labelFilterColor }
-                        .thenBy { it.label.toString() }
-                        .thenBy { it.name }
-                )
-            }
-            else -> itemList.toList()
-        }
-    }
-
-    Column(
-        modifier = modifier.fillMaxSize()
+    Box(
+        modifier
+            .fillMaxSize()
+            .semantics { isTraversalGroup = true }
     ) {
-        // Playlist Area
-        Box(
+        SearchBar(
             modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f)
-                .padding(16.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .border(
-                    width = 1.dp,
-                    color = Color.Black,
-                    shape = RoundedCornerShape(12.dp)
+                .align(Alignment.TopCenter)
+                .semantics { traversalIndex = 0f },
+            inputField = {
+                // Customizable input field implementation
+                SearchBarDefaults.InputField(
+                    query = query,
+                    onQueryChange = onQueryChange,
+                    onSearch = {
+                        onSearch(query)
+                        expanded = false
+                    },
+                    expanded = expanded,
+                    onExpandedChange = { expanded = it },
+                    placeholder = placeholder,
+                    leadingIcon = leadingIcon,
+                    trailingIcon = trailingIcon
                 )
+            },
+            expanded = expanded,
+            onExpandedChange = { expanded = it },
         ) {
-            Column(modifier = Modifier.fillMaxSize()) {
-                // Sorting Header with MultiChoiceSegmentedButtonRow
-                MultiChoiceSegmentedButtonRow(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp)
-                ) {
-                    // Custom Sorting
-                    SegmentedButton(
-                        checked = sortIndex == 0,
-                        onCheckedChange = { if (it) sortIndex = 0 },
-                        shape = SegmentedButtonDefaults.itemShape(index = 0, count = 3),
-                        label = { Text("Custom") }
+            // Show search results in a lazy column for better performance
+            LazyColumn {
+                items(count = searchResults.size) { index ->
+                    val resultText = searchResults[index]
+                    ListItem(
+                        headlineContent = { Text(resultText) },
+                        supportingContent = supportingContent?.let { { it(resultText) } },
+                        leadingContent = leadingContent,
+                        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                        modifier = Modifier
+                            .clickable {
+                                onResultClick(resultText)
+                                expanded = false
+                            }
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 4.dp)
                     )
-                    // Alphabetical Sorting
-                    SegmentedButton(
-                        checked = sortIndex == 1,
-                        onCheckedChange = {
-                            if (it) {
-                                if (sortIndex == 1) isAlphaAsc = !isAlphaAsc
-                                sortIndex = 1
-                            }
-                        },
-                        shape = SegmentedButtonDefaults.itemShape(index = 1, count = 3),
-                        label = { Text(if (sortIndex == 1) (if (isAlphaAsc) "A-Z" else "Z-A") else "Alpha") }
-                    )
-                    // Label Grouping
-                    SegmentedButton(
-                        checked = sortIndex == 2,
-                        onCheckedChange = {
-                            if (it) {
-                                sortIndex = 2
-                                showColorMenu = true
-                            }
-                        },
-                        shape = SegmentedButtonDefaults.itemShape(index = 2, count = 3),
-                        label = {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text("Label")
-                                if (sortIndex == 2 && labelFilterColor != Color.Transparent) {
-                                    Spacer(Modifier.width(4.dp))
-                                    Box(Modifier.size(12.dp).background(labelFilterColor).border(0.5.dp, Color.Black))
-                                }
-                                DropdownMenu(
-                                    expanded = showColorMenu,
-                                    onDismissRequest = { showColorMenu = false }
-                                ) {
-                                    colors.forEachIndexed { index, color ->
-                                        DropdownMenuItem(
-                                            text = {
-                                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                                    Box(Modifier.size(16.dp).background(color).border(1.dp, Color.Black))
-                                                    Spacer(Modifier.width(8.dp))
-                                                    Text(colorNames[index])
-                                                }
-                                            },
-                                            onClick = {
-                                                labelFilterColor = color
-                                                showColorMenu = false
-                                            }
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    )
-                }
-
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    item {
-                        Button(
-                            onClick = {},
-                            modifier = Modifier.fillMaxWidth() .padding(horizontal = 5.dp),
-                            contentPadding = PaddingValues(0.dp)
-                        ) {
-                            Text(text = allSongsPlaylist.name,
-                                modifier = Modifier.fillMaxWidth(),
-                                textAlign = TextAlign.Center)
-                        }
-                    }
-                    items(displayList) { playlist ->
-                        Button(
-                            onClick = {},
-                            modifier = Modifier.fillMaxWidth() .padding(horizontal = 5.dp),
-                            contentPadding = PaddingValues(start= 10.dp, end = 10.dp)
-                        ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Text(text = playlist.name)
-                                if(playlist.label != Color.Transparent) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(20.dp)
-                                            .background(playlist.label)
-                                            .border(1.dp, Color.Black)
-                                    ) {}
-                                }
-                            }
-                        }
-                    }
                 }
             }
-
-            ElevatedButton(
-                onClick = { createPlaylist = true },
-                modifier = Modifier.align(Alignment.BottomEnd) .padding(5.dp)
-            ) {
-                Text("+")
-            }
         }
-
-        if (createPlaylist) {
-            androidx.compose.material3.AlertDialog(
-                onDismissRequest = { createPlaylist = false },
-                confirmButton = {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally)
-                    ) {
-                        Button(onClick = { createPlaylist = false }) {
-                            Text("Cancel")
-                        }
-                        Button(onClick = {
-                            if (newItem.text.isNotBlank()) {
-                                itemList.add(Playlist(name = newItem.text, label = selectedColor))
-                                newItem = TextFieldValue("")
-                            }
-                            createPlaylist = false
-                        }) {
-                            Text("Add")
-                        }
-                    }
-                },
-                dismissButton = null,
-                text = {
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        OutlinedTextField(
-                            value = newItem,
-                            onValueChange = { newItem = it },
-                            label = { Text("Playlist Name") }
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Box {
-                                Button(
-                                    onClick = { playlistLabel = true },
-                                    shape = RectangleShape,
-                                    colors = ButtonDefaults.buttonColors(containerColor = Color.LightGray)
-                                ) {
-                                    Text(if (playlistLabel) "Label Color V" else "Label Color ^")
-                                }
-                                DropdownMenu(expanded = playlistLabel, onDismissRequest = { playlistLabel = false }) {
-                                    DropdownMenuItem(text = { Text("None") }, onClick = { selectedColor = Color.Transparent; playlistLabel = false })
-                                    DropdownMenuItem(text = { Text("Red") }, onClick = { selectedColor = Color.Red; playlistLabel = false })
-                                    DropdownMenuItem(text = { Text("Blue") }, onClick = { selectedColor = Color.Blue; playlistLabel = false })
-                                    DropdownMenuItem(text = { Text("Green") }, onClick = { selectedColor = Color.Green; playlistLabel = false })
-                                    DropdownMenuItem(text = { Text("Cyan") }, onClick = { selectedColor = Color.Cyan; playlistLabel = false })
-                                    DropdownMenuItem(text = { Text("Gray") }, onClick = { selectedColor = Color.Gray; playlistLabel = false })
-                                    DropdownMenuItem(text = { Text("Magenta") }, onClick = { selectedColor = Color.Magenta; playlistLabel = false })
-                                    DropdownMenuItem(text = { Text("Yellow") }, onClick = { selectedColor = Color.Yellow; playlistLabel = false })
-                                    DropdownMenuItem(text = { Text("White") }, onClick = { selectedColor = Color.White; playlistLabel = false })
-                                    DropdownMenuItem(text = { Text("Black") }, onClick = { selectedColor = Color.Black; playlistLabel = false })
-                                }
-                            }
-                            Box(
-                                modifier = Modifier
-                                    .size(40.dp)
-                                    .background(selectedColor)
-                                    .border(1.dp, Color.Black)
-                            )
-                        }
-                    }
-                }
-            )
-        }
-    }
-}
-
-@Preview(showBackground = true, showSystemUi = true) // Added showSystemUi to match phone
-@Composable
-fun MP3Preview() {
-    TempTheme {
-        MP3()
     }
 }
