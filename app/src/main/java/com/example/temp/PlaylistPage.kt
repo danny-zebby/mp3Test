@@ -3,7 +3,6 @@ package com.example.temp
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.gestures.snapping.SnapPosition
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -19,9 +18,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -39,7 +35,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
@@ -55,23 +50,21 @@ import org.burnoutcrew.reorderable.rememberReorderableLazyListState
 import org.burnoutcrew.reorderable.reorderable
 
 @Composable
-fun PlaylistPage(modifier: Modifier = Modifier) {
+fun PlaylistPage(
+    playlist: Playlist,
+    onHomeClick: (Playlist) -> Unit = {},
+    modifier: Modifier = Modifier
+) {
     // Values use to create playlist
-    val AllSongs = remember { mutableStateListOf(Song(1, "Creep"), Song(2, "Candy") , Song(3, "Amber"), Song(4, "311"), Song(5, "We can be heros"))}  // The main list
-    val playlistOfSongs = remember { mutableStateListOf(Song(0,""))}  // The main list
-    var nextPlaylistId by remember { mutableStateOf(1) }                                    // This increments the playlist id
-    var newItem by remember { mutableStateOf(TextFieldValue()) }                            // This stores text field text
-    var createPlaylist by remember { mutableStateOf(false) }                                // Tigger for create playlist
+    val playlistOfSongs = remember { mutableStateListOf<Song>().apply { addAll(playlist.songs) } }
+    var nextSongId by remember { mutableStateOf((playlist.songs.maxOfOrNull { it.id } ?: 0) + 1) }
+    var newItem by remember { mutableStateOf(TextFieldValue()) }
+    var createSong by remember { mutableStateOf(false) }
+    
     // Values used to create three playlist sorts
-    var sortIndex by remember { mutableStateOf(0) }                         // 0: Custom, 1: Alpha, 2: Label
+    var sortIndex by remember { mutableStateOf(0) }                         // 0: Custom, 1: Alpha
     var isAlphaAsc by remember { mutableStateOf(true) }                     // Alphabetical sort trigger
-    val colors = listOf(                                                           // Color to make dropdown easier
-        Color.Red, Color.Yellow, Color.Green, Color.Cyan, Color.Blue, Color.Magenta,
-    )
-    val namesOfColors = listOf(                                                     // names of colors to make dropdown easier
-        "Red", "Yellow", "Green", "Cyan", "Blue", "Magenta",
-    )
-    val labelRows = listOf(1,2)
+
     // How Playlist are sorted
     val displayList = remember(playlistOfSongs.toList(), sortIndex, isAlphaAsc) {
         when (sortIndex) {
@@ -88,29 +81,42 @@ fun PlaylistPage(modifier: Modifier = Modifier) {
             .background(primaryContainerLight)
     ) {
         //Home
-        HomeProfilePart()
+        HomeProfilePart(onHomeClick = { onHomeClick(playlist.copy(songs = playlistOfSongs.toList())) })
         Spacer(modifier = Modifier.height(10.dp))
 
         // Playlist Description
         Text(
-            text = "Playlist Name",
+            text = playlist.name,
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.headlineLarge,
         )
-        Box(
+        
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.fillMaxWidth().padding(8.dp)
         ) {
-            Column(
-            ) {
-                labelRows.forEachIndexed { index, i ->
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        colors.forEachIndexed { index, color ->
-                            Text(namesOfColors[index])
-                            Box(Modifier.size(16.dp).background(color).border(1.dp, Color.Black))
-                            Spacer(Modifier.width(8.dp))
-                        }
+            // First row for even indices
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                playlist.labels.forEachIndexed { index, label ->
+                    if (index % 2 == 0) {
+                        Text(text = label.name, style = MaterialTheme.typography.bodySmall)
+                        Spacer(Modifier.width(4.dp))
+                        Box(Modifier.size(16.dp).background(label.color).border(1.dp, Color.Black))
+                        Spacer(Modifier.width(12.dp))
                     }
                 }
-
+            }
+            Spacer(modifier = Modifier.height(4.dp))
+            // Second row for odd indices
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                playlist.labels.forEachIndexed { index, label ->
+                    if (index % 2 != 0) {
+                        Text(text = label.name, style = MaterialTheme.typography.bodySmall)
+                        Spacer(Modifier.width(4.dp))
+                        Box(Modifier.size(16.dp).background(label.color).border(1.dp, Color.Black))
+                        Spacer(Modifier.width(12.dp))
+                    }
+                }
             }
         }
 
@@ -147,7 +153,6 @@ fun PlaylistPage(modifier: Modifier = Modifier) {
                     onClick = {
                         if (sortIndex == 1) isAlphaAsc = !isAlphaAsc
                         else sortIndex = 1
-                        playlistOfSongs.sortedBy { playlistOfSongs[0].title}
                     },
                     shape = SegmentedButtonDefaults.itemShape(index = 1, count, baseShape = theShape)
                 ) { Text(if (sortIndex == 1) if (isAlphaAsc) "A-Z" else "Z-A" else "Alphabetical") }
@@ -156,8 +161,6 @@ fun PlaylistPage(modifier: Modifier = Modifier) {
             // Middle: LazyColumn for playlists
             val reorderState = rememberReorderableLazyListState(
                 onMove = { from, to ->
-                    // Prevent "All Songs" from moving
-                    if (from.index == 0 || to.index == 0) return@rememberReorderableLazyListState
                     playlistOfSongs.add(to.index, playlistOfSongs.removeAt(from.index))
                 }
             )
@@ -210,7 +213,7 @@ fun PlaylistPage(modifier: Modifier = Modifier) {
                 .background(onPrimaryLight)
             ) {
                 ElevatedButton(
-                    onClick = { createPlaylist = true },
+                    onClick = { createSong = true },
                     modifier = Modifier.align(Alignment.BottomEnd)
                         .padding(10.dp)
                 ) {
@@ -219,36 +222,28 @@ fun PlaylistPage(modifier: Modifier = Modifier) {
             }
         }
         // Dialog screen pop up to create a new playlist
-        if (createPlaylist) {
+        if (createSong) {
             androidx.compose.material3.AlertDialog(
-                onDismissRequest = { createPlaylist = false },
-                // confirmButton
+                onDismissRequest = { createSong = false },
                 confirmButton = {
                     Button(onClick = {
                         if (newItem.text.isNotBlank()) {
-                            playlistOfSongs.add(
-                                Song(
-                                    id = nextPlaylistId,
-                                    title = newItem.text,
-                                )
-                            )
-                            nextPlaylistId++
+                            playlistOfSongs.add(Song(id = nextSongId, title = newItem.text))
+                            nextSongId++
                             newItem = TextFieldValue("")
                         }
-                        createPlaylist = false
+                        createSong = false
                     }) { Text("Add") }
                 },
-                // dismissButton
                 dismissButton = {
-                    Button(onClick = { createPlaylist = false }) { Text("Cancel") }
+                    Button(onClick = { createSong = false }) { Text("Cancel") }
                 },
-                // Text: text field, label dropdown, labels selected
                 text = {
                     Column {
                         OutlinedTextField(
                             value = newItem,
                             onValueChange = { newItem = it },
-                            label = { Text("Playlist Name") }
+                            label = { Text("Song Title") }
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                     }
@@ -267,6 +262,13 @@ fun PlaylistPage(modifier: Modifier = Modifier) {
 @Composable
 fun PlaylistPagePreview() {
     AppTheme {
-        PlaylistPage()
+        PlaylistPage(
+            playlist = Playlist(
+                id = 1, 
+                name = "My Favorites", 
+                labels = listOf(Label(Color.Red, "Rock"), Label(Color.Blue, "Relax")),
+                songs = listOf(Song(1, "Sample Song"))
+            )
+        )
     }
 }

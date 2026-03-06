@@ -36,10 +36,14 @@ import com.example.compose.inversePrimaryLight
 import com.example.compose.onPrimaryLight
 
 @Composable
-fun HomeProfilePart(modifier: Modifier = Modifier) {
+fun HomeProfilePart(
+    onHomeClick: () -> Unit = {},
+    onProfileClick: () -> Unit = {},
+    modifier: Modifier = Modifier
+) {
     // First row: Home button, Music Playing, and Profile page
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .background(inversePrimaryLight)
             .padding(8.dp),
@@ -48,7 +52,7 @@ fun HomeProfilePart(modifier: Modifier = Modifier) {
     ) {
         // Home Button
         Button(
-            onClick = { },
+            onClick = onHomeClick,
             modifier = Modifier.size(60.dp),
             contentPadding = PaddingValues(0.dp),
             shape = RectangleShape,
@@ -81,7 +85,7 @@ fun HomeProfilePart(modifier: Modifier = Modifier) {
         }
         // Profile Button
         OutlinedButton(
-            onClick = { },
+            onClick = onProfileClick,
             modifier = Modifier.size(60.dp)
                 .clip(RoundedCornerShape(60.dp))
                 .background(onPrimaryLight),

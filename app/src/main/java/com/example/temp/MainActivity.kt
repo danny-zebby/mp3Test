@@ -40,6 +40,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -69,7 +70,6 @@ class MainActivity : ComponentActivity() {
             AppTheme {
                 val window = this.window
 
-                val background = Color(0xFFE0E0FF)
                 val statColor = Color(0xFFBFC2FF)
                 val navColor = Color(0xFF272b60)
 
@@ -77,16 +77,50 @@ class MainActivity : ComponentActivity() {
                     window.statusBarColor = statColor.toArgb()
                     window.navigationBarColor = navColor.toArgb()
                 }
+
+                var currentScreen by remember { mutableStateOf("home") }
+                var selectedPlaylistId by remember { mutableStateOf<Int?>(null) }
+                
+                // Hoisted State
+                val playlistOfPlaylist = remember { mutableStateListOf(Playlist(id = 1, name = "All Songs")) }
+                var nextPlaylistId by remember { mutableStateOf(2) }
+
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     containerColor = statColor
                 ) { innerPadding ->
-
-                    PlaylistPage(
-                        modifier = Modifier
-                            .padding(innerPadding)
-                            .background(statColor)
-                    )
+                    when (currentScreen) {
+                        "home" -> MP3Home(
+                            playlistOfPlaylist = playlistOfPlaylist,
+                            onPlaylistClick = { playlist ->
+                                selectedPlaylistId = playlist.id
+                                currentScreen = "playlist"
+                            },
+                            onAddPlaylist = { name, labels ->
+                                playlistOfPlaylist.add(Playlist(id = nextPlaylistId, name = name, labels = labels))
+                                nextPlaylistId++
+                            },
+                            onHomeClick = { currentScreen = "home" },
+                            modifier = Modifier.padding(innerPadding)
+                        )
+                        "playlist" -> {
+                            val playlist = playlistOfPlaylist.find { it.id == selectedPlaylistId }
+                            playlist?.let { currentPlaylist ->
+                                PlaylistPage(
+                                    playlist = currentPlaylist,
+                                    onHomeClick = { updatedPlaylist ->
+                                        // Save changes back to the main list
+                                        val index = playlistOfPlaylist.indexOfFirst { it.id == updatedPlaylist.id }
+                                        if (index != -1) {
+                                            playlistOfPlaylist[index] = updatedPlaylist
+                                        }
+                                        currentScreen = "home"
+                                    },
+                                    modifier = Modifier.padding(innerPadding)
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -98,59 +132,68 @@ data class Song(
     val title: String,
 )
 
+data class Label(
+    val color: Color,
+    val name: String,
+)
+
 data class Playlist(
     val id: Int,
     val name: String,
-    val labels: List<Color> = emptyList(),
+    val labels: List<Label> = emptyList(),
     val songs: List<Song> = emptyList()
 )
 
 @Composable
-fun MP3Home(modifier: Modifier = Modifier) {
-    // Values use to create playlist
-    val playlistOfPlaylist = remember { mutableStateListOf(Playlist(id = 1, name = "All Songs"))}  // The main list
-    var nextPlaylistId by remember { mutableStateOf(2) }                                    // This increments the playlist id
+fun MP3Home(
+    playlistOfPlaylist: SnapshotStateList<Playlist>,
+    onPlaylistClick: (Playlist) -> Unit = {},
+    onAddPlaylist: (String, List<Label>) -> Unit = { _, _ -> },
+    onHomeClick: () -> Unit = {},
+    modifier: Modifier = Modifier
+) {
     var newItem by remember { mutableStateOf(TextFieldValue()) }                            // This stores text field text
-    var selectedColors by remember { mutableStateOf(listOf<Color>()) }                      // Temporary placement for labels
+    var selectedLabels by remember { mutableStateOf(listOf<Label>()) }                      // Temporary placement for labels
     var createPlaylist by remember { mutableStateOf(false) }                                // Tigger for create playlist
     var playlistLabel by remember { mutableStateOf(false) }                                 // Tigger for label dropdown (create)
-    // Values used to create color sorting
-    val colorNames = linkedMapOf(Color.Red to "Red",    // Used to make colorOrder
-        Color.Yellow to "Yellow", Color.Green to "Green", Color.Cyan to "Cyan", Color.Blue to "Blue", Color.Magenta to "Magenta")
-    val colorOrder = colorNames.keys                    // Used to make sortColor
-        .withIndex()
-        .associate { it.value to it.index }
-    fun sortColors(colors: List<Color>): List<Color> { // Sorts the color in the order I listed above in colorNames
-        return colors.sortedBy{ color ->
-            colorOrder[color] ?:
-            Int.MAX_VALUE
+
+    val availableLabels = listOf(
+        Label(Color.Red, "Red"), Label(Color.Yellow, "Yellow"), Label(Color.Green, "Green"),
+        Label(Color.Cyan, "Cyan"), Label(Color.Blue, "Blue"), Label(Color.Magenta, "Magenta")
+    )
+
+    val labelOrderMap = availableLabels.withIndex().associate { it.value.color to it.index }
+
+    fun sortLabels(labels: List<Label>): List<Label> {
+        return labels.sortedBy { label ->
+            labelOrderMap[label.color] ?: Int.MAX_VALUE
         }
     }
+
     // Values used to create three playlist sorts
     var sortIndex by remember { mutableStateOf(0) }                         // 0: Custom, 1: Alpha, 2: Label
     var isAlphaAsc by remember { mutableStateOf(true) }                     // Alphabetical sort trigger
     var labelFilterColor by remember { mutableStateOf(Color.Transparent) }  // Color to sort by
     var showColorMenu by remember { mutableStateOf(false) }                 // Label sort trigger
-    val colors = listOf(                                                           // Color to make dropdown easier
-        Color.Red, Color.Yellow, Color.Green, Color.Cyan, Color.Blue, Color.Magenta,
-    )
-    val namesOfColors = listOf(                                                     // names of colors to make dropdown easier
-        "Red", "Yellow", "Green", "Cyan", "Blue", "Magenta",
-    )
+
     // How Playlist are sorted
     val displayList = remember(playlistOfPlaylist.toList(), sortIndex, isAlphaAsc, labelFilterColor) {
-        when (sortIndex) {
-            0 -> playlistOfPlaylist.toList()
-            1 -> if (isAlphaAsc) playlistOfPlaylist.sortedBy { it.name } else playlistOfPlaylist.sortedByDescending { it.name }
+        val allSongs = playlistOfPlaylist.find { it.id == 1 }
+        val others = playlistOfPlaylist.filter { it.id != 1 }
+
+        val sortedOthers = when (sortIndex) {
+            0 -> others
+            1 -> if (isAlphaAsc) others.sortedBy { it.name } else others.sortedByDescending { it.name }
             2 -> {
-                playlistOfPlaylist.sortedWith(
-                    compareByDescending<Playlist> { it.labels.contains(labelFilterColor)}
-                        .thenBy { it.labels.toString() }
+                others.sortedWith(
+                    compareByDescending<Playlist> { p -> p.labels.any { it.color == labelFilterColor } }
+                        .thenBy { it.labels.joinToString { l -> l.name } }
                         .thenBy { it.name }
                 )
             }
-            else -> playlistOfPlaylist.toList()
+            else -> others
         }
+        if (allSongs != null) listOf(allSongs) + sortedOthers else sortedOthers
     }
 
     //The whole page
@@ -160,7 +203,7 @@ fun MP3Home(modifier: Modifier = Modifier) {
             .background(primaryContainerLight)
     ) {
         // First row: Home button, Music Playing, and Profile page
-        HomeProfilePart()
+        HomeProfilePart(onHomeClick = onHomeClick)
         Spacer(modifier = Modifier.height(10.dp))
 
         // Navigation Row: Using HorizontalPager to swipe in groups of three
@@ -254,7 +297,6 @@ fun MP3Home(modifier: Modifier = Modifier) {
                     onClick = {
                         if (sortIndex == 1) isAlphaAsc = !isAlphaAsc
                         else sortIndex = 1
-                        playlistOfPlaylist.sortedBy { playlistOfPlaylist[0].name}
                     },
                     shape = SegmentedButtonDefaults.itemShape(index = 1, count, baseShape = theShape)
                 ) { Text(if (sortIndex == 1) if (isAlphaAsc) "A-Z" else "Z-A" else "Alphabetical") }
@@ -279,17 +321,17 @@ fun MP3Home(modifier: Modifier = Modifier) {
                                 expanded = showColorMenu,
                                 onDismissRequest = { showColorMenu = false }
                             ) {
-                                colors.forEachIndexed { index, color ->
+                                availableLabels.forEach { label ->
                                     DropdownMenuItem(
                                         text = {
                                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                                Box(Modifier.size(16.dp).background(color).border(1.dp, Color.Black))
+                                                Box(Modifier.size(16.dp).background(label.color).border(1.dp, Color.Black))
                                                 Spacer(Modifier.width(8.dp))
-                                                Text(namesOfColors[index])
+                                                Text(label.name)
                                             }
                                         },
                                         onClick = {
-                                            labelFilterColor = color
+                                            labelFilterColor = label.color
                                             showColorMenu = false
                                         }
                                     )
@@ -302,6 +344,7 @@ fun MP3Home(modifier: Modifier = Modifier) {
             // Middle: LazyColumn for playlists
             val reorderState = rememberReorderableLazyListState(
                 onMove = { from, to ->
+                    if (sortIndex != 0) return@rememberReorderableLazyListState
                     // Prevent "All Songs" from moving
                     if (from.index == 0 || to.index == 0) return@rememberReorderableLazyListState
                     playlistOfPlaylist.add(to.index, playlistOfPlaylist.removeAt(from.index))
@@ -325,7 +368,7 @@ fun MP3Home(modifier: Modifier = Modifier) {
                         key = playlist.id
                     ) { isDragging ->
                         Button(
-                            onClick = {},
+                            onClick = { onPlaylistClick(playlist) },
                             contentPadding = PaddingValues(start = 10.dp, end = 10.dp),
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -345,11 +388,11 @@ fun MP3Home(modifier: Modifier = Modifier) {
                                 // This adds the labels and draggables
                                 if (playlist.labels.isNotEmpty()) { // Checking if playlist has labels
                                     Row {
-                                        playlist.labels.forEach { color ->
+                                        playlist.labels.forEach { label ->
                                             Box(
                                                 modifier = Modifier
                                                     .size(20.dp)
-                                                    .background(color)
+                                                    .background(label.color)
                                                     .border(1.dp, Color.Black)
                                             )
                                             Spacer(modifier = Modifier.width(4.dp))
@@ -389,16 +432,9 @@ fun MP3Home(modifier: Modifier = Modifier) {
                 confirmButton = {
                     Button(onClick = {
                         if (newItem.text.isNotBlank()) {
-                            playlistOfPlaylist.add(
-                                Playlist(
-                                    id = nextPlaylistId,
-                                    name = newItem.text,
-                                    labels = selectedColors
-                                )
-                            )
-                            nextPlaylistId++
+                            onAddPlaylist(newItem.text, selectedLabels)
                             newItem = TextFieldValue("")
-                            selectedColors = emptyList()
+                            selectedLabels = emptyList()
                         }
                         createPlaylist = false
                     }) { Text("Add") }
@@ -426,33 +462,34 @@ fun MP3Home(modifier: Modifier = Modifier) {
                                 else Text("Label Color ^")
                             }
                             Spacer(modifier = Modifier.weight(1f))
-                            selectedColors = sortColors(selectedColors)
-                            for(i in selectedColors.indices){
+                            selectedLabels = sortLabels(selectedLabels)
+                            for(i in selectedLabels.indices){
                                 Box(
                                     modifier = Modifier
                                         .size(35.dp)
-                                        .background(selectedColors[i])
+                                        .background(selectedLabels[i].color)
                                         .border(1.dp, Color.Black)
 
                                 ){}
                             }
-                            // "Red", "Yellow", "Green", "Cyan", "Blue", "Magenta", "White", "Gray", "Black"
+                            // "Red", "Yellow", "Green", "Cyan", "Blue", "Magenta"
                             DropdownMenu(expanded = playlistLabel, onDismissRequest = { playlistLabel = false }) {
                                 DropdownMenuItem(text = { Text("None") }, onClick = {
-                                    selectedColors = emptyList(); playlistLabel = false })
-                                DropdownMenuItem(text = { Text("Red") }, onClick = {
-                                    if(!selectedColors.contains(Color.Red))
-                                    {selectedColors = selectedColors +  Color.Red}
-                                    else
-                                    {selectedColors = selectedColors - Color.Red}
-                                    playlistLabel = false})
-                                // Same as Red
-                                DropdownMenuItem(text = { Text("Yellow") }, onClick = { if(!selectedColors.contains(Color.Yellow)) {selectedColors = selectedColors +  Color.Yellow} else {selectedColors = selectedColors - Color.Yellow}; playlistLabel = false})
-                                DropdownMenuItem(text = { Text("Green") }, onClick = { if(!selectedColors.contains(Color.Green)) {selectedColors = selectedColors +  Color.Green; } else {selectedColors = selectedColors - Color.Green}; playlistLabel = false})
-                                DropdownMenuItem(text = { Text("Cyan") }, onClick = { if(!selectedColors.contains(Color.Cyan)) {selectedColors = selectedColors +  Color.Cyan} else {selectedColors = selectedColors - Color.Cyan}; playlistLabel = false})
-                                DropdownMenuItem(text = { Text("Blue") }, onClick = { if(!selectedColors.contains(Color.Blue)) {selectedColors = selectedColors +  Color.Blue} else {selectedColors = selectedColors - Color.Blue}; playlistLabel = false})
-                                DropdownMenuItem(text = { Text("Magenta") }, onClick = { if(!selectedColors.contains(Color.Magenta)) {selectedColors = selectedColors +  Color.Magenta} else {selectedColors = selectedColors - Color.Magenta}; playlistLabel = false})
+                                    selectedLabels = emptyList(); playlistLabel = false })
+                                availableLabels.forEach { label ->
+                                    DropdownMenuItem(
+                                        text = { Text(label.name) },
+                                        onClick = {
+                                            if (!selectedLabels.any { it.color == label.color }) {
+                                                selectedLabels = selectedLabels + label
+                                            } else {
+                                                selectedLabels = selectedLabels.filterNot { it.color == label.color }
+                                            }
+                                            playlistLabel = false
+                                        }
+                                    )
                                 }
+                            }
                         }
                     }
                 }
@@ -469,6 +506,6 @@ fun MP3Home(modifier: Modifier = Modifier) {
 @Composable
 fun MP3Preview() {
     AppTheme {
-        MP3Home()
+        MP3Home(playlistOfPlaylist = remember { mutableStateListOf(Playlist(id = 1, name = "All Songs")) })
     }
 }
