@@ -82,7 +82,8 @@ class MainActivity : ComponentActivity() {
                 var selectedPlaylistId by remember { mutableStateOf<Int?>(null) }
                 
                 // Hoisted State
-                val playlistOfPlaylist = remember { mutableStateListOf(Playlist(id = 1, name = "All Songs")) }
+                val AllSongs = remember {mutableStateListOf(Song(1,"Creep"), Song(2,"Candy"), Song(3,"Amber"), Song(4, "311"), Song(5, "Tu Falta De Querer"))}
+                val playlistOfPlaylist = remember { mutableStateListOf(Playlist(id = 1, name = "All Songs", songs = AllSongs)) }
                 var nextPlaylistId by remember { mutableStateOf(2) }
 
                 Scaffold(
@@ -385,6 +386,7 @@ fun MP3Home(
                                     overflow = TextOverflow.Ellipsis,
                                     modifier = Modifier.width(250.dp)
                                 )
+                                Spacer(modifier = Modifier.weight(1f))
                                 // This adds the labels and draggables
                                 if (playlist.labels.isNotEmpty()) { // Checking if playlist has labels
                                     Row {

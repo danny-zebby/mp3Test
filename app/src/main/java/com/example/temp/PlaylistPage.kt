@@ -90,7 +90,6 @@ fun PlaylistPage(
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.headlineLarge,
         )
-        
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.fillMaxWidth().padding(8.dp)
@@ -198,26 +197,30 @@ fun PlaylistPage(
                                     overflow = TextOverflow.Ellipsis,
                                     modifier = Modifier.weight(1f)
                                 )
-                                Box(
-                                    modifier = Modifier
-                                        .size(24.dp)
-                                        .detectReorder(reorderState)
-                                ) { Text("=", fontWeight = FontWeight.Bold) }
+                                if(sortIndex == 0){
+                                    Box(
+                                        modifier = Modifier
+                                            .size(24.dp)
+                                            .detectReorder(reorderState)
+                                    ) { Text("=", fontWeight = FontWeight.Bold) }
+                                }
                             }
                         }
                     }
                 }
             }
             // Floating + button: button selected to create a new playlist
-            Box(modifier = Modifier.fillMaxWidth()
-                .background(onPrimaryLight)
-            ) {
-                ElevatedButton(
-                    onClick = { createSong = true },
-                    modifier = Modifier.align(Alignment.BottomEnd)
-                        .padding(10.dp)
+            if(playlist.id != 1){
+                Box(modifier = Modifier.fillMaxWidth()
+                    .background(onPrimaryLight)
                 ) {
-                    Text("+")
+                    ElevatedButton(
+                        onClick = { createSong = true },
+                        modifier = Modifier.align(Alignment.BottomEnd)
+                            .padding(10.dp)
+                    ) {
+                        Text("+")
+                    }
                 }
             }
         }
