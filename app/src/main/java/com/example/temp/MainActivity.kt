@@ -101,15 +101,21 @@ class MainActivity : ComponentActivity() {
                     when (currentScreen) {
                         "home" -> MP3Home(
                             playlistOfPlaylist = playlistOfPlaylist,
+
+                            onDriveModeClick = { currentScreen = "driving" },
+
                             onPlaylistClick = { playlist ->
                                 selectedPlaylistId = playlist.id
                                 currentScreen = "playlist"
                             },
+
                             onAddPlaylist = { name, labels ->
                                 playlistOfPlaylist.add(Playlist(id = nextPlaylistId, name = name, labels = labels))
                                 nextPlaylistId++
                             },
+
                             onHomeClick = { currentScreen = "home" },
+
                             modifier = Modifier.padding(innerPadding)
                         )
                         "playlist" -> {
@@ -126,17 +132,16 @@ class MainActivity : ComponentActivity() {
                                         }
                                     },
 
-                                    onHomeClick = {
-                                        currentScreen = "home"
-                                    },
+                                    onHomeClick = { currentScreen = "home" },
 
                                     modifier = Modifier.padding(innerPadding)
                                 )
                             }
                         }
-                        "Driving" ->{
+                        "driving" -> {
                             DrivingMode(
                                 onHomeClick = { currentScreen = "home" },
+
                                 modifier = Modifier.padding(innerPadding)
                             )
                         }
@@ -167,6 +172,7 @@ data class Playlist(
 @Composable
 fun MP3Home(
     playlistOfPlaylist: SnapshotStateList<Playlist>,
+    onDriveModeClick: () -> Unit = {},
     onPlaylistClick: (Playlist) -> Unit = {},
     onAddPlaylist: (String, List<Label>) -> Unit = { _, _ -> },
     onHomeClick: () -> Unit = {},
@@ -231,6 +237,10 @@ fun MP3Home(
             "View Songs", "Drive Mode", "Podcast Mode",
             "Button 4", "Button 5", "Button 6",
             "Button 7", "Button 8", "Button 9")
+        val buttonFunctions = listOf(
+            {}, {onDriveModeClick()}, {},
+            {}, {}, {},
+            {}, {}, {})
         val pagerState = rememberPagerState(pageCount = { (navButtons.size + 2) / 3 })
 
         HorizontalPager(
@@ -248,7 +258,7 @@ fun MP3Home(
                     val index = startIndex + i
                     if (index < navButtons.size) {
                         Button(
-                            onClick = {},
+                            onClick = buttonFunctions[index],
                             modifier = Modifier
                                 .weight(1f)
                                 .height(125.dp)

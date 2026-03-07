@@ -17,23 +17,23 @@ import androidx.compose.ui.unit.dp
 import com.example.compose.AppTheme
 
 @Composable
-fun DrivingMode(onHomeClick: () -> Unit = {}, modifier: Modifier = Modifier) {
+fun DrivingMode(onHomeClick: () -> Unit, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier.fillMaxSize()
     ){
-        val controlModifier = Modifier.weight(1f).width(200.dp)
+        val controlModifier = Modifier.weight(1f).width(250.dp)
         Column(
-            modifier = modifier.fillMaxHeight(),
+            modifier = Modifier.fillMaxHeight(),
             verticalArrangement = Arrangement.spacedBy(0.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Button(onClick = onHomeClick, shape = RectangleShape, modifier = controlModifier,)  { Text("Home") }
+            Button(onClick = { onHomeClick() }, shape = RectangleShape, modifier = controlModifier,)  { Text("Home") }
             Button(onClick = {}, shape = RectangleShape, modifier = controlModifier,)  { Text("Loop") }
             Button(onClick = {}, shape = RectangleShape, modifier = controlModifier,)  { Text("Prev Play") }
             Button(onClick = {}, shape = RectangleShape, modifier = controlModifier,)  { Text("Prev Song") }
         }
         Column(
-            modifier = modifier.fillMaxHeight(),
+            modifier = Modifier.fillMaxHeight(),
             verticalArrangement = Arrangement.spacedBy(0.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -49,6 +49,6 @@ fun DrivingMode(onHomeClick: () -> Unit = {}, modifier: Modifier = Modifier) {
 @Composable
 fun DrivingModePreview() {
     AppTheme {
-        DrivingMode()
+        DrivingMode(onHomeClick = {})
     }
 }
