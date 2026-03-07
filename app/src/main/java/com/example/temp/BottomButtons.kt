@@ -1,70 +1,111 @@
-package com.example.temp
-
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.compose.AppTheme
+import androidx.compose.ui.graphics.RectangleShape
+
+
 
 @Composable
 fun BottomButtons(modifier: Modifier = Modifier) {
     var toggle by remember { mutableStateOf(true) }
-    // Bottom Controls: Each button takes 1/5th of the width
+    var activeIndex by remember { mutableStateOf(-1) } // currently highlighted button
+    var dragging by remember { mutableStateOf(false) }
+    var lastAction by remember { mutableStateOf("None") }
+
+    val symbols1 = listOf("C>", "||", ">", ">>")
+    val symbols2 = listOf("O>", "||", "<", "<<")
+
+    // Row for 5 buttons
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .height(100.dp)
+            .pointerInput(Unit) {
+                detectDragGestures(
+                    onDragStart = { offset ->
+                        // Only start dragging if the first button is pressed
+                        val buttonWidth = size.width / 5
+                        if (offset.x <= buttonWidth) {
+                            dragging = true
+                            activeIndex = -1
+                        }
+                    },
+                    onDrag = { change, _ ->
+                        if (!dragging) return@detectDragGestures
+                        change.consume()
+                        val buttonWidth = size.width / 5
+                        //check first index
+                        if (change.position.x <= buttonWidth) {
+                            activeIndex = -1  // do nothing when over first button
+                            return@detectDragGestures
+                        }
+                        // Track finger position across buttons 2–5
+                        val index = ((change.position.x - buttonWidth) / buttonWidth).toInt()
+                        activeIndex = index.coerceIn(0, 3)
+                    },
+                    onDragEnd = {
+                        if (activeIndex >= 0) {
+                            lastAction = "Button ${activeIndex + 2} clicked"
+                            println(lastAction)
+                        } else {
+                            lastAction = "Drag cancelled"  // drag ended back on first button
+                            println(lastAction)
+                        }
+                        dragging = false
+                        activeIndex = -1
+                        toggle = !toggle // toggle first button on release
+                    },
+                    onDragCancel = {
+                        dragging = false
+                        activeIndex = -1
+                    }
+                )
+            },
         verticalAlignment = Alignment.CenterVertically
     ) {
         val controlModifier = Modifier.weight(1f).height(100.dp)
-        val symbols1 = listOf("C>", "||", ">", ">>")
-        val symbols2 = listOf("O>", "||", "<", "<<")
+
+        // First button (toggle + drag)
         Button(
-            onClick = {toggle = !toggle},
+            onClick = { toggle = !toggle }, // normal click fallback
             shape = RectangleShape,
-            modifier = controlModifier
+            modifier = controlModifier,
+            colors = ButtonDefaults.buttonColors(containerColor = if (!dragging) Color(0xFF3E4278) else Color(0xFF4D5C92))
         ) {
-            if(toggle) Text("^")
-            else Text("V")
+            Text(text = if (toggle) "^" else "V")
         }
-        if(toggle){
-            symbols1.forEach { symbol ->
-                Button(
-                    onClick = {},
-                    shape = RectangleShape,
-                    modifier = controlModifier
-                ) {
-                    Text(text = symbol)
-                }
-            }
-        }
-        else{
-            symbols2.forEach { symbol ->
-                Button(
-                    onClick = {},
-                    shape = RectangleShape,
-                    modifier = controlModifier
-                ) {
-                    Text(text = symbol)
-                }
+
+        // Remaining 4 buttons
+        val symbols = if (toggle) symbols1 else symbols2
+        symbols.forEachIndexed { index, symbol ->
+            val bg = if (dragging && activeIndex == index) Color(0xFF4D5C92) else Color(0xFF3E4278)
+            Button(
+                onClick = { println("Button ${index + 2} clicked") },
+                shape = RectangleShape,
+                modifier = controlModifier,
+                colors = ButtonDefaults.buttonColors(containerColor = bg)
+            ) {
+                Text(text = symbol)
             }
         }
     }
 }
 
-//Preview App
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
-fun BottomButtonsPreview() {
+fun BottomButtonsDragPreview() {
     AppTheme {
         BottomButtons()
     }

@@ -1,5 +1,6 @@
 package com.example.temp
 
+import BottomButtons
 import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -66,8 +67,6 @@ fun PlaylistPage(
 ) {
     // Values use to create playlist
     val playlistOfSongs = remember { mutableStateListOf<Song>().apply { addAll(playlist.songs) } }
-    var nextSongId by remember { mutableStateOf((playlist.songs.maxOfOrNull { it.id } ?: 0) + 1) }
-    var newItem by remember { mutableStateOf(TextFieldValue()) }
     var addSong by remember { mutableStateOf(false) }
 
     // Values used to create three playlist sorts
@@ -75,12 +74,10 @@ fun PlaylistPage(
     var isAlphaAsc by remember { mutableStateOf(true) }                     // Alphabetical sort trigger
 
     // How Playlist are sorted
-    val displayList = remember(playlistOfSongs.toList(), sortIndex, isAlphaAsc) {
-        when (sortIndex) {
-            0 -> playlistOfSongs.toList()
-            1 -> if (isAlphaAsc) playlistOfSongs.sortedBy { it.title } else playlistOfSongs.sortedByDescending { it.title }
-            else -> playlistOfSongs.toList()
-        }
+    val displayList =  when (sortIndex) {
+            0 -> playlist.songs
+            1 -> if (isAlphaAsc) playlist.songs.sortedBy { it.title } else playlist.songs.sortedByDescending { it.title }
+            else -> playlist.songs
     }
 
     Column(
@@ -235,63 +232,59 @@ fun PlaylistPage(
         }
 
         if (addSong) {
+            var searchText by remember { mutableStateOf("") }
+            var active by remember { mutableStateOf(true) }
+
+            // Recompute filtered songs whenever user types or adds a song
+            val filteredSongs = remember(searchText, playlist.songs) {
+                allSongs.songs.filter { song ->
+                    song.title.contains(searchText, ignoreCase = true) &&
+                            playlist.songs.none { it.id == song.id }
+                }
+            }
             AlertDialog(
                 onDismissRequest = { addSong = false },
                 confirmButton = {},
                 dismissButton = {
                     Button(onClick = { addSong = false }) { Text("Done") }
                 },
-                text = {
-
-                    var searchText by remember { mutableStateOf("") }
-                    var active by remember { mutableStateOf(true) }
-
-                    val filteredSongs = allSongs.songs.filter { song ->
-                        song.title.contains(searchText, ignoreCase = true) &&
-                                playlistOfSongs.none { it.id == song.id }
-                    }
-                    Column(
-
+                text = { Column() {
+                    SearchBar(
+                        query = searchText,
+                        onQueryChange = { searchText = it },
+                        onSearch = {},
+                        active = active,
+                        onActiveChange = { active = it },
+                        placeholder = { Text("Search songs") },
+                        leadingIcon = {
+                            Icon(Icons.Default.Search, contentDescription = null)
+                        },
+                        trailingIcon = {
+                            if (searchText.isNotEmpty()) {
+                                Icon(
+                                    Icons.Default.Close,
+                                    contentDescription = "Clear",
+                                    modifier = Modifier.clickable { searchText = "" }
+                                )
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        SearchBar(
-                            query = searchText,
-                            onQueryChange = { searchText = it },
-                            onSearch = {},
-                            active = active,
-                            onActiveChange = { active = it },
-                            placeholder = { Text("Search songs") },
-                            leadingIcon = {
-                                Icon(Icons.Default.Search, contentDescription = null)
-                            },
-                            trailingIcon = {
-                                if (searchText.isNotEmpty()) {
-                                    Icon(
-                                        Icons.Default.Close,
-                                        contentDescription = "Clear",
-                                        modifier = Modifier.clickable { searchText = "" }
-                                    )
-                                }
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            LazyColumn {
-                                items(filteredSongs) { song ->
-                                    Text(
-                                        text = song.title,
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .clickable {
-                                                onAddSong(song)
-                                                active = false
-                                            }
-                                            .padding(16.dp)
-                                    )
-                                }
+                        LazyColumn {
+                            items(filteredSongs, key = {it.id}) { song ->
+                                Text(
+                                    text = song.title,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            onAddSong(song)
+                                        }
+                                        .padding(16.dp)
+                                )
                             }
                         }
-
                     }
-
+                }
                 }
             )
         }

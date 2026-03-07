@@ -1,5 +1,6 @@
 package com.example.temp
 
+import BottomButtons
 import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.activity.ComponentActivity
