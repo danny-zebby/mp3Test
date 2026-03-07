@@ -108,6 +108,7 @@ class MainActivity : ComponentActivity() {
                             val playlist = playlistOfPlaylist.find { it.id == selectedPlaylistId }
                             playlist?.let { currentPlaylist ->
                                 PlaylistPage(
+                                    allSongs = playlistOfPlaylist[1],
                                     playlist = currentPlaylist,
                                     onHomeClick = { updatedPlaylist ->
                                         // Save changes back to the main list

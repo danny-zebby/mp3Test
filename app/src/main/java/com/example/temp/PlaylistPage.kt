@@ -1,10 +1,14 @@
 package com.example.temp
 
 
+import android.R.attr.query
+import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -17,10 +21,16 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ElevatedButton
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SearchBar
+import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
@@ -30,11 +40,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
@@ -48,9 +61,15 @@ import org.burnoutcrew.reorderable.ReorderableItem
 import org.burnoutcrew.reorderable.detectReorder
 import org.burnoutcrew.reorderable.rememberReorderableLazyListState
 import org.burnoutcrew.reorderable.reorderable
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Close
 
+@SuppressLint("RememberReturnType")
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlaylistPage(
+    allSongs: Playlist,
     playlist: Playlist,
     onHomeClick: (Playlist) -> Unit = {},
     modifier: Modifier = Modifier
@@ -59,7 +78,7 @@ fun PlaylistPage(
     val playlistOfSongs = remember { mutableStateListOf<Song>().apply { addAll(playlist.songs) } }
     var nextSongId by remember { mutableStateOf((playlist.songs.maxOfOrNull { it.id } ?: 0) + 1) }
     var newItem by remember { mutableStateOf(TextFieldValue()) }
-    var createSong by remember { mutableStateOf(false) }
+    var addSong by remember { mutableStateOf(false) }
     
     // Values used to create three playlist sorts
     var sortIndex by remember { mutableStateOf(0) }                         // 0: Custom, 1: Alpha
@@ -215,7 +234,7 @@ fun PlaylistPage(
                     .background(onPrimaryLight)
                 ) {
                     ElevatedButton(
-                        onClick = { createSong = true },
+                        onClick = { addSong = true },
                         modifier = Modifier.align(Alignment.BottomEnd)
                             .padding(10.dp)
                     ) {
@@ -224,10 +243,10 @@ fun PlaylistPage(
                 }
             }
         }
-        // Dialog screen pop up to create a new playlist
-        if (createSong) {
-            androidx.compose.material3.AlertDialog(
-                onDismissRequest = { createSong = false },
+
+        if (addSong) {
+            AlertDialog(
+                onDismissRequest = { addSong = false },
                 confirmButton = {
                     Button(onClick = {
                         if (newItem.text.isNotBlank()) {
@@ -235,20 +254,39 @@ fun PlaylistPage(
                             nextSongId++
                             newItem = TextFieldValue("")
                         }
-                        createSong = false
+                        addSong = false
                     }) { Text("Add") }
                 },
                 dismissButton = {
-                    Button(onClick = { createSong = false }) { Text("Cancel") }
+                    Button(onClick = { addSong = false }) { Text("Cancel") }
                 },
                 text = {
+                    var searchText by remember { mutableStateOf("") }
+                    var active by remember { mutableStateOf(false) }
+
+                    val filteredSongs = allSongs.songs.filter {
+                        it.title.contains(searchText, ignoreCase = true)
+                    }
                     Column {
-                        OutlinedTextField(
-                            value = newItem,
-                            onValueChange = { newItem = it },
-                            label = { Text("Song Title") }
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
+                        SearchBar(
+                            query = searchText,
+                            onQueryChange = { searchText = it },
+                            onSearch = { active = false },
+                            active = active,
+                            onActiveChange = { active = it },
+                            placeholder = { Text("Search Songs") },
+                            leadingIcon = {
+                                Icon(Icons.Default.Search, contentDescription = null)
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {}
+                        LazyColumn {
+                            items(filteredSongs) { song ->
+                                Text(
+                                    text = song.title
+                                )
+                            }
+                        }
                     }
                 }
             )
@@ -266,8 +304,14 @@ fun PlaylistPage(
 fun PlaylistPagePreview() {
     AppTheme {
         PlaylistPage(
+            allSongs = Playlist(
+                id = 1,
+                name = "All Songs",
+                labels = emptyList(),
+                songs = listOf(Song(1,"Creep"), Song(2,"Candy"), Song(3,"Amber"), Song(4, "311"), Song(5, "Tu Falta De Querer"))
+            ),
             playlist = Playlist(
-                id = 1, 
+                id = 2,
                 name = "My Favorites", 
                 labels = listOf(Label(Color.Red, "Rock"), Label(Color.Blue, "Relax")),
                 songs = listOf(Song(1, "Sample Song"))
