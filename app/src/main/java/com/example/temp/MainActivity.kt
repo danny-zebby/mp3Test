@@ -1,5 +1,6 @@
 package com.example.temp
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -64,6 +65,7 @@ import androidx.compose.runtime.SideEffect
 import com.example.compose.primaryContainerLight
 
 class MainActivity : ComponentActivity() {
+    @SuppressLint("UnrememberedMutableState")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -82,8 +84,13 @@ class MainActivity : ComponentActivity() {
                 var selectedPlaylistId by remember { mutableStateOf<Int?>(null) }
                 
                 // Hoisted State
-                val AllSongs = remember {mutableStateListOf(Song(1,"Creep"), Song(2,"Candy"), Song(3,"Amber"), Song(4, "311"), Song(5, "Tu Falta De Querer"))}
-                val playlistOfPlaylist = remember { mutableStateListOf(Playlist(id = 1, name = "All Songs", songs = AllSongs)) }
+                val AllSongs = mutableStateListOf(
+                    Song(1,"Creep"), Song(2,"Candy"), Song(3,"Amber"),
+                    Song(4, "311"), Song(5, "Tu Falta De Querer")
+                )
+                val playlistOfPlaylist = mutableStateListOf(
+                    Playlist(id = 1, name = "All Songs", songs = AllSongs)
+                )
                 var nextPlaylistId by remember { mutableStateOf(2) }
 
                 Scaffold(
@@ -108,16 +115,20 @@ class MainActivity : ComponentActivity() {
                             val playlist = playlistOfPlaylist.find { it.id == selectedPlaylistId }
                             playlist?.let { currentPlaylist ->
                                 PlaylistPage(
-                                    allSongs = playlistOfPlaylist[1],
+
+                                    allSongs = playlistOfPlaylist.first { it.id == 1 },
                                     playlist = currentPlaylist,
-                                    onHomeClick = { updatedPlaylist ->
-                                        // Save changes back to the main list
-                                        val index = playlistOfPlaylist.indexOfFirst { it.id == updatedPlaylist.id }
-                                        if (index != -1) {
-                                            playlistOfPlaylist[index] = updatedPlaylist
+
+                                    onAddSong = { song ->
+                                        if (currentPlaylist.songs.none { it.id == song.id }) {
+                                            currentPlaylist.songs.add(song)
                                         }
+                                    },
+
+                                    onHomeClick = {
                                         currentScreen = "home"
                                     },
+
                                     modifier = Modifier.padding(innerPadding)
                                 )
                             }
@@ -143,7 +154,7 @@ data class Playlist(
     val id: Int,
     val name: String,
     val labels: List<Label> = emptyList(),
-    val songs: List<Song> = emptyList()
+    val songs: SnapshotStateList<Song> = mutableStateListOf()
 )
 
 @Composable
