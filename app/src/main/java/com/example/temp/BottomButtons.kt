@@ -105,7 +105,7 @@ fun BottomButtons(modifier: Modifier = Modifier) {
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
-fun BottomButtonsDragPreview() {
+fun BottomButtonsPreview() {
     AppTheme {
         BottomButtons()
     }

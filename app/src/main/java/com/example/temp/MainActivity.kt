@@ -134,6 +134,12 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
                         }
+                        "Driving" ->{
+                            DrivingMode(
+                                onHomeClick = { currentScreen = "home" },
+                                modifier = Modifier.padding(innerPadding)
+                            )
+                        }
                     }
                 }
             }
