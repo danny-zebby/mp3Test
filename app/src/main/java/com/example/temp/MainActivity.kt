@@ -63,18 +63,21 @@ import org.burnoutcrew.reorderable.rememberReorderableLazyListState
 import org.burnoutcrew.reorderable.reorderable
 import kotlin.collections.sortedBy
 import androidx.compose.runtime.SideEffect
+import com.example.compose.primaryBGLight
 import com.example.compose.primaryContainerLight
+import com.example.compose.tertiaryBGLight
+import com.example.temp.ui.theme.NewTheme
 
 class MainActivity : ComponentActivity() {
     @SuppressLint("UnrememberedMutableState")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            AppTheme {
+            NewTheme {
                 val window = this.window
 
-                val statColor = Color(0xFFBFC2FF)
-                val navColor = Color(0xFF272b60)
+                val statColor = Color(0xFF0191B3)
+                val navColor = Color(0xFF196D8A)
 
                 SideEffect {
                     window.statusBarColor = statColor.toArgb()
@@ -226,7 +229,7 @@ fun MP3Home(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(primaryContainerLight)
+            .background(primaryBGLight)
     ) {
         // First row: Home button, Music Playing, and Profile page
         HomeProfilePart(onHomeClick = onHomeClick)
@@ -283,7 +286,8 @@ fun MP3Home(
             horizontalArrangement = Arrangement.Center
         ) {
             repeat(pagerState.pageCount) { iteration ->
-                val color = if (pagerState.currentPage == iteration) Color.DarkGray else Color.LightGray
+                // primaryBCLight
+                val color = if (pagerState.currentPage == iteration) Color(0xFF196D8A) else Color.LightGray
                 Box(
                     modifier = Modifier
                         .padding(4.dp)
@@ -310,7 +314,7 @@ fun MP3Home(
             // Top: Segmented buttons
             SingleChoiceSegmentedButtonRow(
                 modifier = Modifier.fillMaxWidth()
-                    .background(onPrimaryLight)
+                    .background(tertiaryBGLight)
             ) {
                 val count = 3
                 val theShape = RoundedCornerShape(0.dp)
@@ -384,7 +388,7 @@ fun MP3Home(
                 state = reorderState.listState,
                 contentPadding = PaddingValues(top = 8.dp),
                 modifier = Modifier
-                    .background(onPrimaryLight)
+                    .background(tertiaryBGLight)
                     .fillMaxWidth()
                     .weight(1f)
                     .reorderable(reorderState),
@@ -448,6 +452,8 @@ fun MP3Home(
             ) {
                 ElevatedButton(
                     onClick = { createPlaylist = true },
+                    // tertiaryBCLight
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDCF2F4)),
                     modifier = Modifier.align(Alignment.BottomEnd)
                         .padding(10.dp)
                 ) {
@@ -536,7 +542,7 @@ fun MP3Home(
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun MP3Preview() {
-    AppTheme {
+    NewTheme {
         MP3Home(playlistOfPlaylist = remember { mutableStateListOf(Playlist(id = 1, name = "All Songs")) })
     }
 }

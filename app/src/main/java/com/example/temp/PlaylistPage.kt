@@ -54,6 +54,8 @@ import org.burnoutcrew.reorderable.reorderable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Close
+import com.example.compose.primaryBGLight
+import com.example.compose.tertiaryBGLight
 
 @SuppressLint("RememberReturnType")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -84,7 +86,7 @@ fun PlaylistPage(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
             .fillMaxSize()
-            .background(primaryContainerLight)
+            .background(primaryBGLight)
     ) {
         //Home
         HomeProfilePart(onHomeClick = { onHomeClick() })
@@ -141,7 +143,7 @@ fun PlaylistPage(
             // Top: Segmented buttons
             SingleChoiceSegmentedButtonRow(
                 modifier = Modifier.fillMaxWidth()
-                    .background(onPrimaryLight)
+                    .background(tertiaryBGLight)
             ) {
                 val count = 2
                 val theShape = RoundedCornerShape(0.dp)
@@ -173,7 +175,7 @@ fun PlaylistPage(
                 state = reorderState.listState,
                 contentPadding = PaddingValues(top = 8.dp),
                 modifier = Modifier
-                    .background(onPrimaryLight)
+                    .background(tertiaryBGLight)
                     .fillMaxWidth()
                     .weight(1f)
                     .reorderable(reorderState),
@@ -218,7 +220,7 @@ fun PlaylistPage(
             // Floating + button: button selected to create a new playlist
             if(playlist.id != 1){
                 Box(modifier = Modifier.fillMaxWidth()
-                    .background(onPrimaryLight)
+                    .background(tertiaryBGLight)
                 ) {
                     ElevatedButton(
                         onClick = { addSong = true },

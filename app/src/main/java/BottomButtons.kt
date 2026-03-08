@@ -14,7 +14,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.compose.AppTheme
 import androidx.compose.ui.graphics.RectangleShape
-
+import com.example.temp.ui.theme.NewTheme
 
 
 @Composable
@@ -82,7 +82,7 @@ fun BottomButtons(modifier: Modifier = Modifier) {
             onClick = { toggle = !toggle }, // normal click fallback
             shape = RectangleShape,
             modifier = controlModifier,
-            colors = ButtonDefaults.buttonColors(containerColor = if (!dragging) Color(0xFF3E4278) else Color(0xFF4D5C92))
+            colors = ButtonDefaults.buttonColors(containerColor = if (!dragging) Color(0xFF196D8A) else Color(0xFF145e77))
         ) {
             Text(text = if (toggle) "^" else "V")
         }
@@ -90,7 +90,7 @@ fun BottomButtons(modifier: Modifier = Modifier) {
         // Remaining 4 buttons
         val symbols = if (toggle) symbols1 else symbols2
         symbols.forEachIndexed { index, symbol ->
-            val bg = if (dragging && activeIndex == index) Color(0xFF4D5C92) else Color(0xFF3E4278)
+            val bg = if (dragging && activeIndex == index) Color(0xFF145e77) else Color(0xFF196D8A)
             Button(
                 onClick = { println("Button ${index + 2} clicked") },
                 shape = RectangleShape,
@@ -106,7 +106,7 @@ fun BottomButtons(modifier: Modifier = Modifier) {
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun BottomButtonsPreview() {
-    AppTheme {
+    NewTheme {
         BottomButtons()
     }
 }

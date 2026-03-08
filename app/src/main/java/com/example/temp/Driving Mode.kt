@@ -15,6 +15,7 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.compose.AppTheme
+import com.example.temp.ui.theme.NewTheme
 
 @Composable
 fun DrivingMode(onHomeClick: () -> Unit, modifier: Modifier = Modifier) {
@@ -48,7 +49,7 @@ fun DrivingMode(onHomeClick: () -> Unit, modifier: Modifier = Modifier) {
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun DrivingModePreview() {
-    AppTheme {
+    NewTheme {
         DrivingMode(onHomeClick = {})
     }
 }
