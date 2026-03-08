@@ -1,5 +1,6 @@
 package com.example.temp
 
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -21,7 +22,7 @@ fun DrivingMode(onHomeClick: () -> Unit, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier.fillMaxSize()
     ){
-        val controlModifier = Modifier.weight(1f).width(250.dp)
+        val controlModifier = Modifier.weight(1f).width(250.dp).border(width = 1.dp, color = androidx.compose.ui.graphics.Color.Black)
         Column(
             modifier = Modifier.fillMaxHeight(),
             verticalArrangement = Arrangement.spacedBy(0.dp),

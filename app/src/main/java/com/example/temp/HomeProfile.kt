@@ -73,7 +73,7 @@ fun HomeProfilePart(
         Surface(
             shape = RoundedCornerShape(25.dp),
             color = secondaryBCLight,
-            modifier = Modifier.weight(1f).height(80.dp)
+            modifier = Modifier.weight(1f).height(75.dp)
         ) {
             var sliderPosition by remember { mutableFloatStateOf(0f) }
             Column() {

@@ -43,6 +43,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.tooling.preview.Preview
 import org.burnoutcrew.reorderable.ReorderableItem
 import org.burnoutcrew.reorderable.detectReorder
 import org.burnoutcrew.reorderable.rememberReorderableLazyListState
@@ -50,8 +51,10 @@ import org.burnoutcrew.reorderable.reorderable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.ButtonDefaults
 import com.example.compose.primaryBGLight
 import com.example.compose.tertiaryBGLight
+import com.example.temp.ui.theme.NewTheme
 
 @SuppressLint("RememberReturnType")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -147,7 +150,11 @@ fun PlaylistPage(
                 SegmentedButton(
                     selected = sortIndex == 0,
                     onClick = { sortIndex = 0 },
-                    shape = SegmentedButtonDefaults.itemShape(index = 0, count, baseShape = theShape)
+                    shape = SegmentedButtonDefaults.itemShape(index = 0, count, baseShape = theShape),
+                    colors = SegmentedButtonDefaults.colors(
+                        activeContainerColor = Color(0xFF196D8A),
+                        activeContentColor = Color.White
+                    )
                 ) { Text("Custom") }
 
                 // Alphabetical (A-Z & Z-A)
@@ -157,7 +164,11 @@ fun PlaylistPage(
                         if (sortIndex == 1) isAlphaAsc = !isAlphaAsc
                         else sortIndex = 1
                     },
-                    shape = SegmentedButtonDefaults.itemShape(index = 1, count, baseShape = theShape)
+                    shape = SegmentedButtonDefaults.itemShape(index = 1, count, baseShape = theShape),
+                    colors = SegmentedButtonDefaults.colors(
+                        activeContainerColor = Color(0xFF196D8A),
+                        activeContentColor = Color.White
+                    )
                 ) { Text(if (sortIndex == 1) if (isAlphaAsc) "A-Z" else "Z-A" else "Alphabetical") }
 
             }
@@ -220,6 +231,7 @@ fun PlaylistPage(
                 ) {
                     ElevatedButton(
                         onClick = { addSong = true },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDCF2F4)),
                         modifier = Modifier.align(Alignment.BottomEnd)
                             .padding(10.dp)
                     ) {
@@ -292,18 +304,18 @@ fun PlaylistPage(
     }
 }
 
-/*
+
 //Preview App
+@SuppressLint("UnrememberedMutableState")
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun PlaylistPagePreview() {
-    AppTheme {
+    NewTheme {
         PlaylistPage(
             allSongs = Playlist(
                 id = 1,
                 name = "All Songs",
-                labels = emptyList(),
-                songs = listOf(
+                songs = mutableStateListOf(
                     Song(1, "Creep"),
                     Song(2, "Candy"),
                     Song(3, "Amber"),
@@ -315,9 +327,10 @@ fun PlaylistPagePreview() {
                 id = 2,
                 name = "My Favorites",
                 labels = listOf(Label(Color.Red, "Rock"), Label(Color.Blue, "Relax")),
-                songs = listOf(Song(1, "Sample Song"))
+                songs = mutableStateListOf(Song(1, "Sample Song"))
             ),
+            onAddSong = {},
+            onHomeClick = {}
         )
     }
 }
-*/
