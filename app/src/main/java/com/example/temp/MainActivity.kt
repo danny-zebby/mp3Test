@@ -29,7 +29,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ElevatedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
@@ -46,7 +45,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -71,7 +69,6 @@ class MainActivity : ComponentActivity() {
         setContent {
             NewTheme {
                 val window = this.window
-
                 val statColor = Color(0xFF0191B3)
                 val navColor = Color(0xFF196D8A)
 
@@ -83,7 +80,6 @@ class MainActivity : ComponentActivity() {
                 var currentScreen by remember { mutableStateOf("home") }
                 var selectedPlaylistId by remember { mutableStateOf<Int?>(null) }
                 
-                // Hoisted State
                 val AllSongs = mutableStateListOf(
                     Song(1,"Creep"), Song(2,"Candy"), Song(3,"Amber"),
                     Song(4, "311"), Song(5, "Tu Falta De Querer")
@@ -162,9 +158,9 @@ data class Label(
 )
 
 data class Playlist(
-    val id: Int,
-    val name: String,
-    val labels: List<Label> = emptyList(),
+    val id: Int, 
+    val name: String, 
+    val labels: List<Label> = emptyList(), 
     val songs: SnapshotStateList<Song> = mutableStateListOf()
 )
 
@@ -201,7 +197,6 @@ fun MP3Home(
     var labelFilterColor by remember { mutableStateOf(Color.Transparent) }  // Color to sort by
     var showColorMenu by remember { mutableStateOf(false) }                 // Label sort trigger
 
-    // How Playlist are sorted
     val displayList = remember(playlistOfPlaylist.toList(), sortIndex, isAlphaAsc, labelFilterColor) {
         val allSongs = playlistOfPlaylist.find { it.id == 1 }
         val others = playlistOfPlaylist.filter { it.id != 1 }
@@ -221,17 +216,14 @@ fun MP3Home(
         if (allSongs != null) listOf(allSongs) + sortedOthers else sortedOthers
     }
 
-    //The whole page
     Column(
         modifier = modifier
             .fillMaxSize()
             .background(primaryBGLight)
     ) {
-        // First row: Home button, Music Playing, and Profile page
         HomeProfilePart(onHomeClick = onHomeClick)
         Spacer(modifier = Modifier.height(10.dp))
 
-        // Navigation Row: Using HorizontalPager to swipe in groups of three
         val navButtons = listOf(
             "View Songs", "Drive Mode", "Podcast Mode",
             "Button 4", "Button 5", "Button 6",
@@ -274,7 +266,6 @@ fun MP3Home(
             }
         }
 
-        // Pager Indicator
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -282,7 +273,6 @@ fun MP3Home(
             horizontalArrangement = Arrangement.Center
         ) {
             repeat(pagerState.pageCount) { iteration ->
-                // primaryBCLight
                 val color = if (pagerState.currentPage == iteration) Color(0xFF196D8A) else Color.LightGray
                 Box(
                     modifier = Modifier
@@ -294,7 +284,6 @@ fun MP3Home(
             }
         }
 
-        // Playlist Area
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -307,14 +296,12 @@ fun MP3Home(
                     shape = RoundedCornerShape(12.dp)
                 )
         ) {
-            // Top: Segmented buttons
             SingleChoiceSegmentedButtonRow(
                 modifier = Modifier.fillMaxWidth()
                     .background(tertiaryBGLight)
             ) {
                 val count = 3
                 val theShape = RoundedCornerShape(0.dp)
-                // Custom (Draggable)
                 SegmentedButton(
                     selected = sortIndex == 0,
                     onClick = { sortIndex = 0 },
@@ -322,10 +309,9 @@ fun MP3Home(
                     colors = SegmentedButtonDefaults.colors(
                         activeContainerColor = Color(0xFF196D8A),
                         activeContentColor = Color.White
-                        )
+                    )
                 ) { Text("Custom") }
 
-                // Alphabetical (A-Z & Z-A)
                 SegmentedButton(
                     selected = sortIndex == 1,
                     onClick = {
@@ -339,13 +325,12 @@ fun MP3Home(
                     )
                 ) { Text(if (sortIndex == 1) if (isAlphaAsc) "A-Z" else "Z-A" else "Alphabetical") }
 
-                // Label Grouping
                 SegmentedButton(
                     selected = sortIndex == 2,
                     onClick = {
                         sortIndex = 2
                         showColorMenu = true
-                        },
+                    },
                     shape = SegmentedButtonDefaults.itemShape(index = 2, count, baseShape = theShape),
                     colors = SegmentedButtonDefaults.colors(
                         activeContainerColor = Color(0xFF196D8A),
@@ -383,11 +368,9 @@ fun MP3Home(
                     }
                 )
             }
-            // Middle: LazyColumn for playlists
             val reorderState = rememberReorderableLazyListState(
                 onMove = { from, to ->
                     if (sortIndex != 0) return@rememberReorderableLazyListState
-                    // Prevent "All Songs" from moving
                     if (from.index == 0 || to.index == 0) return@rememberReorderableLazyListState
                     playlistOfPlaylist.add(to.index, playlistOfPlaylist.removeAt(from.index))
                 }
@@ -460,7 +443,6 @@ fun MP3Home(
             ) {
                 ElevatedButton(
                     onClick = { createPlaylist = true },
-                    // tertiaryBCLight
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDCF2F4)),
                     modifier = Modifier.align(Alignment.BottomEnd)
                         .padding(10.dp)
@@ -469,84 +451,10 @@ fun MP3Home(
                 }
             }
         }
-        // Dialog screen pop up to create a new playlist
-        if (createPlaylist) {
-            androidx.compose.material3.AlertDialog(
-                onDismissRequest = { createPlaylist = false },
-                // confirmButton
-                confirmButton = {
-                    Button(onClick = {
-                        if (newItem.text.isNotBlank()) {
-                            onAddPlaylist(newItem.text, selectedLabels)
-                            newItem = TextFieldValue("")
-                            selectedLabels = emptyList()
-                        }
-                        createPlaylist = false
-                    }) { Text("Add") }
-                },
-                // dismissButton
-                dismissButton = {
-                    Button(onClick = { createPlaylist = false }) { Text("Cancel") }
-                },
-                // Text: text field, label dropdown, labels selected
-                text = {
-                    Column {
-                        OutlinedTextField(
-                            value = newItem,
-                            onValueChange = { newItem = it },
-                            label = { Text("Playlist Name") }
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Row () {
-                            Button(
-                                onClick = { playlistLabel = true},
-                                shape = RectangleShape,
-                                colors = ButtonDefaults.buttonColors(containerColor = Color.DarkGray)
-                            ) {
-                                if (playlistLabel) Text("Label Color V")
-                                else Text("Label Color ^")
-                            }
-                            Spacer(modifier = Modifier.weight(1f))
-                            selectedLabels = sortLabels(selectedLabels)
-                            for(i in selectedLabels.indices){
-                                Box(
-                                    modifier = Modifier
-                                        .size(35.dp)
-                                        .background(selectedLabels[i].color)
-                                        .border(1.dp, Color.Black)
-
-                                ){}
-                            }
-                            // "Red", "Yellow", "Green", "Cyan", "Blue", "Magenta"
-                            DropdownMenu(expanded = playlistLabel, onDismissRequest = { playlistLabel = false }) {
-                                DropdownMenuItem(text = { Text("None") }, onClick = {
-                                    selectedLabels = emptyList(); playlistLabel = false })
-                                availableLabels.forEach { label ->
-                                    DropdownMenuItem(
-                                        text = { Text(label.name) },
-                                        onClick = {
-                                            if (!selectedLabels.any { it.color == label.color }) {
-                                                selectedLabels = selectedLabels + label
-                                            } else {
-                                                selectedLabels = selectedLabels.filterNot { it.color == label.color }
-                                            }
-                                            playlistLabel = false
-                                        }
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-            )
-        }
-
-        // Bottom Controls: Each button takes 1/5th of the width
         BottomButtons()
     }
 }
 
-//Preview App
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun MP3Preview() {

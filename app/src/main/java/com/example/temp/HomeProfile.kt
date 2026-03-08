@@ -1,5 +1,12 @@
 package com.example.temp
 
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.media.AudioManager
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -25,6 +32,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -75,18 +83,54 @@ fun HomeProfilePart(
             color = secondaryBCLight,
             modifier = Modifier.weight(1f).height(75.dp)
         ) {
-            var sliderPosition by remember { mutableFloatStateOf(0f) }
+            // Get the Audio Manager
+            val context = LocalContext.current
+            val audioManager = remember { context.getSystemService(Context.AUDIO_SERVICE) as AudioManager }
+            val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+
+            // Initialize slider with the current system volume
+            var sliderPosition by remember {
+                mutableFloatStateOf(audioManager.getStreamVolume(AudioManager.STREAM_MUSIC).toFloat() / maxVolume)
+            }
+            var playingSong by remember { mutableStateOf(false) }
+            // Listen for physical button presses
+            DisposableEffect(context) {
+                val receiver = object : BroadcastReceiver() {
+                    override fun onReceive(context: Context?, intent: Intent?) {
+                        val newVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
+                        sliderPosition = newVolume.toFloat() / maxVolume
+                    }
+                }
+                // Register the receiver for volume changes
+                val filter = IntentFilter("android.media.VOLUME_CHANGED_ACTION")
+                context.registerReceiver(receiver, filter)
+
+                onDispose {
+                    context.unregisterReceiver(receiver)
+                }
+            }
             Column() {
                 Row() {
                     Slider(
                         value = sliderPosition,
+
+                        onValueChange = { newValue ->
+                            if(!playingSong){
+                                sliderPosition = newValue
+                                val newVolume = (newValue * maxVolume).toInt()
+                                // Update system volume (0 flag means hide the system volume bar)
+                                audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, newVolume, 0)
+                            }else{
+                                sliderPosition = newValue
+                            }
+                        },
+
                         // primaryBCLight & primaryBGLight
                         colors = SliderDefaults.colors(
                             thumbColor = MaterialTheme.colorScheme.primary,
                             activeTrackColor = MaterialTheme.colorScheme.primary,
                             inactiveTrackColor = MaterialTheme.colorScheme.background,
-                        ),
-                        onValueChange = { sliderPosition = it }
+                        )
                     )
                 }
                 Row(  ){
@@ -94,9 +138,12 @@ fun HomeProfilePart(
                         text = "   " + String.format("%.2f", sliderPosition),
                     )
                     Spacer(modifier = Modifier.weight(1f))
-                    Text(
-                        text = String.format("%.2f", (1-sliderPosition)) + "   ",
-                    )
+
+                    if(playingSong){
+                        Text( text = String.format("%.2f", (1-sliderPosition)) + "   " )
+                    }else{
+                        Text( text = "")
+                    }
                 }
             }
 
