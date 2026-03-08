@@ -55,8 +55,6 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.compose.AppTheme
-import com.example.compose.onPrimaryLight
 import org.burnoutcrew.reorderable.ReorderableItem
 import org.burnoutcrew.reorderable.detectReorder
 import org.burnoutcrew.reorderable.rememberReorderableLazyListState
@@ -64,7 +62,6 @@ import org.burnoutcrew.reorderable.reorderable
 import kotlin.collections.sortedBy
 import androidx.compose.runtime.SideEffect
 import com.example.compose.primaryBGLight
-import com.example.compose.primaryContainerLight
 import com.example.compose.tertiaryBGLight
 import com.example.temp.ui.theme.NewTheme
 
@@ -448,7 +445,7 @@ fun MP3Home(
             }
             // Floating + button: button selected to create a new playlist
             Box(modifier = Modifier.fillMaxWidth()
-                .background(onPrimaryLight)
+                .background(tertiaryBGLight)
             ) {
                 ElevatedButton(
                     onClick = { createPlaylist = true },

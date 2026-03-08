@@ -5,11 +5,8 @@ plugins {
 
 android {
     namespace = "com.example.temp"
-    compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
-        }
-    }
+
+    compileSdk = 36       // <-- ADD THIS
 
     defaultConfig {
         applicationId = "com.example.temp"
@@ -30,10 +27,7 @@ android {
             )
         }
     }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
-    }
+
     buildFeatures {
         compose = true
     }
