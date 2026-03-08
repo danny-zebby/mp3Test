@@ -1,6 +1,5 @@
 package com.example.temp
 
-import BottomButtons
 import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -319,7 +318,11 @@ fun MP3Home(
                 SegmentedButton(
                     selected = sortIndex == 0,
                     onClick = { sortIndex = 0 },
-                    shape = SegmentedButtonDefaults.itemShape(index = 0, count, baseShape = theShape)
+                    shape = SegmentedButtonDefaults.itemShape(index = 0, count, baseShape = theShape),
+                    colors = SegmentedButtonDefaults.colors(
+                        activeContainerColor = Color(0xFF196D8A),
+                        activeContentColor = Color.White
+                        )
                 ) { Text("Custom") }
 
                 // Alphabetical (A-Z & Z-A)
@@ -329,7 +332,11 @@ fun MP3Home(
                         if (sortIndex == 1) isAlphaAsc = !isAlphaAsc
                         else sortIndex = 1
                     },
-                    shape = SegmentedButtonDefaults.itemShape(index = 1, count, baseShape = theShape)
+                    shape = SegmentedButtonDefaults.itemShape(index = 1, count, baseShape = theShape),
+                    colors = SegmentedButtonDefaults.colors(
+                        activeContainerColor = Color(0xFF196D8A),
+                        activeContentColor = Color.White
+                    )
                 ) { Text(if (sortIndex == 1) if (isAlphaAsc) "A-Z" else "Z-A" else "Alphabetical") }
 
                 // Label Grouping
@@ -340,6 +347,10 @@ fun MP3Home(
                         showColorMenu = true
                         },
                     shape = SegmentedButtonDefaults.itemShape(index = 2, count, baseShape = theShape),
+                    colors = SegmentedButtonDefaults.colors(
+                        activeContainerColor = Color(0xFF196D8A),
+                        activeContentColor = Color.White
+                    ),
                     label = {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text("Label")
