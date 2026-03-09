@@ -30,6 +30,7 @@ fun BottomButtons(modifier: Modifier = Modifier) {
 
     // Row for 5 buttons
     Row(
+        verticalAlignment = Alignment.CenterVertically,
         modifier = modifier
             .fillMaxWidth()
             .height(100.dp)
@@ -73,8 +74,7 @@ fun BottomButtons(modifier: Modifier = Modifier) {
                         activeIndex = -1
                     }
                 )
-            },
-        verticalAlignment = Alignment.CenterVertically
+            }
     ) {
         val controlModifier = Modifier.weight(1f).height(100.dp)
 

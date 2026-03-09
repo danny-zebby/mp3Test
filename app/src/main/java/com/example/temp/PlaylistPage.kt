@@ -63,6 +63,7 @@ fun PlaylistPage(
     allSongs: Playlist,
     playlist: Playlist,
     onAddSong: (Song) -> Unit,
+    onRemoveSong: (Song) -> Unit,
     onHomeClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -207,11 +208,6 @@ fun PlaylistPage(
                                 modifier = Modifier.fillMaxWidth(),
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
-                                Text(
-                                    text = song.title,
-                                    overflow = TextOverflow.Ellipsis,
-                                    modifier = Modifier.weight(1f)
-                                )
                                 if(sortIndex == 0){
                                     Box(
                                         modifier = Modifier
@@ -219,6 +215,16 @@ fun PlaylistPage(
                                             .detectReorder(reorderState)
                                     ) { Text("=", fontWeight = FontWeight.Bold) }
                                 }
+                                Spacer(modifier = Modifier.width(5.dp))
+                                Text(
+                                    text = song.title,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                                Spacer(modifier = Modifier.weight(1f))
+                                Text(
+                                    text = "X",
+                                    modifier = Modifier.clickable { onRemoveSong(song) }
+                                )
                             }
                         }
                     }
@@ -330,6 +336,7 @@ fun PlaylistPagePreview() {
                 songs = mutableStateListOf(Song(1, "Sample Song"))
             ),
             onAddSong = {},
+            onRemoveSong = {},
             onHomeClick = {}
         )
     }
