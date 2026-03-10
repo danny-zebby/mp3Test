@@ -33,6 +33,7 @@ import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -60,13 +61,13 @@ import kotlin.collections.plus
 
 @Composable
 fun MP3Home(
+    modifier: Modifier = Modifier,
     playlistOfPlaylist: SnapshotStateList<Playlist>,
     onDriveModeClick: () -> Unit = {},
     onPlaylistClick: (Playlist) -> Unit = {},
     onAddPlaylist: (String, List<Label>) -> Unit = { _, _ -> },
     onDeletePlaylist: (Int) -> Unit = {},
-    onHomeClick: () -> Unit = {},
-    modifier: Modifier = Modifier
+    onHomeClick: () -> Unit = {}
 ) {
     var newItem by remember { mutableStateOf(TextFieldValue()) }            // This stores text field text
     var selectedLabels by remember { mutableStateOf(listOf<Label>()) }      // Temporary placement for labels
@@ -89,7 +90,7 @@ fun MP3Home(
     }
 
     // Values used to create three playlist sorts
-    var sortIndex by remember { mutableStateOf(0) }                         // 0: Custom, 1: Alpha, 2: Label
+    var sortIndex by remember { mutableIntStateOf(0) }                         // 0: Custom, 1: Alpha, 2: Label
     var isAlphaAsc by remember { mutableStateOf(true) }                     // Alphabetical sort trigger
     var labelFilterColor by remember { mutableStateOf(Color.Transparent) }  // Color to sort by
     var showColorMenu by remember { mutableStateOf(false) }                 // Label sort trigger
@@ -335,7 +336,7 @@ fun MP3Home(
                                     Text(
                                         text = "X",
                                         modifier = Modifier.clickable{
-                                            playlistToDelete = playlist.id - 1
+                                            playlistToDelete = playlist.id
                                             deletePlaylist = true}
                                     )
                                 }
@@ -386,7 +387,7 @@ fun MP3Home(
                             label = { Text("Playlist Name") }
                         )
                         Spacer(modifier = Modifier.height(8.dp))
-                        Row () {
+                        Row {
                             Button(
                                 onClick = { playlistLabel = true},
                                 shape = RectangleShape,
@@ -446,7 +447,7 @@ fun MP3Home(
                 },
                 // Text: text field, label dropdown, labels selected
                 text = {
-                    Text(text = "Are you sure you want to delete " + playlistOfPlaylist[playlistToDelete].name)
+                    Text(text = "Are you sure you want to delete " + playlistOfPlaylist[playlistToDelete+2].name)
                 }
             )
         }

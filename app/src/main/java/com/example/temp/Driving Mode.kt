@@ -28,20 +28,20 @@ fun DrivingMode(onHomeClick: () -> Unit, modifier: Modifier = Modifier) {
             verticalArrangement = Arrangement.spacedBy(0.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Button(onClick = { onHomeClick() }, shape = RectangleShape, modifier = controlModifier,)  { Text("Home") }
-            Button(onClick = {}, shape = RectangleShape, modifier = controlModifier,)  { Text("Loop") }
-            Button(onClick = {}, shape = RectangleShape, modifier = controlModifier,)  { Text("Prev Play") }
-            Button(onClick = {}, shape = RectangleShape, modifier = controlModifier,)  { Text("Prev Song") }
+            Button(onClick = { onHomeClick() }, shape = RectangleShape, modifier = controlModifier)  { Text("Home") }
+            Button(onClick = {}, shape = RectangleShape, modifier = controlModifier)  { Text("Loop") }
+            Button(onClick = {}, shape = RectangleShape, modifier = controlModifier)  { Text("Prev Play") }
+            Button(onClick = {}, shape = RectangleShape, modifier = controlModifier)  { Text("Prev Song") }
         }
         Column(
             modifier = Modifier.fillMaxHeight(),
             verticalArrangement = Arrangement.spacedBy(0.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Button(onClick = {}, shape = RectangleShape, modifier = controlModifier,)  { Text("Repeat") }
-            Button(onClick = {}, shape = RectangleShape, modifier = controlModifier,)  { Text("Pause") }
-            Button(onClick = {}, shape = RectangleShape, modifier = controlModifier,)  { Text("Next Play") }
-            Button(onClick = {}, shape = RectangleShape, modifier = controlModifier,)  { Text("Next Song") }
+            Button(onClick = {}, shape = RectangleShape, modifier = controlModifier)  { Text("Repeat") }
+            Button(onClick = {}, shape = RectangleShape, modifier = controlModifier)  { Text("Pause") }
+            Button(onClick = {}, shape = RectangleShape, modifier = controlModifier)  { Text("Next Play") }
+            Button(onClick = {}, shape = RectangleShape, modifier = controlModifier)  { Text("Next Song") }
         }
     }
 }

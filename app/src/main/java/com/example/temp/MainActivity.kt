@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.mutableIntStateOf
 import com.example.temp.ui.theme.NewTheme
 
 class MainActivity : ComponentActivity() {
@@ -37,14 +38,14 @@ class MainActivity : ComponentActivity() {
                 var currentScreen by remember { mutableStateOf("home") }
                 var selectedPlaylistId by remember { mutableStateOf<Int?>(null) }
                 
-                val AllSongs = mutableStateListOf(
+                val allSongs = mutableStateListOf(
                     Song(1,"Creep"), Song(2,"Candy"), Song(3,"Amber"),
                     Song(4, "311"), Song(5, "Tu Falta De Querer")
                 )
                 val playlistOfPlaylist = mutableStateListOf(
-                    Playlist(id = 1, name = "All Songs", songs = AllSongs)
+                    Playlist(id = 1, name = "All Songs", songs = allSongs)
                 )
-                var nextPlaylistId by remember { mutableStateOf(2) }
+                var nextPlaylistId by remember { mutableIntStateOf(2) }
 
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
@@ -52,6 +53,8 @@ class MainActivity : ComponentActivity() {
                 ) { innerPadding ->
                     when (currentScreen) {
                         "home" -> MP3Home(
+                            modifier = Modifier.padding(innerPadding),
+
                             playlistOfPlaylist = playlistOfPlaylist,
 
                             onDriveModeClick = { currentScreen = "driving" },
@@ -71,18 +74,11 @@ class MainActivity : ComponentActivity() {
                                 }
                             },
 
-                            onDeletePlaylist = { index ->
-                                if(playlistOfPlaylist.any {playlistOfPlaylist[index].id == it.id}){
-                                    playlistOfPlaylist.remove(playlistOfPlaylist[index])
-                                    nextPlaylistId--
-                                }else{
-                                    // some code it's like hey this play doesn't exist try again
-                                }
+                            onDeletePlaylist = { playlistId ->
+                                playlistOfPlaylist.removeAll { it.id == playlistId }
                             },
 
                             onHomeClick = { currentScreen = "home" },
-
-                            modifier = Modifier.padding(innerPadding)
                         )
                         "playlist" -> {
                             val playlist = playlistOfPlaylist.find { it.id == selectedPlaylistId }
@@ -100,9 +96,7 @@ class MainActivity : ComponentActivity() {
                                     },
 
                                     onRemoveSong = { song ->
-                                        if (currentPlaylist.songs.any {it.id == song.id}){
-                                            currentPlaylist.songs.remove(song)
-                                        }
+                                        currentPlaylist.songs.removeAll{ it.id == song.id }
                                     },
 
                                     onHomeClick = { currentScreen = "home" },

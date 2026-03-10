@@ -21,7 +21,7 @@ import com.example.temp.ui.theme.NewTheme
 @Composable
 fun BottomButtons(modifier: Modifier = Modifier) {
     var toggle by remember { mutableStateOf(true) }
-    var activeIndex by remember { mutableStateOf(-1) } // currently highlighted button
+    var activeIndex by remember { mutableIntStateOf(-1) } // currently highlighted button
     var dragging by remember { mutableStateOf(false) }
     var lastAction by remember { mutableStateOf("None") }
 

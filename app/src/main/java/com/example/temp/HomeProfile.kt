@@ -50,9 +50,9 @@ import com.example.temp.ui.theme.NewTheme
 
 @Composable
 fun HomeProfilePart(
+    modifier: Modifier = Modifier,
     onHomeClick: () -> Unit = {},
-    onProfileClick: () -> Unit = {},
-    modifier: Modifier = Modifier
+    onProfileClick: () -> Unit = {}
 ) {
     // First row: Home button, Music Playing, and Profile page
     Row(
@@ -109,8 +109,8 @@ fun HomeProfilePart(
                     context.unregisterReceiver(receiver)
                 }
             }
-            Column() {
-                Row() {
+            Column {
+                Row {
                     Slider(
                         value = sliderPosition,
 
@@ -133,7 +133,7 @@ fun HomeProfilePart(
                         )
                     )
                 }
-                Row(  ){
+                Row{
                     Text(
                         text = "   " + String.format("%.2f", sliderPosition),
                     )
