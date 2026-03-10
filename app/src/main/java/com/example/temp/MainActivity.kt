@@ -18,7 +18,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.mutableIntStateOf
+import com.example.audiotest.AudioPlayerScreen
 import com.example.temp.ui.theme.NewTheme
+import java.io.File
 
 class MainActivity : ComponentActivity() {
     @SuppressLint("UnrememberedMutableState")
@@ -38,10 +40,8 @@ class MainActivity : ComponentActivity() {
                 var currentScreen by remember { mutableStateOf("home") }
                 var selectedPlaylistId by remember { mutableStateOf<Int?>(null) }
                 
-                val allSongs = mutableStateListOf(
-                    Song(1,"Creep"), Song(2,"Candy"), Song(3,"Amber"),
-                    Song(4, "311"), Song(5, "Tu Falta De Querer")
-                )
+                val allSongs = loadDownloadSongs()
+
                 val playlistOfPlaylist = mutableStateListOf(
                     Playlist(id = 1, name = "All Songs", songs = allSongs)
                 )
@@ -56,6 +56,8 @@ class MainActivity : ComponentActivity() {
                             modifier = Modifier.padding(innerPadding),
 
                             playlistOfPlaylist = playlistOfPlaylist,
+
+                            onAudioClick = {currentScreen = "audio"},
 
                             onDriveModeClick = { currentScreen = "driving" },
 
@@ -112,6 +114,13 @@ class MainActivity : ComponentActivity() {
                                 modifier = Modifier.padding(innerPadding)
                             )
                         }
+                        "audio" -> {
+                            AudioPlayerScreen(
+                                onHomeClick = { currentScreen = "home" },
+
+                                modifier = Modifier.padding(innerPadding)
+                            )
+                        }
                     }
                 }
             }
@@ -122,6 +131,7 @@ class MainActivity : ComponentActivity() {
 data class Song(
     val id: Int,
     val title: String,
+    val path: String,
 )
 
 data class Label(
@@ -136,3 +146,28 @@ data class Playlist(
     val songs: SnapshotStateList<Song> = mutableStateListOf()
 )
 
+fun loadDownloadSongs(): SnapshotStateList<Song> {
+
+    val list = mutableStateListOf<Song>()
+
+    val folder = File("/storage/emulated/0/Download")
+
+    var idCounter = 0
+
+    folder.listFiles()?.forEach { file ->
+
+        if (file.extension.lowercase() == "mp3") {
+
+            list.add(
+                Song(
+                    id = idCounter++,
+                    title = file.nameWithoutExtension,
+                    path = file.absolutePath
+                )
+            )
+
+        }
+    }
+
+    return list
+}

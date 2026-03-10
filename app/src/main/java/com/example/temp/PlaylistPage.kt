@@ -326,19 +326,12 @@ fun PlaylistPagePreview() {
             allSongs = Playlist(
                 id = 1,
                 name = "All Songs",
-                songs = mutableStateListOf(
-                    Song(1, "Creep"),
-                    Song(2, "Candy"),
-                    Song(3, "Amber"),
-                    Song(4, "311"),
-                    Song(5, "Tu Falta De Querer")
-                )
+                labels = emptyList(),
             ),
             playlist = Playlist(
-                id = 2,
-                name = "My Favorites",
-                labels = listOf(Label(Color.Red, "Rock"), Label(Color.Blue, "Relax")),
-                songs = mutableStateListOf(Song(1, "Sample Song"))
+                id = 1,
+                name = "All Songs",
+                labels = emptyList(),
             ),
             onAddSong = {},
             onRemoveSong = {},
