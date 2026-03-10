@@ -68,7 +68,6 @@ fun PlaylistPage(
     modifier: Modifier = Modifier
 ) {
     // Values use to create playlist
-    val playlistOfSongs = remember { mutableStateListOf<Song>().apply { addAll(playlist.songs) } }
     var addSong by remember { mutableStateOf(false) }
 
     // Values used to create three playlist sorts
@@ -81,7 +80,6 @@ fun PlaylistPage(
         1 -> if (isAlphaAsc) playlist.songs.sortedBy { it.title } else playlist.songs.sortedByDescending { it.title }
         else -> playlist.songs
     }
-
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
@@ -176,9 +174,15 @@ fun PlaylistPage(
             // Middle: LazyColumn for playlists
             val reorderState = rememberReorderableLazyListState(
                 onMove = { from, to ->
-                    playlistOfSongs.add(to.index, playlistOfSongs.removeAt(from.index))
+                    if (sortIndex == 0) {
+                        playlist.songs.add(
+                            to.index,
+                            playlist.songs.removeAt(from.index)
+                        )
+                    }
                 }
             )
+
             LazyColumn(
                 state = reorderState.listState,
                 contentPadding = PaddingValues(top = 8.dp),
