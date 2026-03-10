@@ -74,7 +74,7 @@ fun MP3Home(
     var createPlaylist by remember { mutableStateOf(false) }                // Tigger for create playlist
     var playlistLabel by remember { mutableStateOf(false) }                 // Tigger for label dropdown (create)
     var deletePlaylist by remember { mutableStateOf(false) }                // Tigger for deleting playlist
-    var playlistToDelete = -1                                                       // Temp placement for deleted playlist
+    var playlistToDelete by remember {mutableIntStateOf(-1)}                                                       // Temp placement for deleted playlist
 
     val availableLabels = listOf(
         Label(Color.Red, "Red"), Label(Color.Yellow, "Yellow"), Label(Color.Green, "Green"),
@@ -95,7 +95,7 @@ fun MP3Home(
     var labelFilterColor by remember { mutableStateOf(Color.Transparent) }  // Color to sort by
     var showColorMenu by remember { mutableStateOf(false) }                 // Label sort trigger
 
-    val displayList = remember(playlistOfPlaylist.toList(), sortIndex, isAlphaAsc, labelFilterColor) {
+    val displayList = remember(playlistOfPlaylist.size, sortIndex, isAlphaAsc, labelFilterColor) {
         val allSongs = playlistOfPlaylist.find { it.id == 1 }
         val others = playlistOfPlaylist.filter { it.id != 1 }
 
@@ -283,7 +283,8 @@ fun MP3Home(
                     .reorderable(reorderState),
             ) {
                 items(
-                    items = displayList,
+                    items = if(sortIndex == 0) playlistOfPlaylist
+                    else displayList,
                     key = { it.id }
                 ) { playlist ->
                     ReorderableItem(
@@ -447,7 +448,7 @@ fun MP3Home(
                 },
                 // Text: text field, label dropdown, labels selected
                 text = {
-                    Text(text = "Are you sure you want to delete " + playlistOfPlaylist[playlistToDelete+2].name)
+                    Text(text = "Are you sure you want to delete " + playlistOfPlaylist.find { it.id ==  playlistToDelete}?.name)
                 }
             )
         }

@@ -52,7 +52,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.runtime.mutableIntStateOf
 import com.example.compose.primaryBGLight
 import com.example.compose.tertiaryBGLight
 import com.example.temp.ui.theme.NewTheme
@@ -73,14 +72,14 @@ fun PlaylistPage(
     var addSong by remember { mutableStateOf(false) }
 
     // Values used to create three playlist sorts
-    var sortIndex by remember { mutableIntStateOf(0) }                         // 0: Custom, 1: Alpha
+    var sortIndex by remember { mutableStateOf(0) }                         // 0: Custom, 1: Alpha
     var isAlphaAsc by remember { mutableStateOf(true) }                     // Alphabetical sort trigger
 
     // How Playlist are sorted
     val displayList =  when (sortIndex) {
-            0 -> playlist.songs
-            1 -> if (isAlphaAsc) playlist.songs.sortedBy { it.title } else playlist.songs.sortedByDescending { it.title }
-            else -> playlist.songs
+        0 -> playlist.songs
+        1 -> if (isAlphaAsc) playlist.songs.sortedBy { it.title } else playlist.songs.sortedByDescending { it.title }
+        else -> playlist.songs
     }
 
     Column(
@@ -216,12 +215,11 @@ fun PlaylistPage(
                                             .detectReorder(reorderState)
                                     ) { Text("=", fontWeight = FontWeight.Bold) }
                                 }
-                                Spacer(modifier = Modifier.width(5.dp))
                                 Text(
                                     text = song.title,
                                     overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.weight(1f)
                                 )
-                                Spacer(modifier = Modifier.weight(1f))
                                 if(playlist.id != 1){
                                     Text(
                                         text = "X",
@@ -267,7 +265,7 @@ fun PlaylistPage(
                 dismissButton = {
                     Button(onClick = { addSong = false }) { Text("Done") }
                 },
-                text = { Column {
+                text = { Column() {
                     SearchBar(
                         query = searchText,
                         onQueryChange = { searchText = it },
