@@ -18,14 +18,23 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.mutableIntStateOf
-import com.example.audiotest.AudioPlayerScreen
 import com.example.temp.ui.theme.NewTheme
 import java.io.File
+import android.Manifest
+import androidx.core.app.ActivityCompat
 
 class MainActivity : ComponentActivity() {
     @SuppressLint("UnrememberedMutableState")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Request audio permission
+        ActivityCompat.requestPermissions(
+            this,
+            arrayOf(Manifest.permission.READ_MEDIA_AUDIO),
+            1
+        )
+
         setContent {
             NewTheme {
                 val window = this.window
@@ -150,7 +159,7 @@ fun loadDownloadSongs(): SnapshotStateList<Song> {
 
     val list = mutableStateListOf<Song>()
 
-    val folder = File("/storage/emulated/0/Download")
+    val folder = File("/storage/emulated/0/Download/")
 
     var idCounter = 0
 

@@ -31,7 +31,6 @@ import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -52,6 +51,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.runtime.mutableIntStateOf
 import com.example.compose.primaryBGLight
 import com.example.compose.tertiaryBGLight
 import com.example.temp.ui.theme.NewTheme
@@ -71,7 +71,7 @@ fun PlaylistPage(
     var addSong by remember { mutableStateOf(false) }
 
     // Values used to create three playlist sorts
-    var sortIndex by remember { mutableStateOf(0) }                         // 0: Custom, 1: Alpha
+    var sortIndex by remember { mutableIntStateOf(0) }                         // 0: Custom, 1: Alpha
     var isAlphaAsc by remember { mutableStateOf(true) }                     // Alphabetical sort trigger
 
     // How Playlist are sorted
@@ -269,7 +269,7 @@ fun PlaylistPage(
                 dismissButton = {
                     Button(onClick = { addSong = false }) { Text("Done") }
                 },
-                text = { Column() {
+                text = { Column {
                     SearchBar(
                         query = searchText,
                         onQueryChange = { searchText = it },

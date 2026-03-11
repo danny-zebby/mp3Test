@@ -417,7 +417,7 @@ fun MP3Home(
                                     DropdownMenuItem(
                                         text = { Text(label.name) },
                                         onClick = {
-                                            if (!selectedLabels.any { it.color == label.color }) {
+                                            if(!selectedLabels.any { it.color == label.color }) {
                                                 selectedLabels = selectedLabels + label
                                             } else {
                                                 selectedLabels = selectedLabels.filterNot { it.color == label.color }
