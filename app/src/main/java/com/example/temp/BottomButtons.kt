@@ -37,7 +37,7 @@ fun BottomButtons(modifier: Modifier = Modifier) {
         }else{
             AudioManger.resume()
         }},
-        {println("3")},
+        { AudioManger.nextSong()},
         {println("4")},)
 
     val buttonFunctions2 = listOf(
@@ -47,7 +47,7 @@ fun BottomButtons(modifier: Modifier = Modifier) {
         }else{
             AudioManger.resume()
         }},
-        {println("7")},
+        { AudioManger.prevSong()},
         {println("8")},)
 
     val symbols = if (toggle.xor(dragging)) symbols1 else symbols2

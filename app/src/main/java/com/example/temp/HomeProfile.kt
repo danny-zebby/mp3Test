@@ -92,7 +92,6 @@ fun HomeProfilePart(
             var sliderPosition by remember {
                 mutableFloatStateOf(audioManager.getStreamVolume(AudioManager.STREAM_MUSIC).toFloat() / maxVolume)
             }
-            var playingSong by remember { mutableStateOf(false) }
             // Listen for physical button presses
             DisposableEffect(context) {
                 val receiver = object : BroadcastReceiver() {
@@ -115,7 +114,7 @@ fun HomeProfilePart(
                         value = sliderPosition,
 
                         onValueChange = { newValue ->
-                            if(!playingSong){
+                            if(AudioManger.isPlaying()){
                                 sliderPosition = newValue
                                 val newVolume = (newValue * maxVolume).toInt()
                                 // Update system volume (0 flag means hide the system volume bar)
@@ -139,7 +138,7 @@ fun HomeProfilePart(
                     )
                     Spacer(modifier = Modifier.weight(1f))
 
-                    if(playingSong){
+                    if(AudioManger.isPlaying()){
                         Text( text = String.format("%.2f", (1-sliderPosition)) + "   " )
                     }else{
                         Text( text = "")

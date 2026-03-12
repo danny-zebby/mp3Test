@@ -64,7 +64,6 @@ import kotlin.collections.plus
 @Composable
 fun MP3Home(
     modifier: Modifier = Modifier,
-    playlistOfPlaylist: SnapshotStateList<Playlist>,
     onAudioClick: () -> Unit = {},
     onDriveModeClick: () -> Unit = {},
     onPlaylistClick: (Playlist) -> Unit = {},
@@ -98,9 +97,9 @@ fun MP3Home(
     var labelFilterColor by remember { mutableStateOf(Color.Transparent) }  // Color to sort by
     var showColorMenu by remember { mutableStateOf(false) }                 // Label sort trigger
 
-    val displayList = remember(playlistOfPlaylist.size, sortIndex, isAlphaAsc, labelFilterColor) {
-        val allSongs = playlistOfPlaylist.find { it.id == 1 }
-        val others = playlistOfPlaylist.filter { it.id != 1 }
+    val displayList = remember(PoP.playlistOfPlaylist.size, sortIndex, isAlphaAsc, labelFilterColor) {
+        val allSongs = PoP.playlistOfPlaylist.find { it.id == 1 }
+        val others = PoP.playlistOfPlaylist.filter { it.id != 1 }
 
         val sortedOthers = when (sortIndex) {
             0 -> others
@@ -273,7 +272,7 @@ fun MP3Home(
                 onMove = { from, to ->
                     if (sortIndex != 0) return@rememberReorderableLazyListState
                     if (from.index == 0 || to.index == 0) return@rememberReorderableLazyListState
-                    playlistOfPlaylist.add(to.index, playlistOfPlaylist.removeAt(from.index))
+                    PoP.playlistOfPlaylist.add(to.index, PoP.playlistOfPlaylist.removeAt(from.index))
                 }
             )
             LazyColumn(
@@ -286,7 +285,7 @@ fun MP3Home(
                     .reorderable(reorderState),
             ) {
                 items(
-                    items = if(sortIndex == 0) playlistOfPlaylist
+                    items = if(sortIndex == 0) PoP.playlistOfPlaylist
                     else displayList,
                     key = { it.id }
                 ) { playlist ->
@@ -451,19 +450,18 @@ fun MP3Home(
                 },
                 // Text: text field, label dropdown, labels selected
                 text = {
-                    Text(text = "Are you sure you want to delete " + playlistOfPlaylist.find { it.id ==  playlistToDelete}?.name)
+                    Text(text = "Are you sure you want to delete " + PoP.playlistOfPlaylist.find { it.id ==  playlistToDelete}?.name)
                 }
             )
         }
         BottomButtons()
     }
 }
-/*
+
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun MP3Preview() {
     NewTheme {
-        MP3Home(playlistOfPlaylist = remember { mutableStateListOf(Playlist(id = 1, name = "All Songs")) })
+        MP3Home()
     }
 }
-*/

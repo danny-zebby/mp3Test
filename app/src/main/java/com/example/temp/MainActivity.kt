@@ -52,9 +52,10 @@ class MainActivity : ComponentActivity() {
                 
                 val allSongs = loadDownloadSongs()
 
-                val playlistOfPlaylist = mutableStateListOf(
-                    Playlist(id = 1, name = "All Songs", songs = allSongs)
-                )
+                PoP.playlistOfPlaylist.add(Playlist(id = 1, name = "All Songs", songs = allSongs))
+//                val playlistOfPlaylist = mutableStateListOf(
+//                    Playlist(id = 1, name = "All Songs", songs = allSongs)
+//                )
                 var nextPlaylistId by remember { mutableIntStateOf(2) }
 
                 Scaffold(
@@ -64,8 +65,6 @@ class MainActivity : ComponentActivity() {
                     when (currentScreen) {
                         "home" -> MP3Home(
                             modifier = Modifier.padding(innerPadding),
-
-                            playlistOfPlaylist = playlistOfPlaylist,
 
                             onAudioClick = {currentScreen = "audio"},
 
@@ -77,8 +76,8 @@ class MainActivity : ComponentActivity() {
                             },
 
                             onAddPlaylist = { name, labels ->
-                                if(playlistOfPlaylist.none {it.name == name}){
-                                    playlistOfPlaylist.add(Playlist(id = nextPlaylistId, name = name, labels = labels))
+                                if(PoP.playlistOfPlaylist.none {it.name == name}){
+                                    PoP.playlistOfPlaylist.add(Playlist(id = nextPlaylistId, name = name, labels = labels))
                                     nextPlaylistId++
                                 }
                                 else{
@@ -87,17 +86,17 @@ class MainActivity : ComponentActivity() {
                             },
 
                             onDeletePlaylist = { playlistId ->
-                                playlistOfPlaylist.removeAll { it.id == playlistId }
+                                PoP.playlistOfPlaylist.removeAll { it.id == playlistId }
                             },
 
                             onHomeClick = { currentScreen = "home" },
                         )
                         "playlist" -> {
-                            val playlist = playlistOfPlaylist.find { it.id == selectedPlaylistId }
+                            val playlist = PoP.playlistOfPlaylist.find { it.id == selectedPlaylistId }
                             playlist?.let { currentPlaylist ->
                                 PlaylistPage(
 
-                                    allSongs = playlistOfPlaylist.first { it.id == 1 },
+                                    allSongs = PoP.playlistOfPlaylist.first { it.id == 1 },
 
                                     playlist = currentPlaylist,
 
@@ -139,9 +138,9 @@ class MainActivity : ComponentActivity() {
 }
 
 data class Song(
-    val id: Int,
-    val title: String,
-    val path: String,
+    val id: Int = -1,
+    val title: String = "",
+    val path: String = "",
 )
 
 data class Label(
@@ -157,12 +156,28 @@ data class Playlist(
 )
 object AudioManger{
     var mediaPlayer: MediaPlayer? = null
-    fun play(path: String) {
-    mediaPlayer = MediaPlayer().apply {
-            setDataSource(path)
-            prepare()
-            start()
+    var currentSong: Song = Song()
+    var currentPlaylist: Playlist = Playlist()
+
+    fun play(song: Song, playlist: Playlist) {
+        if(currentSong == song)
+        {
+            return
         }
+        if(currentSong != song){
+            onDispose()
+        }
+        currentSong = song
+        currentPlaylist = playlist
+        mediaPlayer = MediaPlayer().apply {
+                setDataSource(song.path)
+                prepare()
+                start()
+            }
+    }
+
+    fun onDispose() {
+        mediaPlayer?.release()
     }
 
     fun pause() {
@@ -177,8 +192,44 @@ object AudioManger{
         return mediaPlayer?.isPlaying == true
     }
 
+    //Still need to work on use cases for the following functions
+    fun nextSong() {
+        if(currentSong.id == currentPlaylist.songs.lastIndex){
+            return
+        }else {
+            play(currentPlaylist.songs[currentSong.id + 1], currentPlaylist)
+        }
+    }
+
+    fun prevSong() {
+        if (currentSong.id == currentPlaylist.songs[0].id){
+            return
+        } else {
+            play(currentPlaylist.songs[currentSong.id - 1], currentPlaylist)
+        }
+    }
+
+    fun nextPlaylist() {
+        if(currentPlaylist.id == PoP.playlistOfPlaylist.lastIndex){
+            return
+        }else {
+            play(PoP.playlistOfPlaylist[currentPlaylist.id+1].songs[0], PoP.playlistOfPlaylist[currentPlaylist.id+1])
+        }
+    }
+
+    fun prevPlaylist() {
+        if (currentPlaylist.id == PoP.playlistOfPlaylist[0].id){
+            return
+        } else {
+            play(PoP.playlistOfPlaylist[currentPlaylist.id-1].songs[0], PoP.playlistOfPlaylist[currentPlaylist.id-1])
+        }
+    }
+
 }
 
+object PoP{
+    val playlistOfPlaylist: MutableList<Playlist> = mutableListOf()
+}
 fun loadDownloadSongs(): SnapshotStateList<Song> {
 
     val list = mutableStateListOf<Song>()

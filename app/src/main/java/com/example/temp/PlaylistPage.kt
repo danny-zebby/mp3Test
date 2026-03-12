@@ -202,7 +202,7 @@ fun PlaylistPage(
                     ) { isDragging ->
                         Button(
                             onClick = {
-                                AudioManger.play(song.path)
+                                AudioManger.play(song, playlist)
                             },
                             contentPadding = PaddingValues(start = 10.dp, end = 10.dp),
                             modifier = Modifier
