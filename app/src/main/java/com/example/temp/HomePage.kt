@@ -306,7 +306,7 @@ fun MP3Home(
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
                                 // Makes the playlist draggable
-                                if(sortIndex == 0 && playlist.id != 1){ // Checking if the sort is custom and not for All Songs
+                                if(sortIndex == 0 && playlist.id != 0){ // Checking if the sort is custom and not for All Songs
                                     Box(
                                         modifier = Modifier
                                             .size(24.dp)
@@ -335,7 +335,7 @@ fun MP3Home(
                                         }
                                     }
                                 }
-                                if(playlist.id != 1){
+                                if(playlist.id != 0){
                                     Text(
                                         text = "X",
                                         modifier = Modifier.clickable{

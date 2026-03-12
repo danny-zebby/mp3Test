@@ -167,7 +167,6 @@ object AudioPlayer{
         }
         currentSong = song
         currentPlaylist = playlist
-        println("PLAYLIST ID HERE: "+currentPlaylist.id + " SONG ID HERE: "+currentSong.id)
         mediaPlayer = MediaPlayer().apply {
                 setDataSource(song.path)
                 prepare()
@@ -198,34 +197,36 @@ object AudioPlayer{
 
     //Still need to work on use cases for the following functions
     fun nextSong() {
-        if(currentSong.id == currentPlaylist.songs.lastIndex){
+        if( currentPlaylist.songs.indexOf(currentSong) == currentPlaylist.songs.lastIndex ) {
             return
         }else {
-            play(currentPlaylist.songs[currentSong.id + 1], currentPlaylist)
+            play(currentPlaylist.songs[currentPlaylist.songs.indexOf(currentSong)+1], currentPlaylist)
         }
     }
 
     fun prevSong() {
-        if (currentSong.id == currentPlaylist.songs[0].id){
+        if( currentPlaylist.songs.indexOf(currentSong) == 0 ) {
             return
-        } else {
-            play(currentPlaylist.songs[currentSong.id - 1], currentPlaylist)
+        }else {
+            play(currentPlaylist.songs[currentPlaylist.songs.indexOf(currentSong)-1], currentPlaylist)
         }
     }
 
     fun nextPlaylist() {
-        if(currentPlaylist.id == PoP.playlistOfPlaylist.lastIndex || PoP.playlistOfPlaylist[currentPlaylist.id+1].songs.isEmpty()){
+        if(PoP.playlistOfPlaylist.indexOf(currentPlaylist) == PoP.playlistOfPlaylist.lastIndex
+            || PoP.playlistOfPlaylist[PoP.playlistOfPlaylist.indexOf(currentPlaylist) + 1 ].songs.isEmpty()){
             return
         }else {
-            play(PoP.playlistOfPlaylist[currentPlaylist.id+1].songs[0], PoP.playlistOfPlaylist[currentPlaylist.id+1])
+            play(PoP.playlistOfPlaylist[PoP.playlistOfPlaylist.indexOf(currentPlaylist) + 1 ].songs[0], PoP.playlistOfPlaylist[PoP.playlistOfPlaylist.indexOf(currentPlaylist) + 1 ])
         }
     }
 
     fun prevPlaylist() {
-        if (currentPlaylist.id == PoP.playlistOfPlaylist[0].id || PoP.playlistOfPlaylist[currentPlaylist.id-1].songs.isEmpty()){
+        if (PoP.playlistOfPlaylist.indexOf(currentPlaylist) == 0
+            || PoP.playlistOfPlaylist[PoP.playlistOfPlaylist.indexOf(currentPlaylist) - 1 ].songs.isEmpty()){
             return
         } else {
-            play(PoP.playlistOfPlaylist[currentPlaylist.id-1].songs[0], PoP.playlistOfPlaylist[currentPlaylist.id-1])
+            play(PoP.playlistOfPlaylist[PoP.playlistOfPlaylist.indexOf(currentPlaylist) - 1].songs[0], PoP.playlistOfPlaylist[PoP.playlistOfPlaylist.indexOf(currentPlaylist) - 1])
         }
     }
 
