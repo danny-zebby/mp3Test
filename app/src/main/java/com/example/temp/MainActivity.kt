@@ -21,6 +21,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import com.example.temp.ui.theme.NewTheme
 import java.io.File
 import android.Manifest
+import android.media.MediaPlayer
 import androidx.core.app.ActivityCompat
 
 class MainActivity : ComponentActivity() {
@@ -70,7 +71,7 @@ class MainActivity : ComponentActivity() {
 
                             onDriveModeClick = { currentScreen = "driving" },
 
-                            onPlaylistClick = { playlist ->
+                            onPlaylistClick = { playlist,  ->
                                 selectedPlaylistId = playlist.id
                                 currentScreen = "playlist"
                             },
@@ -154,6 +155,29 @@ data class Playlist(
     val labels: List<Label> = emptyList(), 
     val songs: SnapshotStateList<Song> = mutableStateListOf()
 )
+object AudioManger{
+    var mediaPlayer: MediaPlayer? = null
+    fun play(path: String) {
+    mediaPlayer = MediaPlayer().apply {
+            setDataSource(path)
+            prepare()
+            start()
+        }
+    }
+
+    fun pause() {
+        mediaPlayer?.pause()
+    }
+
+    fun resume() {
+        mediaPlayer?.start()
+    }
+
+    fun isPlaying(): Boolean {
+        return mediaPlayer?.isPlaying == true
+    }
+
+}
 
 fun loadDownloadSongs(): SnapshotStateList<Song> {
 

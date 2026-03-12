@@ -8,6 +8,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -27,6 +28,30 @@ fun BottomButtons(modifier: Modifier = Modifier) {
 
     val symbols1 = listOf("C>", "||", ">", ">>")
     val symbols2 = listOf("O>", "||", "<", "<<")
+
+    // Remaining 4 buttons
+    val buttonFunctions1 = listOf(
+        {println("1")},
+        { if(AudioManger.isPlaying()) {
+            AudioManger.pause()
+        }else{
+            AudioManger.resume()
+        }},
+        {println("3")},
+        {println("4")},)
+
+    val buttonFunctions2 = listOf(
+        {println("5")},
+        { if(AudioManger.isPlaying()) {
+            AudioManger.pause()
+        }else{
+            AudioManger.resume()
+        }},
+        {println("7")},
+        {println("8")},)
+
+    val symbols = if (toggle.xor(dragging)) symbols1 else symbols2
+    val buttonFunction = if (toggle.xor(dragging)) buttonFunctions1 else buttonFunctions2
 
     // Row for 5 buttons
     Row(
@@ -59,8 +84,7 @@ fun BottomButtons(modifier: Modifier = Modifier) {
                     },
                     onDragEnd = {
                         if (activeIndex >= 0) {
-                            lastAction = "Button ${activeIndex + 2} clicked"
-                            println(lastAction)
+                            buttonFunction[activeIndex]
                         } else {
                             lastAction = "Drag cancelled"  // drag ended back on first button
                             println(lastAction)
@@ -85,15 +109,15 @@ fun BottomButtons(modifier: Modifier = Modifier) {
             modifier = controlModifier,
             colors = ButtonDefaults.buttonColors(containerColor = if (!dragging) Color(0xFF196D8A) else Color(0xFF145e77))
         ) {
-            Text(text = if (toggle) "^" else "V")
+            Text(text = if (toggle) "^" else "v")
         }
 
         // Remaining 4 buttons
-        val symbols = if (toggle) symbols1 else symbols2
         symbols.forEachIndexed { index, symbol ->
             val bg = if (dragging && activeIndex == index) Color(0xFF145e77) else Color(0xFF196D8A)
+            val button = buttonFunction[index]
             Button(
-                onClick = { println("Button ${index + 2} clicked") },
+                onClick = { button() },
                 shape = RectangleShape,
                 modifier = controlModifier,
                 colors = ButtonDefaults.buttonColors(containerColor = bg)

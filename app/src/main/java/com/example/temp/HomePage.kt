@@ -1,5 +1,6 @@
 package com.example.temp
 
+import android.media.MediaPlayer
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -39,6 +40,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.compose.runtime.snapshots.SnapshotStateObserver
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -456,7 +458,7 @@ fun MP3Home(
         BottomButtons()
     }
 }
-
+/*
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun MP3Preview() {
@@ -464,3 +466,4 @@ fun MP3Preview() {
         MP3Home(playlistOfPlaylist = remember { mutableStateListOf(Playlist(id = 1, name = "All Songs")) })
     }
 }
+*/

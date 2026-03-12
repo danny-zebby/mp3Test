@@ -13,83 +13,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.temp.ui.theme.NewTheme
 
-/*
-@Composable
-fun AudioPlayerScreen(onHomeClick: () -> Unit, modifier: Modifier = Modifier) {
-
-    val context = LocalContext.current
-
-    var mediaPlayer by remember { mutableStateOf<MediaPlayer?>(null) }
-    var audioUri by remember { mutableStateOf<Uri?>(null) }
-
-    val picker = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenDocument()
-    ) { uri: Uri? ->
-        audioUri = uri
-    }
-
-    DisposableEffect(Unit) {
-        onDispose {
-            mediaPlayer?.release()
-        }
-    }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        HomeProfilePart(onHomeClick = onHomeClick)
-
-        Button(
-            onClick = { picker.launch(arrayOf("audio/mpeg")) }
-        ) {
-            Text("Select Audio File")
-        }
-
-        Button(
-            onClick = {
-                audioUri?.let { uri ->
-
-                    mediaPlayer?.release()
-
-                    mediaPlayer = MediaPlayer().apply {
-                        setDataSource(context, uri)
-                        prepare()
-                        start()
-                    }
-                }
-            }
-        ) {
-            Text("Play")
-        }
-
-        Button(
-            onClick = {
-                mediaPlayer?.pause()
-            }
-        ) {
-            Text("Pause")
-        }
-
-        BottomButtons()
-    }
-}*/
 @Composable
 fun AudioPlayerScreen(onHomeClick: () -> Unit, modifier: Modifier = Modifier) {
 
     val filePath = "/storage/emulated/0/Download/Candy.mp3"
-//    val file = File(filePath)
-//    Log.d("DEBUG4FILE", file.exists().toString())
 
     var mediaPlayer by remember { mutableStateOf<MediaPlayer?>(null) }
-
-    DisposableEffect(Unit) {
-        onDispose {
-            mediaPlayer?.release()
-        }
-    }
 
     Column(
         modifier = modifier

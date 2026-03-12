@@ -42,7 +42,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.tooling.preview.Preview
 import org.burnoutcrew.reorderable.ReorderableItem
 import org.burnoutcrew.reorderable.detectReorder
 import org.burnoutcrew.reorderable.rememberReorderableLazyListState
@@ -52,6 +51,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.ui.tooling.preview.Preview
 import com.example.compose.primaryBGLight
 import com.example.compose.tertiaryBGLight
 import com.example.temp.ui.theme.NewTheme
@@ -201,7 +201,9 @@ fun PlaylistPage(
                         key = song.id
                     ) { isDragging ->
                         Button(
-                            onClick = {},
+                            onClick = {
+                                AudioManger.play(song.path)
+                            },
                             contentPadding = PaddingValues(start = 10.dp, end = 10.dp),
                             modifier = Modifier
                                 .fillMaxWidth()
