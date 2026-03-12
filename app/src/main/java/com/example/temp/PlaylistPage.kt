@@ -202,7 +202,7 @@ fun PlaylistPage(
                     ) { isDragging ->
                         Button(
                             onClick = {
-                                AudioManger.play(song, playlist)
+                                AudioPlayer.play(song, playlist)
                             },
                             contentPadding = PaddingValues(start = 10.dp, end = 10.dp),
                             modifier = Modifier
@@ -226,7 +226,7 @@ fun PlaylistPage(
                                     overflow = TextOverflow.Ellipsis,
                                     modifier = Modifier.weight(1f)
                                 )
-                                if(playlist.id != 1){
+                                if(playlist.id != 0){
                                     Text(
                                         text = "X",
                                         modifier = Modifier.clickable { onRemoveSong(song) }
@@ -238,7 +238,7 @@ fun PlaylistPage(
                 }
             }
             // Floating + button: button selected to create a new playlist
-            if(playlist.id != 1){
+            if(playlist.id != 0){
                 Box(modifier = Modifier.fillMaxWidth()
                     .background(tertiaryBGLight)
                 ) {
@@ -326,13 +326,13 @@ fun PlaylistPagePreview() {
     NewTheme {
         PlaylistPage(
             allSongs = Playlist(
-                id = 1,
+                id = 0,
                 name = "All Songs",
                 labels = emptyList(),
             ),
             playlist = Playlist(
                 id = 1,
-                name = "All Songs",
+                name = "Some Songs",
                 labels = emptyList(),
             ),
             onAddSong = {},

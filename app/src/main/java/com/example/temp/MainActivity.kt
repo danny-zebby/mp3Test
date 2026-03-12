@@ -52,11 +52,9 @@ class MainActivity : ComponentActivity() {
                 
                 val allSongs = loadDownloadSongs()
 
-                PoP.playlistOfPlaylist.add(Playlist(id = 1, name = "All Songs", songs = allSongs))
-//                val playlistOfPlaylist = mutableStateListOf(
-//                    Playlist(id = 1, name = "All Songs", songs = allSongs)
-//                )
-                var nextPlaylistId by remember { mutableIntStateOf(2) }
+                PoP.playlistOfPlaylist.add(Playlist(id = 0, name = "All Songs", songs = allSongs))
+
+                var nextPlaylistId by remember { mutableIntStateOf(1) }
 
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
@@ -96,7 +94,7 @@ class MainActivity : ComponentActivity() {
                             playlist?.let { currentPlaylist ->
                                 PlaylistPage(
 
-                                    allSongs = PoP.playlistOfPlaylist.first { it.id == 1 },
+                                    allSongs = PoP.playlistOfPlaylist.first { it.id == 0 },
 
                                     playlist = currentPlaylist,
 
@@ -154,7 +152,7 @@ data class Playlist(
     val labels: List<Label> = emptyList(), 
     val songs: SnapshotStateList<Song> = mutableStateListOf()
 )
-object AudioManger{
+object AudioPlayer{
     var mediaPlayer: MediaPlayer? = null
     var currentSong: Song = Song()
     var currentPlaylist: Playlist = Playlist()
@@ -169,11 +167,17 @@ object AudioManger{
         }
         currentSong = song
         currentPlaylist = playlist
+        println("PLAYLIST ID HERE: "+currentPlaylist.id + " SONG ID HERE: "+currentSong.id)
         mediaPlayer = MediaPlayer().apply {
                 setDataSource(song.path)
                 prepare()
                 start()
             }
+    }
+
+    fun replay () {
+        mediaPlayer?.seekTo(0)
+        mediaPlayer?.start()
     }
 
     fun onDispose() {
@@ -210,7 +214,7 @@ object AudioManger{
     }
 
     fun nextPlaylist() {
-        if(currentPlaylist.id == PoP.playlistOfPlaylist.lastIndex){
+        if(currentPlaylist.id == PoP.playlistOfPlaylist.lastIndex || PoP.playlistOfPlaylist[currentPlaylist.id+1].songs.isEmpty()){
             return
         }else {
             play(PoP.playlistOfPlaylist[currentPlaylist.id+1].songs[0], PoP.playlistOfPlaylist[currentPlaylist.id+1])
@@ -218,7 +222,7 @@ object AudioManger{
     }
 
     fun prevPlaylist() {
-        if (currentPlaylist.id == PoP.playlistOfPlaylist[0].id){
+        if (currentPlaylist.id == PoP.playlistOfPlaylist[0].id || PoP.playlistOfPlaylist[currentPlaylist.id-1].songs.isEmpty()){
             return
         } else {
             play(PoP.playlistOfPlaylist[currentPlaylist.id-1].songs[0], PoP.playlistOfPlaylist[currentPlaylist.id-1])

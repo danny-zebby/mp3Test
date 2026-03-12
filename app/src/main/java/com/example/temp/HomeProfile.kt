@@ -30,9 +30,9 @@ import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -47,6 +47,19 @@ import com.example.compose.secondaryBCLight
 import com.example.compose.secondaryBGLight
 import com.example.compose.tertiaryBGLight
 import com.example.temp.ui.theme.NewTheme
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.time.delay
+
+fun formatTime(ms: Int?): String {
+
+    if (ms == null || ms <= 0) return "0:00"
+
+    val totalSeconds = ms / 1000
+    val minutes = totalSeconds / 60
+    val seconds = totalSeconds % 60
+
+    return "%d:%02d".format(minutes, seconds)
+}
 
 @Composable
 fun HomeProfilePart(
@@ -84,23 +97,46 @@ fun HomeProfilePart(
             modifier = Modifier.weight(1f).height(75.dp)
         ) {
             // Get the Audio Manager
+            // Get the Audio Manager
             val context = LocalContext.current
             val audioManager = remember { context.getSystemService(Context.AUDIO_SERVICE) as AudioManager }
             val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
 
-            // Initialize slider with the current system volume
-            var sliderPosition by remember {
-                mutableFloatStateOf(audioManager.getStreamVolume(AudioManager.STREAM_MUSIC).toFloat() / maxVolume)
+            // Initialize slider position
+            var sliderPosition by remember { mutableFloatStateOf(0f) }
+
+            // This effect runs whenever the "Playing" state changes
+            LaunchedEffect(AudioPlayer.isPlaying()) {
+                if (AudioPlayer.isPlaying()) {
+                    // MUSIC MODE: Update slider position every 200ms
+                    while (AudioPlayer.isPlaying()) {
+                        val player = AudioPlayer.mediaPlayer
+                        val duration = player?.duration ?: 1
+                        val position = player?.currentPosition ?: 0
+                        sliderPosition = position.toFloat() / duration
+                        delay(200)
+                    }
+                } else {
+                    // VOLUME MODE: Set slider to current system volume
+                    val currentVol = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
+                    sliderPosition = currentVol.toFloat() / maxVolume
+                }
             }
             // Listen for physical button presses
             DisposableEffect(context) {
                 val receiver = object : BroadcastReceiver() {
                     override fun onReceive(context: Context?, intent: Intent?) {
-                        val newVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
-                        sliderPosition = newVolume.toFloat() / maxVolume
+
+                        if (!AudioPlayer.isPlaying()) {
+
+                            val newVolume =
+                                audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
+
+                            sliderPosition = newVolume.toFloat() / maxVolume
+                        }
                     }
                 }
-                // Register the receiver for volume changes
+
                 val filter = IntentFilter("android.media.VOLUME_CHANGED_ACTION")
                 context.registerReceiver(receiver, filter)
 
@@ -114,34 +150,63 @@ fun HomeProfilePart(
                         value = sliderPosition,
 
                         onValueChange = { newValue ->
-                            if(AudioManger.isPlaying()){
-                                sliderPosition = newValue
-                                val newVolume = (newValue * maxVolume).toInt()
-                                // Update system volume (0 flag means hide the system volume bar)
-                                audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, newVolume, 0)
-                            }else{
-                                sliderPosition = newValue
+
+                            sliderPosition = newValue
+
+                            if (AudioPlayer.isPlaying()) {
+
+                                val player = AudioPlayer.mediaPlayer
+                                val duration = player?.duration ?: 0
+
+                                val seekPosition =
+                                    (newValue * duration).toInt()
+
+                                player?.seekTo(seekPosition)
+
+                            } else {
+
+                                val newVolume =
+                                    (newValue * maxVolume).toInt()
+
+                                audioManager.setStreamVolume(
+                                    AudioManager.STREAM_MUSIC,
+                                    newVolume,
+                                    0
+                                )
                             }
                         },
 
-                        // primaryBCLight & primaryBGLight
+                        valueRange = 0f..1f,
+
                         colors = SliderDefaults.colors(
                             thumbColor = MaterialTheme.colorScheme.primary,
                             activeTrackColor = MaterialTheme.colorScheme.primary,
-                            inactiveTrackColor = MaterialTheme.colorScheme.background,
+                            inactiveTrackColor = MaterialTheme.colorScheme.background
                         )
                     )
                 }
                 Row{
-                    Text(
-                        text = "   " + String.format("%.2f", sliderPosition),
-                    )
-                    Spacer(modifier = Modifier.weight(1f))
+                    if (AudioPlayer.isPlaying()) {
 
-                    if(AudioManger.isPlaying()){
-                        Text( text = String.format("%.2f", (1-sliderPosition)) + "   " )
-                    }else{
-                        Text( text = "")
+                        val player = AudioPlayer.mediaPlayer
+                        val position = player?.currentPosition ?: 0
+                        val duration = player?.duration ?: 1
+
+                        Text(
+                            text = "   " + formatTime(position),
+                        )
+
+                        Spacer(modifier = Modifier.weight(1f))
+
+                        Text(
+                            text = formatTime(duration) + "   ",
+                        )
+
+                    } else {
+
+                        Text(
+                            text = "   ${(sliderPosition * 100).toInt()}"
+                        )
                     }
                 }
             }
