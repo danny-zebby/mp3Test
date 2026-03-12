@@ -31,24 +31,24 @@ fun BottomButtons(modifier: Modifier = Modifier) {
 
     // Remaining 4 buttons
     val buttonFunctions1 = listOf(
-        { AudioPlayer.replay()},
+        { AudioPlayer.replay() },
         { if(AudioPlayer.isPlaying()) {
             AudioPlayer.pause()
-        }else{
+        } else {
             AudioPlayer.resume()
-        }},
-        { AudioPlayer.nextSong()},
-        { AudioPlayer.nextPlaylist()},)
+        } },
+        { AudioPlayer.nextSong() },
+        { AudioPlayer.nextPlaylist() }, )
 
     val buttonFunctions2 = listOf(
         {println("5")},
         { if(AudioPlayer.isPlaying()) {
             AudioPlayer.pause()
-        }else{
+        } else {
             AudioPlayer.resume()
-        }},
-        { AudioPlayer.prevSong()},
-        { AudioPlayer.prevPlaylist()},)
+        } },
+        { AudioPlayer.prevSong() },
+        { AudioPlayer.prevPlaylist() }, )
 
     val symbols = if (toggle.xor(dragging)) symbols1 else symbols2
     val buttonFunction = if (toggle.xor(dragging)) buttonFunctions1 else buttonFunctions2

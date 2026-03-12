@@ -18,7 +18,7 @@ import androidx.compose.ui.unit.dp
 import com.example.temp.ui.theme.NewTheme
 
 @Composable
-fun DrivingMode(onHomeClick: () -> Unit, modifier: Modifier = Modifier) {
+fun SimpleMode(onHomeClick: () -> Unit, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier.fillMaxSize()
     ){
@@ -30,26 +30,29 @@ fun DrivingMode(onHomeClick: () -> Unit, modifier: Modifier = Modifier) {
         ) {
             Button(onClick = { onHomeClick() }, shape = RectangleShape, modifier = controlModifier)  { Text("Home") }
             Button(onClick = {}, shape = RectangleShape, modifier = controlModifier)  { Text("Loop") }
-            Button(onClick = {}, shape = RectangleShape, modifier = controlModifier)  { Text("Prev Play") }
-            Button(onClick = {}, shape = RectangleShape, modifier = controlModifier)  { Text("Prev Song") }
+            Button(onClick = { AudioPlayer.prevPlaylist() }, shape = RectangleShape, modifier = controlModifier)  { Text("Prev Play") }
+            Button(onClick = { AudioPlayer.prevSong() }, shape = RectangleShape, modifier = controlModifier)  { Text("Prev Song") }
         }
         Column(
             modifier = Modifier.fillMaxHeight(),
             verticalArrangement = Arrangement.spacedBy(0.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Button(onClick = {}, shape = RectangleShape, modifier = controlModifier)  { Text("Repeat") }
-            Button(onClick = {}, shape = RectangleShape, modifier = controlModifier)  { Text("Pause") }
-            Button(onClick = {}, shape = RectangleShape, modifier = controlModifier)  { Text("Next Play") }
-            Button(onClick = {}, shape = RectangleShape, modifier = controlModifier)  { Text("Next Song") }
+            Button(onClick = { AudioPlayer.replay() }, shape = RectangleShape, modifier = controlModifier)  { Text("Repeat") }
+            Button(onClick = {
+                if(AudioPlayer.mediaPlayer == null) { AudioPlayer.play(PoP.playlistOfPlaylist[0].songs[0], PoP.playlistOfPlaylist[0] ) }
+                else { if(AudioPlayer.isPlaying()) { AudioPlayer.pause() }else{ AudioPlayer.resume() } } },
+                shape = RectangleShape, modifier = controlModifier)  { Text("Pause") }
+            Button(onClick = { AudioPlayer.nextPlaylist() }, shape = RectangleShape, modifier = controlModifier)  { Text("Next Play") }
+            Button(onClick = { AudioPlayer.nextSong() }, shape = RectangleShape, modifier = controlModifier)  { Text("Next Song") }
         }
     }
 }
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
-fun DrivingModePreview() {
+fun SimpleModePreview() {
     NewTheme {
-        DrivingMode(onHomeClick = {})
+        SimpleMode(onHomeClick = {})
     }
 }

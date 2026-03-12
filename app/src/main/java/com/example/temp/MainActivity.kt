@@ -66,7 +66,7 @@ class MainActivity : ComponentActivity() {
 
                             onAudioClick = {currentScreen = "audio"},
 
-                            onDriveModeClick = { currentScreen = "driving" },
+                            onSimpleModeClick = { currentScreen = "simple" },
 
                             onPlaylistClick = { playlist,  ->
                                 selectedPlaylistId = playlist.id
@@ -114,8 +114,8 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
                         }
-                        "driving" -> {
-                            DrivingMode(
+                        "simple" -> {
+                            SimpleMode(
                                 onHomeClick = { currentScreen = "home" },
 
                                 modifier = Modifier.padding(innerPadding)
