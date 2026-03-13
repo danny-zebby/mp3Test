@@ -64,7 +64,6 @@ import kotlin.collections.plus
 @Composable
 fun MP3Home(
     modifier: Modifier = Modifier,
-    onAudioClick: () -> Unit = {},
     onSimpleModeClick: () -> Unit = {},
     onPlaylistClick: (Playlist) -> Unit = {},
     onAddPlaylist: (String, List<Label>) -> Unit = { _, _ -> },
@@ -72,19 +71,17 @@ fun MP3Home(
     onHomeClick: () -> Unit = {}
 ) {
     var newItem by remember { mutableStateOf(TextFieldValue()) }            // This stores text field text
-    var selectedLabels by remember { mutableStateOf(listOf<Label>()) }      // Temporary placement for labels
     var createPlaylist by remember { mutableStateOf(false) }                // Tigger for create playlist
-    var playlistLabel by remember { mutableStateOf(false) }                 // Tigger for label dropdown (create)
     var deletePlaylist by remember { mutableStateOf(false) }                // Tigger for deleting playlist
-    var playlistToDelete by remember {mutableIntStateOf(-1)}                                                       // Temp placement for deleted playlist
+    var playlistToDelete by remember {mutableIntStateOf(-1)}                // Temp placement for deleted playlist
 
+    var selectedLabels by remember { mutableStateOf(listOf<Label>()) }      // Temporary placement for labels
+    var playlistLabel by remember { mutableStateOf(false) }                 // Tigger for label dropdown (create)
     val availableLabels = listOf(
         Label(Color.Red, "Red"), Label(Color.Yellow, "Yellow"), Label(Color.Green, "Green"),
         Label(Color.Cyan, "Cyan"), Label(Color.Blue, "Blue"), Label(Color.Magenta, "Magenta")
     )
-
     val labelOrderMap = availableLabels.withIndex().associate { it.value.color to it.index }
-
     fun sortLabels(labels: List<Label>): List<Label> {
         return labels.sortedBy { label ->
             labelOrderMap[label.color] ?: Int.MAX_VALUE
@@ -92,7 +89,7 @@ fun MP3Home(
     }
 
     // Values used to create three playlist sorts
-    var sortIndex by remember { mutableIntStateOf(0) }                         // 0: Custom, 1: Alpha, 2: Label
+    var sortIndex by remember { mutableIntStateOf(0) }                      // 0: Custom, 1: Alpha, 2: Label
     var isAlphaAsc by remember { mutableStateOf(true) }                     // Alphabetical sort trigger
     var labelFilterColor by remember { mutableStateOf(Color.Transparent) }  // Color to sort by
     var showColorMenu by remember { mutableStateOf(false) }                 // Label sort trigger
@@ -121,7 +118,7 @@ fun MP3Home(
             .fillMaxSize()
             .background(primaryBGLight)
     ) {
-        HomeProfilePart(onHomeClick = onHomeClick)
+        TopBar(onHomeClick = onHomeClick)
         Spacer(modifier = Modifier.height(10.dp))
 
         val navButtons = listOf(
@@ -129,7 +126,7 @@ fun MP3Home(
             "Button 4", "Button 5", "Button 6",
             "Button 7", "Button 8", "Button 9")
         val buttonFunctions = listOf(
-            {onAudioClick()}, {onSimpleModeClick()}, {},
+            {}, {onSimpleModeClick()}, {},
             {}, {}, {},
             {}, {}, {})
         val pagerState = rememberPagerState(pageCount = { (navButtons.size + 2) / 3 })

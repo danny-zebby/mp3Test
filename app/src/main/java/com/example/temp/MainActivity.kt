@@ -64,8 +64,6 @@ class MainActivity : ComponentActivity() {
                         "home" -> MP3Home(
                             modifier = Modifier.padding(innerPadding),
 
-                            onAudioClick = {currentScreen = "audio"},
-
                             onSimpleModeClick = { currentScreen = "simple" },
 
                             onPlaylistClick = { playlist,  ->
@@ -108,6 +106,15 @@ class MainActivity : ComponentActivity() {
                                         currentPlaylist.songs.removeAll{ it.id == song.id }
                                     },
 
+                                    onEditPlaylist = {name, label ->
+                                        currentPlaylist.name = name
+                                        currentPlaylist.labels = label
+                                    },
+
+                                    onDeletePlaylist = {playlistId ->
+                                        PoP.playlistOfPlaylist.removeAll { it.id == playlistId }
+                                    },
+
                                     onHomeClick = { currentScreen = "home" },
 
                                     modifier = Modifier.padding(innerPadding)
@@ -121,18 +128,18 @@ class MainActivity : ComponentActivity() {
                                 modifier = Modifier.padding(innerPadding)
                             )
                         }
-                        "audio" -> {
-                            AudioPlayerScreen(
-                                onHomeClick = { currentScreen = "home" },
-
-                                modifier = Modifier.padding(innerPadding)
-                            )
-                        }
                     }
                 }
             }
         }
     }
+}
+
+enum class SortType{
+    CUSTOM,
+    AZ,
+    ZA,
+    LABEL
 }
 
 data class Song(
@@ -148,10 +155,11 @@ data class Label(
 
 data class Playlist(
     val id: Int = -1,
-    val name: String = "",
-    val labels: List<Label> = emptyList(), 
-    val songs: SnapshotStateList<Song> = mutableStateListOf()
+    var name: String = "",
+    var labels: List<Label> = emptyList(),
+    val songs: SnapshotStateList<Song> = mutableStateListOf(),
 )
+
 object AudioPlayer{
     var mediaPlayer: MediaPlayer? = null
     var currentSong: Song = Song()
@@ -236,17 +244,13 @@ object PoP{
     val playlistOfPlaylist: MutableList<Playlist> = mutableListOf()
 }
 fun loadDownloadSongs(): SnapshotStateList<Song> {
-
+    //
     val list = mutableStateListOf<Song>()
-
     val folder = File("/storage/emulated/0/Download/")
-
     var idCounter = 0
 
     folder.listFiles()?.forEach { file ->
-
         if (file.extension.lowercase() == "mp3") {
-
             list.add(
                 Song(
                     id = idCounter++,
@@ -254,9 +258,8 @@ fun loadDownloadSongs(): SnapshotStateList<Song> {
                     path = file.absolutePath
                 )
             )
-
         }
     }
-
+    //
     return list
 }

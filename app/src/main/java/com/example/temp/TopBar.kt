@@ -48,7 +48,6 @@ import com.example.compose.secondaryBGLight
 import com.example.compose.tertiaryBGLight
 import com.example.temp.ui.theme.NewTheme
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.time.delay
 
 fun formatTime(ms: Int?): String {
 
@@ -62,7 +61,7 @@ fun formatTime(ms: Int?): String {
 }
 
 @Composable
-fun HomeProfilePart(
+fun TopBar(
     modifier: Modifier = Modifier,
     onHomeClick: () -> Unit = {},
     onProfileClick: () -> Unit = {}
@@ -244,8 +243,8 @@ fun HomeProfilePart(
 //Preview App
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
-fun HomeProfilePartPreview() {
+fun TopBarPreview() {
     NewTheme {
-        HomeProfilePart()
+        TopBar()
     }
 }

@@ -50,7 +50,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.compose.primaryBGLight
 import com.example.compose.tertiaryBGLight
@@ -64,6 +70,8 @@ fun PlaylistPage(
     playlist: Playlist,
     onAddSong: (Song) -> Unit,
     onRemoveSong: (Song) -> Unit,
+    onEditPlaylist: (String, List<Label>) -> Unit = { _, _ -> },
+    onDeletePlaylist: (Int) -> Unit = {},
     onHomeClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -71,8 +79,27 @@ fun PlaylistPage(
     var addSong by remember { mutableStateOf(false) }
 
     // Values used to create three playlist sorts
-    var sortIndex by remember { mutableIntStateOf(0) }                         // 0: Custom, 1: Alpha
+    var sortIndex by remember { mutableIntStateOf(0) }                      // 0: Custom, 1: Alpha
     var isAlphaAsc by remember { mutableStateOf(true) }                     // Alphabetical sort trigger
+
+    var newItem by remember { mutableStateOf(TextFieldValue(playlist.name)) }            // This stores text field text
+    var editPlaylist by remember { mutableStateOf(false) }                // Tigger for create playlist
+    var deletePlaylist by remember { mutableStateOf(false) }                // Tigger for deleting playlist
+    var playlistToDelete by remember {mutableIntStateOf(-1)}                // Temp placement for deleted playlist
+
+    var selectedLabels by remember { mutableStateOf(listOf<Label>()) }      // Temporary placement for labels
+    var playlistLabel by remember { mutableStateOf(false) }                 // Tigger for label dropdown (create)
+    val availableLabels = listOf(
+        Label(Color.Red, "Red"), Label(Color.Yellow, "Yellow"), Label(Color.Green, "Green"),
+        Label(Color.Cyan, "Cyan"), Label(Color.Blue, "Blue"), Label(Color.Magenta, "Magenta")
+    )
+    val labelOrderMap = availableLabels.withIndex().associate { it.value.color to it.index }
+    fun sortLabels(labels: List<Label>): List<Label> {
+        return labels.sortedBy { label ->
+            labelOrderMap[label.color] ?: Int.MAX_VALUE
+        }
+    }
+
 
     // How Playlist are sorted
     val displayList =  when (sortIndex) {
@@ -87,19 +114,27 @@ fun PlaylistPage(
             .background(primaryBGLight)
     ) {
         //Home
-        HomeProfilePart(onHomeClick = { onHomeClick() })
+        TopBar(onHomeClick = { onHomeClick() })
         Spacer(modifier = Modifier.height(10.dp))
 
         // Playlist Description
-        Text(
-            text = playlist.name,
-            textAlign = TextAlign.Center,
-            style = MaterialTheme.typography.headlineLarge,
-        )
+
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.fillMaxWidth().padding(8.dp)
         ) {
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(start = 10.dp, end = 8.dp)
+            ){
+                Text(
+                    text = playlist.name,
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.headlineLarge,
+                )
+                if(playlist.id != 0){
+                    Spacer(modifier = Modifier.weight(1f))
+                    Button(onClick = {editPlaylist = true}) { Text("Edit")}
+                }
+            }
             // First row for even Labels
             Row(verticalAlignment = Alignment.CenterVertically) {
                 playlist.labels.forEachIndexed { index, label ->
@@ -148,7 +183,10 @@ fun PlaylistPage(
                 // Custom (Draggable)
                 SegmentedButton(
                     selected = sortIndex == 0,
-                    onClick = { sortIndex = 0 },
+                    onClick = {
+                                sortIndex = 0
+//                                playlist.relist(sortIndex)
+                              },
                     shape = SegmentedButtonDefaults.itemShape(index = 0, count, baseShape = theShape),
                     colors = SegmentedButtonDefaults.colors(
                         activeContainerColor = Color(0xFF196D8A),
@@ -160,9 +198,14 @@ fun PlaylistPage(
                 SegmentedButton(
                     selected = sortIndex == 1,
                     onClick = {
-                        if (sortIndex == 1) isAlphaAsc = !isAlphaAsc
-                        else sortIndex = 1
-                    },
+                        if (sortIndex == 1) {
+                            isAlphaAsc = !isAlphaAsc
+//                            if (!isAlphaAsc) playlist.relist(sortIndex+1)
+//                            else playlist.relist(sortIndex)
+                        }
+                        else {sortIndex = 1
+//                            playlist.relist(sortIndex)
+                        } },
                     shape = SegmentedButtonDefaults.itemShape(index = 1, count, baseShape = theShape),
                     colors = SegmentedButtonDefaults.colors(
                         activeContainerColor = Color(0xFF196D8A),
@@ -312,8 +355,107 @@ fun PlaylistPage(
             )
         }
 
+        // Dialog screen pop up to edit current playlist
+        if (editPlaylist) {
+            androidx.compose.material3.AlertDialog(
+                onDismissRequest = { editPlaylist = false },
+                // confirmButton
+                confirmButton = {
+                    Button(onClick = {
+                        if (newItem.text.isNotBlank()) {
+                            onEditPlaylist(newItem.text, selectedLabels)
+                            newItem = TextFieldValue("")
+                            selectedLabels = emptyList()
+                        }
+                        editPlaylist = false
+                    }) { Text("Edit") }
+                },
+                // dismissButton
+                dismissButton = {
+                    Button(onClick = { editPlaylist = false }) { Text("Cancel") }
+                },
+                // Text: text field, label dropdown, labels selected
+                text = {
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        Row(verticalAlignment = Alignment.CenterVertically){
+                            OutlinedTextField(
+                                value = newItem,
+                                onValueChange = { newItem = it },
+                                label = { Text("Playlist Name") }
+                            )
+//                            Spacer(modifier = Modifier.width(3.dp))
+                            Button(onClick = {deletePlaylist = true},shape = RectangleShape){Text("Delete")}
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Button(
+                                onClick = { playlistLabel = true},
+                                shape = RectangleShape,
+                                colors = ButtonDefaults.buttonColors(containerColor = Color.DarkGray)
+                            ) {
+                                if (playlistLabel) Text("Label Color v")
+                                else Text("Label Color ^")
+                            }
+                            Spacer(modifier = Modifier.weight(1f))
+                            selectedLabels = sortLabels(selectedLabels)
+                            for(i in selectedLabels.indices){
+                                Box(
+                                    modifier = Modifier
+                                        .size(35.dp)
+                                        .background(selectedLabels[i].color)
+                                        .border(1.dp, Color.Black)
+
+                                ){}
+                            }
+                            // "Red", "Yellow", "Green", "Cyan", "Blue", "Magenta"
+                            DropdownMenu(expanded = playlistLabel, onDismissRequest = { playlistLabel = false }) {
+                                DropdownMenuItem(text = { Text("None") }, onClick = {
+                                    selectedLabels = emptyList(); playlistLabel = false })
+                                availableLabels.forEach { label ->
+                                    DropdownMenuItem(
+                                        text = { Text(label.name) },
+                                        onClick = {
+                                            if(!selectedLabels.any { it.color == label.color }) {
+                                                selectedLabels = selectedLabels + label
+                                            } else {
+                                                selectedLabels = selectedLabels.filterNot { it.color == label.color }
+                                            }
+                                            playlistLabel = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            )
+        }
+        // delete playlist pop up
+        if (deletePlaylist){
+            androidx.compose.material3.AlertDialog(
+                onDismissRequest = { deletePlaylist = false },
+                // confirmButton
+                confirmButton = {
+                    Button(onClick = {
+                        onDeletePlaylist(playlist.id)
+                        deletePlaylist = false
+                    }) { Text("Delete") }
+                },
+                // dismissButton
+                dismissButton = {
+                    Button(onClick = { deletePlaylist = false }) { Text("Cancel") }
+                },
+                // Text: text field, label dropdown, labels selected
+                text = {
+                    Text(text = "Are you sure you want to delete " + PoP.playlistOfPlaylist.find { it.id ==  playlist.id}?.name)
+                }
+            )
+        }
+
         //Buttons
         BottomButtons()
+
+        LaunchedEffect(AudioPlayer.isPlaying()) {}
     }
 }
 
