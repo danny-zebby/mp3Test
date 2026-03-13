@@ -95,8 +95,8 @@ fun MP3Home(
     var showColorMenu by remember { mutableStateOf(false) }                 // Label sort trigger
 
     val displayList = remember(PoP.playlistOfPlaylist.size, sortIndex, isAlphaAsc, labelFilterColor) {
-        val allSongs = PoP.playlistOfPlaylist.find { it.id == 1 }
-        val others = PoP.playlistOfPlaylist.filter { it.id != 1 }
+        val allSongs = PoP.playlistOfPlaylist.find { it.id == 0 }
+        val others = PoP.playlistOfPlaylist.filter { it.id != 0 }
 
         val sortedOthers = when (sortIndex) {
             0 -> others

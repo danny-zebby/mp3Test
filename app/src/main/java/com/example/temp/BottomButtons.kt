@@ -41,7 +41,7 @@ fun BottomButtons(modifier: Modifier = Modifier) {
         { AudioPlayer.nextPlaylist() }, )
 
     val buttonFunctions2 = listOf(
-        {println("5")},
+        { AudioPlayer.repeatSong == true },
         { if(AudioPlayer.isPlaying()) {
             AudioPlayer.pause()
         } else {

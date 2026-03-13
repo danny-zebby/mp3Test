@@ -164,22 +164,32 @@ object AudioPlayer{
     var mediaPlayer: MediaPlayer? = null
     var currentSong: Song = Song()
     var currentPlaylist: Playlist = Playlist()
+    var playQueue: List<Song> = emptyList()
+    var currentIndex: Int = -1
+    var repeatPlaylist = true
+    var repeatSong = false
 
-    fun play(song: Song, playlist: Playlist) {
-        if(currentSong == song)
-        {
-            return
-        }
-        if(currentSong != song){
-            onDispose()
-        }
+
+    fun play(song: Song, playlist: Playlist, queue: List<Song>) {
+
+        if (currentSong == song) return
+
+        onDispose()
+
         currentSong = song
         currentPlaylist = playlist
+        playQueue = queue
+        currentIndex = queue.indexOf(song)
+
         mediaPlayer = MediaPlayer().apply {
-                setDataSource(song.path)
-                prepare()
-                start()
+            setDataSource(song.path)
+            prepare()
+            start()
+
+            setOnCompletionListener {
+                nextSong()
             }
+        }
     }
 
     fun replay () {
@@ -189,6 +199,7 @@ object AudioPlayer{
 
     fun onDispose() {
         mediaPlayer?.release()
+        mediaPlayer = null
     }
 
     fun pause() {
@@ -205,43 +216,42 @@ object AudioPlayer{
 
     //Still need to work on use cases for the following functions
     fun nextSong() {
-        if( currentPlaylist.songs.indexOf(currentSong) == currentPlaylist.songs.lastIndex ) {
+        if(repeatSong==true) play(currentSong, currentPlaylist, playQueue)
+
+        if (currentIndex >= playQueue.lastIndex) {
+            if (repeatPlaylist) play(playQueue.first(), currentPlaylist, playQueue)
             return
-        }else {
-            play(currentPlaylist.songs[currentPlaylist.songs.indexOf(currentSong)+1], currentPlaylist)
         }
+        val next = playQueue[currentIndex + 1]
+        play(next, currentPlaylist, playQueue)
     }
 
     fun prevSong() {
-        if( currentPlaylist.songs.indexOf(currentSong) == 0 ) {
-            return
-        }else {
-            play(currentPlaylist.songs[currentPlaylist.songs.indexOf(currentSong)-1], currentPlaylist)
-        }
+        if (currentIndex <= 0) return
+        val prev = playQueue[currentIndex - 1]
+        play(prev, currentPlaylist, playQueue)
     }
 
     fun nextPlaylist() {
-        if(PoP.playlistOfPlaylist.indexOf(currentPlaylist) == PoP.playlistOfPlaylist.lastIndex
-            || PoP.playlistOfPlaylist[PoP.playlistOfPlaylist.indexOf(currentPlaylist) + 1 ].songs.isEmpty()){
-            return
-        }else {
-            play(PoP.playlistOfPlaylist[PoP.playlistOfPlaylist.indexOf(currentPlaylist) + 1 ].songs[0], PoP.playlistOfPlaylist[PoP.playlistOfPlaylist.indexOf(currentPlaylist) + 1 ])
-        }
+        val currentIndex = PoP.playlistOfPlaylist.indexOf(currentPlaylist)
+        if (currentIndex == PoP.playlistOfPlaylist.lastIndex) return
+        val nextPlaylist = PoP.playlistOfPlaylist[currentIndex + 1]
+        if (nextPlaylist.songs.isEmpty()) return
+        play(nextPlaylist.songs[0], nextPlaylist, playQueue)
     }
 
     fun prevPlaylist() {
-        if (PoP.playlistOfPlaylist.indexOf(currentPlaylist) == 0
-            || PoP.playlistOfPlaylist[PoP.playlistOfPlaylist.indexOf(currentPlaylist) - 1 ].songs.isEmpty()){
-            return
-        } else {
-            play(PoP.playlistOfPlaylist[PoP.playlistOfPlaylist.indexOf(currentPlaylist) - 1].songs[0], PoP.playlistOfPlaylist[PoP.playlistOfPlaylist.indexOf(currentPlaylist) - 1])
-        }
+        val currentIndex = PoP.playlistOfPlaylist.indexOf(currentPlaylist)
+        if (currentIndex == 0) return
+        val nextPlaylist = PoP.playlistOfPlaylist[currentIndex - 1]
+        if (nextPlaylist.songs.isEmpty()) return
+        play(nextPlaylist.songs[0], nextPlaylist, playQueue)
     }
 
 }
 
 object PoP{
-    val playlistOfPlaylist: MutableList<Playlist> = mutableListOf()
+    val playlistOfPlaylist = mutableStateListOf<Playlist>()
 }
 fun loadDownloadSongs(): SnapshotStateList<Song> {
     //

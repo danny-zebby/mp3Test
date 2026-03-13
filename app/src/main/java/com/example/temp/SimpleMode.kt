@@ -29,7 +29,7 @@ fun SimpleMode(onHomeClick: () -> Unit, modifier: Modifier = Modifier) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Button(onClick = { onHomeClick() }, shape = RectangleShape, modifier = controlModifier)  { Text("Home") }
-            Button(onClick = {}, shape = RectangleShape, modifier = controlModifier)  { Text("Loop") }
+            Button(onClick = { AudioPlayer.repeatSong == true }, shape = RectangleShape, modifier = controlModifier)  { Text("Loop") }
             Button(onClick = { AudioPlayer.prevPlaylist() }, shape = RectangleShape, modifier = controlModifier)  { Text("Prev Play") }
             Button(onClick = { AudioPlayer.prevSong() }, shape = RectangleShape, modifier = controlModifier)  { Text("Prev Song") }
         }
@@ -40,7 +40,7 @@ fun SimpleMode(onHomeClick: () -> Unit, modifier: Modifier = Modifier) {
         ) {
             Button(onClick = { AudioPlayer.replay() }, shape = RectangleShape, modifier = controlModifier)  { Text("Repeat") }
             Button(onClick = {
-                if(AudioPlayer.mediaPlayer == null) { AudioPlayer.play(PoP.playlistOfPlaylist[0].songs[0], PoP.playlistOfPlaylist[0] ) }
+                if(AudioPlayer.mediaPlayer == null) { AudioPlayer.play(PoP.playlistOfPlaylist[0].songs[0], PoP.playlistOfPlaylist[0], PoP.playlistOfPlaylist[0].songs ) }
                 else { if(AudioPlayer.isPlaying()) { AudioPlayer.pause() }else{ AudioPlayer.resume() } } },
                 shape = RectangleShape, modifier = controlModifier)  { Text("Pause") }
             Button(onClick = { AudioPlayer.nextPlaylist() }, shape = RectangleShape, modifier = controlModifier)  { Text("Next Play") }

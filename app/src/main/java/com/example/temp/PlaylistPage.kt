@@ -85,7 +85,6 @@ fun PlaylistPage(
     var newItem by remember { mutableStateOf(TextFieldValue(playlist.name)) }            // This stores text field text
     var editPlaylist by remember { mutableStateOf(false) }                // Tigger for create playlist
     var deletePlaylist by remember { mutableStateOf(false) }                // Tigger for deleting playlist
-    var playlistToDelete by remember {mutableIntStateOf(-1)}                // Temp placement for deleted playlist
 
     var selectedLabels by remember { mutableStateOf(listOf<Label>()) }      // Temporary placement for labels
     var playlistLabel by remember { mutableStateOf(false) }                 // Tigger for label dropdown (create)
@@ -245,7 +244,7 @@ fun PlaylistPage(
                     ) { isDragging ->
                         Button(
                             onClick = {
-                                AudioPlayer.play(song, playlist)
+                                AudioPlayer.play(song, playlist, displayList)
                             },
                             contentPadding = PaddingValues(start = 10.dp, end = 10.dp),
                             modifier = Modifier
