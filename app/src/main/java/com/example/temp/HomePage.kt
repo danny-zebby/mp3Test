@@ -35,12 +35,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshots.SnapshotStateList
-import androidx.compose.runtime.snapshots.SnapshotStateObserver
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -122,7 +119,7 @@ fun MP3Home(
         Spacer(modifier = Modifier.height(10.dp))
 
         val navButtons = listOf(
-            "View Songs", "Simple Mode", "Podcast Mode",
+            "View Files", "Simple Mode", "Podcast Mode",
             "Button 4", "Button 5", "Button 6",
             "Button 7", "Button 8", "Button 9")
         val buttonFunctions = listOf(
@@ -292,11 +289,13 @@ fun MP3Home(
                     ) { isDragging ->
                         Button(
                             onClick = { onPlaylistClick(playlist) },
+                            shape = RectangleShape,
                             contentPadding = PaddingValues(start = 10.dp, end = 10.dp),
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(horizontal = 5.dp)
                                 .background(if (isDragging) Color.LightGray else Color.Transparent)
+                                .clip(RoundedCornerShape(10.dp))
                         ) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),

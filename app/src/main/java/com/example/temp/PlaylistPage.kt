@@ -55,6 +55,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
@@ -120,7 +121,9 @@ fun PlaylistPage(
 
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.fillMaxWidth().padding(8.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(start = 10.dp, end = 8.dp)
             ){
@@ -140,7 +143,10 @@ fun PlaylistPage(
                     if (index % 2 == 0) {
                         Text(text = label.name, style = MaterialTheme.typography.bodySmall)
                         Spacer(Modifier.width(4.dp))
-                        Box(Modifier.size(16.dp).background(label.color).border(1.dp, Color.Black))
+                        Box(Modifier
+                            .size(16.dp)
+                            .background(label.color)
+                            .border(1.dp, Color.Black))
                         Spacer(Modifier.width(12.dp))
                     }
                 }
@@ -152,7 +158,10 @@ fun PlaylistPage(
                     if (index % 2 != 0) {
                         Text(text = label.name, style = MaterialTheme.typography.bodySmall)
                         Spacer(Modifier.width(4.dp))
-                        Box(Modifier.size(16.dp).background(label.color).border(1.dp, Color.Black))
+                        Box(Modifier
+                            .size(16.dp)
+                            .background(label.color)
+                            .border(1.dp, Color.Black))
                         Spacer(Modifier.width(12.dp))
                     }
                 }
@@ -174,7 +183,8 @@ fun PlaylistPage(
         ) {
             // Top: Segmented buttons
             SingleChoiceSegmentedButtonRow(
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
                     .background(tertiaryBGLight)
             ) {
                 val count = 2
@@ -246,11 +256,13 @@ fun PlaylistPage(
                             onClick = {
                                 AudioPlayer.play(song, playlist, displayList)
                             },
+                            shape = RectangleShape,
                             contentPadding = PaddingValues(start = 10.dp, end = 10.dp),
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(horizontal = 5.dp)
                                 .background(if (isDragging) Color.LightGray else Color.Transparent)
+                                .clip(RoundedCornerShape(10.dp))
                         ) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -281,13 +293,15 @@ fun PlaylistPage(
             }
             // Floating + button: button selected to create a new playlist
             if(playlist.id != 0){
-                Box(modifier = Modifier.fillMaxWidth()
+                Box(modifier = Modifier
+                    .fillMaxWidth()
                     .background(tertiaryBGLight)
                 ) {
                     ElevatedButton(
                         onClick = { addSong = true },
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDCF2F4)),
-                        modifier = Modifier.align(Alignment.BottomEnd)
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
                             .padding(10.dp)
                     ) {
                         Text("+")
@@ -313,43 +327,44 @@ fun PlaylistPage(
                 dismissButton = {
                     Button(onClick = { addSong = false }) { Text("Done") }
                 },
-                text = { Column {
-                    SearchBar(
-                        query = searchText,
-                        onQueryChange = { searchText = it },
-                        onSearch = {},
-                        active = active,
-                        onActiveChange = { active = it },
-                        placeholder = { Text("Search songs") },
-                        leadingIcon = {
-                            Icon(Icons.Default.Search, contentDescription = null)
-                        },
-                        trailingIcon = {
-                            if (searchText.isNotEmpty()) {
-                                Icon(
-                                    Icons.Default.Close,
-                                    contentDescription = "Clear",
-                                    modifier = Modifier.clickable { searchText = "" }
-                                )
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        LazyColumn {
-                            items(filteredSongs, key = {it.id}) { song ->
-                                Text(
-                                    text = song.title,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clickable {
-                                            onAddSong(song)
-                                        }
-                                        .padding(16.dp)
-                                )
+                text = {
+                    Column {
+                        SearchBar(
+                            query = searchText,
+                            onQueryChange = { searchText = it },
+                            onSearch = {},
+                            active = active,
+                            onActiveChange = { active = it },
+                            placeholder = { Text("Search songs") },
+                            leadingIcon = {
+                                Icon(Icons.Default.Search, contentDescription = null)
+                            },
+                            trailingIcon = {
+                                if (searchText.isNotEmpty()) {
+                                    Icon(
+                                        Icons.Default.Close,
+                                        contentDescription = "Clear",
+                                        modifier = Modifier.clickable { searchText = "" }
+                                    )
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            LazyColumn {
+                                items(filteredSongs, key = {it.id}) { song ->
+                                    Text(
+                                        text = song.title,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clickable {
+                                                onAddSong(song)
+                                            }
+                                            .padding(16.dp)
+                                    )
+                                }
                             }
                         }
                     }
-                }
                 }
             )
         }
@@ -475,6 +490,7 @@ fun PlaylistPagePreview() {
                 id = 1,
                 name = "Some Songs",
                 labels = emptyList(),
+                songs = listOf<Song>( Song(1,"Preview", "yes"), Song(2,"These Nuts","") ) as SnapshotStateList<Song>,
             ),
             onAddSong = {},
             onRemoveSong = {},

@@ -23,6 +23,14 @@ import java.io.File
 import android.Manifest
 import android.media.MediaPlayer
 import androidx.core.app.ActivityCompat
+import android.content.Context
+import java.io.FileOutputStream
+import java.io.IOException
+import java.io.BufferedReader
+import java.io.FileInputStream
+import java.io.InputStreamReader
+import java.lang.StringBuilder
+import androidx.compose.ui.platform.LocalContext
 
 class MainActivity : ComponentActivity() {
     @SuppressLint("UnrememberedMutableState")
@@ -38,6 +46,8 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             NewTheme {
+                val context = LocalContext.current
+
                 val window = this.window
                 val statColor = Color(0xFF0191B3)
                 val navColor = Color(0xFF196D8A)
@@ -73,7 +83,8 @@ class MainActivity : ComponentActivity() {
 
                             onAddPlaylist = { name, labels ->
                                 if(PoP.playlistOfPlaylist.none {it.name == name}){
-                                    PoP.playlistOfPlaylist.add(Playlist(id = nextPlaylistId, name = name, labels = labels))
+                                    PoP.playlistOfPlaylist.add(Playlist(
+                                        id = nextPlaylistId, name = name, labels = labels))
                                     nextPlaylistId++
                                 }
                                 else{
@@ -272,4 +283,38 @@ fun loadDownloadSongs(): SnapshotStateList<Song> {
     }
     //
     return list
+}
+
+fun writeToFile(context: Context, fileName: String, content: String) {
+    try {
+        // Use Context.openFileOutput for internal storage
+        val fileOutputStream: FileOutputStream =
+            context.openFileOutput(fileName, Context.MODE_PRIVATE)
+        fileOutputStream.write(content.toByteArray())
+        fileOutputStream.close()
+        // Optionally show a Toast or update UI state on success
+    } catch (e: IOException) {
+        e.printStackTrace()
+        // Handle the exception
+    }
+}
+
+fun readFromFile(context: Context, fileName: String): String? {
+    val stringBuilder = StringBuilder()
+    try {
+        val fileInputStream: FileInputStream = context.openFileInput(fileName)
+        val inputStreamReader = InputStreamReader(fileInputStream)
+        val bufferedReader = BufferedReader(inputStreamReader)
+        var line: String? = bufferedReader.readLine()
+
+        while (line != null) {
+            stringBuilder.append(line)
+            line = bufferedReader.readLine()
+        }
+        fileInputStream.close()
+    } catch (e: IOException) {
+        e.printStackTrace()
+        // Handle the exception, return null or empty string
+    }
+    return stringBuilder.toString()
 }
