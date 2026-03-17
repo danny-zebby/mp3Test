@@ -62,6 +62,7 @@ import kotlin.collections.plus
 fun MP3Home(
     modifier: Modifier = Modifier,
     onSimpleModeClick: () -> Unit = {},
+    onViewFilesClick: () -> Unit = {},
     onPlaylistClick: (Playlist) -> Unit = {},
     onAddPlaylist: (String, List<Label>) -> Unit = { _, _ -> },
     onDeletePlaylist: (Int) -> Unit = {},
@@ -123,7 +124,7 @@ fun MP3Home(
             "Button 4", "Button 5", "Button 6",
             "Button 7", "Button 8", "Button 9")
         val buttonFunctions = listOf(
-            {}, {onSimpleModeClick()}, {},
+            {onViewFilesClick()}, {onSimpleModeClick()}, {},
             {}, {}, {},
             {}, {}, {})
         val pagerState = rememberPagerState(pageCount = { (navButtons.size + 2) / 3 })

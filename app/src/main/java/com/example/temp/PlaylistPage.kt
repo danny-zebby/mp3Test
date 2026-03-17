@@ -468,8 +468,6 @@ fun PlaylistPage(
 
         //Buttons
         BottomButtons()
-
-        LaunchedEffect(AudioPlayer.isPlaying()) {}
     }
 }
 

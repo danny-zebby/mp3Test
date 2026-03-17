@@ -60,7 +60,8 @@ class MainActivity : ComponentActivity() {
                 var currentScreen by remember { mutableStateOf("home") }
                 var selectedPlaylistId by remember { mutableStateOf<Int?>(null) }
                 
-                val allSongs = loadDownloadSongs()
+                val allMP3s = loadDownloadMP3s()
+                val allSongs = SnapshotStateList<Song>()
 
                 PoP.playlistOfPlaylist.add(Playlist(id = 0, name = "All Songs", songs = allSongs))
 
@@ -75,6 +76,8 @@ class MainActivity : ComponentActivity() {
                             modifier = Modifier.padding(innerPadding),
 
                             onSimpleModeClick = { currentScreen = "simple" },
+
+                            onViewFilesClick = {currentScreen = "view"},
 
                             onPlaylistClick = { playlist,  ->
                                 selectedPlaylistId = playlist.id
@@ -139,6 +142,13 @@ class MainActivity : ComponentActivity() {
                                 modifier = Modifier.padding(innerPadding)
                             )
                         }
+                        "view" -> {
+                            ViewFiles(
+                                onHomeClick = { currentScreen = "home" },
+                                allMP3s = allMP3s,
+                                allSongs = PoP.playlistOfPlaylist.first { it.id == 0 },
+                            )
+                        }
                     }
                 }
             }
@@ -154,6 +164,11 @@ enum class SortType{
 }
 
 data class Song(
+    val id: Int = -1,
+    val title: String = "",
+    val path: String = "",
+)
+data class Podcast(
     val id: Int = -1,
     val title: String = "",
     val path: String = "",
@@ -264,7 +279,7 @@ object AudioPlayer{
 object PoP{
     val playlistOfPlaylist = mutableStateListOf<Playlist>()
 }
-fun loadDownloadSongs(): SnapshotStateList<Song> {
+fun loadDownloadMP3s(): SnapshotStateList<Song> {
     //
     val list = mutableStateListOf<Song>()
     val folder = File("/storage/emulated/0/Download/")
