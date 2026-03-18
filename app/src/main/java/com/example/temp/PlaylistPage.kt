@@ -69,8 +69,8 @@ import com.example.temp.ui.theme.NewTheme
 fun PlaylistPage(
     allSongs: Playlist,
     playlist: Playlist,
-    onAddSong: (Song) -> Unit,
-    onRemoveSong: (Song) -> Unit,
+    onAddSong: (MP3) -> Unit,
+    onRemoveSong: (MP3) -> Unit,
     onEditPlaylist: (String, List<Label>) -> Unit = { _, _ -> },
     onDeletePlaylist: (Int) -> Unit = {},
     onHomeClick: () -> Unit,
@@ -103,9 +103,9 @@ fun PlaylistPage(
 
     // How Playlist are sorted
     val displayList =  when (sortIndex) {
-        0 -> playlist.songs
-        1 -> if (isAlphaAsc) playlist.songs.sortedBy { it.title } else playlist.songs.sortedByDescending { it.title }
-        else -> playlist.songs
+        0 -> playlist.mp3s
+        1 -> if (isAlphaAsc) playlist.mp3s.sortedBy { it.title } else playlist.mp3s.sortedByDescending { it.title }
+        else -> playlist.mp3s
     }
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -227,9 +227,9 @@ fun PlaylistPage(
             val reorderState = rememberReorderableLazyListState(
                 onMove = { from, to ->
                     if (sortIndex == 0) {
-                        playlist.songs.add(
+                        playlist.mp3s.add(
                             to.index,
-                            playlist.songs.removeAt(from.index)
+                            playlist.mp3s.removeAt(from.index)
                         )
                     }
                 }
@@ -315,10 +315,10 @@ fun PlaylistPage(
             var active by remember { mutableStateOf(true) }
 
             // Recompute filtered songs whenever user types or adds a song
-            val filteredSongs = remember(searchText, playlist.songs) {
-                allSongs.songs.filter { song ->
+            val filteredSongs = remember(searchText, playlist.mp3s) {
+                allSongs.mp3s.filter { song ->
                     song.title.contains(searchText, ignoreCase = true) &&
-                            playlist.songs.none { it.id == song.id }
+                            playlist.mp3s.none { it.id == song.id }
                 }
             }
             AlertDialog(
@@ -488,7 +488,7 @@ fun PlaylistPagePreview() {
                 id = 1,
                 name = "Some Songs",
                 labels = emptyList(),
-                songs = listOf<Song>( Song(1,"Preview", "yes"), Song(2,"These Nuts","") ) as SnapshotStateList<Song>,
+                mp3s = listOf<MP3>( MP3(1,"Preview", "yes"), MP3(2,"These Nuts","") ) as SnapshotStateList<MP3>,
             ),
             onAddSong = {},
             onRemoveSong = {},

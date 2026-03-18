@@ -288,60 +288,63 @@ fun MP3Home(
                         state = reorderState,
                         key = playlist.id
                     ) { isDragging ->
-                        Button(
-                            onClick = { onPlaylistClick(playlist) },
-                            shape = RectangleShape,
-                            contentPadding = PaddingValues(start = 10.dp, end = 10.dp),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 5.dp)
-                                .background(if (isDragging) Color.LightGray else Color.Transparent)
-                                .clip(RoundedCornerShape(10.dp))
-                        ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically,
+                        if(playlist.type == PlaylistType.Song){
+                            Button(
+                                onClick = { onPlaylistClick(playlist) },
+                                shape = RectangleShape,
+                                contentPadding = PaddingValues(start = 10.dp, end = 10.dp),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 5.dp)
+                                    .background(if (isDragging) Color.LightGray else Color.Transparent)
+                                    .clip(RoundedCornerShape(10.dp))
                             ) {
-                                // Makes the playlist draggable
-                                if(sortIndex == 0 && playlist.id != 0){ // Checking if the sort is custom and not for All Songs
-                                    Box(
-                                        modifier = Modifier
-                                            .size(24.dp)
-                                            .detectReorder(reorderState)
-                                    ) { Text("=", fontWeight = FontWeight.Bold) }
-                                }
-                                Spacer(modifier = Modifier.width(5.dp))
-                                Text(
-                                    text = playlist.name,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
-                                    modifier = Modifier.width(250.dp)
-                                )
-                                Spacer(modifier = Modifier.weight(1f))
-                                // This adds the labels
-                                if (playlist.labels.isNotEmpty()) { // Checking if playlist has labels
-                                    Row {
-                                        playlist.labels.forEach { label ->
-                                            Box(
-                                                modifier = Modifier
-                                                    .size(20.dp)
-                                                    .background(label.color)
-                                                    .border(1.dp, Color.Black)
-                                            )
-                                            Spacer(modifier = Modifier.width(4.dp))
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    // Makes the playlist draggable
+                                    if(sortIndex == 0 && playlist.id != 0){ // Checking if the sort is custom and not for All Songs
+                                        Box(
+                                            modifier = Modifier
+                                                .size(24.dp)
+                                                .detectReorder(reorderState)
+                                        ) { Text("=", fontWeight = FontWeight.Bold) }
+                                    }
+                                    Spacer(modifier = Modifier.width(5.dp))
+                                    Text(
+                                        text = playlist.name,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                        modifier = Modifier.width(250.dp)
+                                    )
+                                    Spacer(modifier = Modifier.weight(1f))
+                                    // This adds the labels
+                                    if (playlist.labels.isNotEmpty()) { // Checking if playlist has labels
+                                        Row {
+                                            playlist.labels.forEach { label ->
+                                                Box(
+                                                    modifier = Modifier
+                                                        .size(20.dp)
+                                                        .background(label.color)
+                                                        .border(1.dp, Color.Black)
+                                                )
+                                                Spacer(modifier = Modifier.width(4.dp))
+                                            }
                                         }
                                     }
-                                }
-                                if(playlist.id != 0){
-                                    Text(
-                                        text = "X",
-                                        modifier = Modifier.clickable{
-                                            playlistToDelete = playlist.id
-                                            deletePlaylist = true}
-                                    )
+                                    if(playlist.id != 0){
+                                        Text(
+                                            text = "X",
+                                            modifier = Modifier.clickable{
+                                                playlistToDelete = playlist.id
+                                                deletePlaylist = true}
+                                        )
+                                    }
                                 }
                             }
                         }
+
                     }
                 }
             }

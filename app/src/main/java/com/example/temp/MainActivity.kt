@@ -61,9 +61,13 @@ class MainActivity : ComponentActivity() {
                 var selectedPlaylistId by remember { mutableStateOf<Int?>(null) }
                 
                 val allMP3s = loadDownloadMP3s()
-                val allSongs = SnapshotStateList<Song>()
+                val allSongs = SnapshotStateList<MP3>()
+                val allPodcast = SnapshotStateList<MP3>()
+                val allTrash =  SnapshotStateList<MP3>() // COME UP WITH BETTER NAME
 
-                PoP.playlistOfPlaylist.add(Playlist(id = 0, name = "All Songs", songs = allSongs))
+                PoP.playlistOfPlaylist.add(Playlist(id = 0, name = "All Songs", mp3s = allSongs, type = PlaylistType.Song))
+                PoP.playlistOfPlaylist.add(Playlist(id = 1, name = "All Podcast", mp3s = allPodcast, type = PlaylistType.Pod))
+                PoP.playlistOfPlaylist.add(Playlist(id = 2, name = "All Trash", mp3s = allTrash,type = PlaylistType.Trash))
 
                 var nextPlaylistId by remember { mutableIntStateOf(1) }
 
@@ -110,14 +114,14 @@ class MainActivity : ComponentActivity() {
 
                                     playlist = currentPlaylist,
 
-                                    onAddSong = { song ->
-                                        if (currentPlaylist.songs.none { it.id == song.id }) {
-                                            currentPlaylist.songs.add(song)
+                                    onAddSong = { mp3 ->
+                                        if (currentPlaylist.mp3s.none { it.id == mp3.id }) {
+                                            currentPlaylist.mp3s.add(mp3)
                                         }
                                     },
 
-                                    onRemoveSong = { song ->
-                                        currentPlaylist.songs.removeAll{ it.id == song.id }
+                                    onRemoveSong = { mp3 ->
+                                        currentPlaylist.mp3s.removeAll{ it.id == mp3.id }
                                     },
 
                                     onEditPlaylist = {name, label ->
@@ -147,6 +151,20 @@ class MainActivity : ComponentActivity() {
                                 onHomeClick = { currentScreen = "home" },
                                 allMP3s = allMP3s,
                                 allSongs = PoP.playlistOfPlaylist.first { it.id == 0 },
+                                allPodcast = PoP.playlistOfPlaylist.first { it.id == 1 },
+                                allTrash = PoP.playlistOfPlaylist.first { it.id == 2 },
+                                onAddSong = { mp3 ->
+                                    PoP.playlistOfPlaylist[0].mp3s.add(mp3)
+                                    allMP3s.remove(mp3)
+                                },
+                                onAddTrash = { mp3 ->
+                                    PoP.playlistOfPlaylist[2].mp3s.add(mp3)
+                                    allMP3s.remove(mp3)
+                                },
+                                onAddPod = { mp3 ->
+                                    PoP.playlistOfPlaylist[1].mp3s.add(mp3)
+                                    allMP3s.remove(mp3)
+                                },
                             )
                         }
                     }
@@ -163,12 +181,14 @@ enum class SortType{
     LABEL
 }
 
-data class Song(
-    val id: Int = -1,
-    val title: String = "",
-    val path: String = "",
-)
-data class Podcast(
+enum class PlaylistType{
+    Pod,
+    Song,
+    Trash,
+    Null,
+}
+
+data class MP3(
     val id: Int = -1,
     val title: String = "",
     val path: String = "",
@@ -183,20 +203,21 @@ data class Playlist(
     val id: Int = -1,
     var name: String = "",
     var labels: List<Label> = emptyList(),
-    val songs: SnapshotStateList<Song> = mutableStateListOf(),
+    val mp3s: SnapshotStateList<MP3> = mutableStateListOf(),
+    val type: PlaylistType = PlaylistType.Null,
 )
 
 object AudioPlayer{
     var mediaPlayer: MediaPlayer? = null
-    var currentSong: Song = Song()
+    var currentSong: MP3 = MP3()
     var currentPlaylist: Playlist = Playlist()
-    var playQueue: List<Song> = emptyList()
+    var playQueue: List<MP3> = emptyList()
     var currentIndex: Int = -1
     var repeatPlaylist = true
     var repeatSong = false
 
 
-    fun play(song: Song, playlist: Playlist, queue: List<Song>) {
+    fun play(song: MP3, playlist: Playlist, queue: List<MP3>) {
 
         if (currentSong == song) return
 
@@ -262,16 +283,16 @@ object AudioPlayer{
         val currentIndex = PoP.playlistOfPlaylist.indexOf(currentPlaylist)
         if (currentIndex == PoP.playlistOfPlaylist.lastIndex) return
         val nextPlaylist = PoP.playlistOfPlaylist[currentIndex + 1]
-        if (nextPlaylist.songs.isEmpty()) return
-        play(nextPlaylist.songs[0], nextPlaylist, playQueue)
+        if (nextPlaylist.mp3s.isEmpty()) return
+        play(nextPlaylist.mp3s[0], nextPlaylist, playQueue)
     }
 
     fun prevPlaylist() {
         val currentIndex = PoP.playlistOfPlaylist.indexOf(currentPlaylist)
         if (currentIndex == 0) return
         val nextPlaylist = PoP.playlistOfPlaylist[currentIndex - 1]
-        if (nextPlaylist.songs.isEmpty()) return
-        play(nextPlaylist.songs[0], nextPlaylist, playQueue)
+        if (nextPlaylist.mp3s.isEmpty()) return
+        play(nextPlaylist.mp3s[0], nextPlaylist, playQueue)
     }
 
 }
@@ -279,16 +300,16 @@ object AudioPlayer{
 object PoP{
     val playlistOfPlaylist = mutableStateListOf<Playlist>()
 }
-fun loadDownloadMP3s(): SnapshotStateList<Song> {
+fun loadDownloadMP3s(): SnapshotStateList<MP3> {
     //
-    val list = mutableStateListOf<Song>()
+    val list = mutableStateListOf<MP3>()
     val folder = File("/storage/emulated/0/Download/")
     var idCounter = 0
 
     folder.listFiles()?.forEach { file ->
         if (file.extension.lowercase() == "mp3") {
             list.add(
-                Song(
+                MP3(
                     id = idCounter++,
                     title = file.nameWithoutExtension,
                     path = file.absolutePath
