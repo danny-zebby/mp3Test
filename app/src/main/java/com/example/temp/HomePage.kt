@@ -1,6 +1,5 @@
 package com.example.temp
 
-import android.media.MediaPlayer
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -58,6 +57,11 @@ import org.burnoutcrew.reorderable.rememberReorderableLazyListState
 import org.burnoutcrew.reorderable.reorderable
 import kotlin.collections.plus
 
+// The home page is mainly the Playlist of Playlist page
+// Displays all the different types of playlist in custom order, A-Z, Z-A, or by Labels
+//      Labels are the Genre (Ill make the name switch later)
+// It also has a swipeable row of buttons, currently at 9 buttons
+// All pages, including the home page has the top bar and bottom buttons
 @Composable
 fun MP3Home(
     modifier: Modifier = Modifier,
@@ -68,13 +72,17 @@ fun MP3Home(
     onDeletePlaylist: (Int) -> Unit = {},
     onHomeClick: () -> Unit = {}
 ) {
+    // temp vars
     var newItem by remember { mutableStateOf(TextFieldValue()) }            // This stores text field text
     var createPlaylist by remember { mutableStateOf(false) }                // Tigger for create playlist
+
+    // trigger vars
     var deletePlaylist by remember { mutableStateOf(false) }                // Tigger for deleting playlist
     var playlistToDelete by remember {mutableIntStateOf(-1)}                // Temp placement for deleted playlist
-
-    var selectedLabels by remember { mutableStateOf(listOf<Label>()) }      // Temporary placement for labels
     var playlistLabel by remember { mutableStateOf(false) }                 // Tigger for label dropdown (create)
+
+    // label values
+    var selectedLabels by remember { mutableStateOf(listOf<Label>()) }      // Temporary placement for labels
     val availableLabels = listOf(
         Label(Color.Red, "Red"), Label(Color.Yellow, "Yellow"), Label(Color.Green, "Green"),
         Label(Color.Cyan, "Cyan"), Label(Color.Blue, "Blue"), Label(Color.Magenta, "Magenta")
@@ -86,12 +94,13 @@ fun MP3Home(
         }
     }
 
-    // Values used to create three playlist sorts
+    // Vars used to create three playlist sorts
     var sortIndex by remember { mutableIntStateOf(0) }                      // 0: Custom, 1: Alpha, 2: Label
     var isAlphaAsc by remember { mutableStateOf(true) }                     // Alphabetical sort trigger
     var labelFilterColor by remember { mutableStateOf(Color.Transparent) }  // Color to sort by
     var showColorMenu by remember { mutableStateOf(false) }                 // Label sort trigger
 
+    // Lazy col displays order
     val displayList = remember(PoP.playlistOfPlaylist.size, sortIndex, isAlphaAsc, labelFilterColor) {
         val allSongs = PoP.playlistOfPlaylist.find { it.id == 0 }
         val others = PoP.playlistOfPlaylist.filter { it.id != 0 }
@@ -111,14 +120,17 @@ fun MP3Home(
         if (allSongs != null) listOf(allSongs) + sortedOthers else sortedOthers
     }
 
+    // The whole page
     Column(
         modifier = modifier
             .fillMaxSize()
             .background(primaryBGLight)
     ) {
+        // Top of page
         TopBar(onHomeClick = onHomeClick)
         Spacer(modifier = Modifier.height(10.dp))
 
+        // vals for HorizontalPager
         val navButtons = listOf(
             "View Files", "Simple Mode", "Podcast Mode",
             "Button 4", "Button 5", "Button 6",

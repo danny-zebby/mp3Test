@@ -53,7 +53,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.graphics.RectangleShape
@@ -67,14 +66,14 @@ import com.example.temp.ui.theme.NewTheme
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlaylistPage(
+    modifier: Modifier = Modifier,
     allSongs: Playlist,
     playlist: Playlist,
     onAddSong: (MP3) -> Unit,
     onRemoveSong: (MP3) -> Unit,
     onEditPlaylist: (String, List<Label>) -> Unit = { _, _ -> },
     onDeletePlaylist: (Int) -> Unit = {},
-    onHomeClick: () -> Unit,
-    modifier: Modifier = Modifier
+    onHomeClick: () -> Unit
 ) {
     // Values use to create playlist
     var addSong by remember { mutableStateOf(false) }
@@ -118,7 +117,6 @@ fun PlaylistPage(
         Spacer(modifier = Modifier.height(10.dp))
 
         // Playlist Description
-
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
@@ -371,7 +369,7 @@ fun PlaylistPage(
 
         // Dialog screen pop up to edit current playlist
         if (editPlaylist) {
-            androidx.compose.material3.AlertDialog(
+            AlertDialog(
                 onDismissRequest = { editPlaylist = false },
                 // confirmButton
                 confirmButton = {
@@ -446,7 +444,7 @@ fun PlaylistPage(
         }
         // delete playlist pop up
         if (deletePlaylist){
-            androidx.compose.material3.AlertDialog(
+            AlertDialog(
                 onDismissRequest = { deletePlaylist = false },
                 // confirmButton
                 confirmButton = {

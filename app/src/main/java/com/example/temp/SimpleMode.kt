@@ -29,7 +29,7 @@ fun SimpleMode(onHomeClick: () -> Unit, modifier: Modifier = Modifier) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Button(onClick = { onHomeClick() }, shape = RectangleShape, modifier = controlModifier)  { Text("Home") }
-            Button(onClick = { AudioPlayer.repeatSong == true }, shape = RectangleShape, modifier = controlModifier)  { Text("Loop") }
+            Button(onClick = { AudioPlayer.repeatSong = !AudioPlayer.repeatSong }, shape = RectangleShape, modifier = controlModifier)  { Text("Loop") }
             Button(onClick = { AudioPlayer.prevPlaylist() }, shape = RectangleShape, modifier = controlModifier)  { Text("Prev Play") }
             Button(onClick = { AudioPlayer.prevSong() }, shape = RectangleShape, modifier = controlModifier)  { Text("Prev Song") }
         }

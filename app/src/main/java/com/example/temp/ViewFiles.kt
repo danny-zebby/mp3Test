@@ -13,19 +13,15 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.SearchBar
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -61,7 +57,7 @@ fun ViewFiles(
             style = MaterialTheme.typography.headlineLarge
         )
         // Var & vals for SearchBar
-        var slectedMP3Index by remember {mutableStateOf(-1)}
+        var selectedMP3Index by remember {mutableIntStateOf(-1)}
         var searchText by remember { mutableStateOf("") }
 
         // Recompute filtered songs whenever user types or adds a song
@@ -92,8 +88,8 @@ fun ViewFiles(
                                 .fillMaxWidth()
                                 .clickable {
                                     // I need to change this so it grabs the song only
-                                    if(slectedMP3Index != -1) slectedMP3Index = allMP3s.indexOf(song)
-                                    else slectedMP3Index = -1
+                                    if(selectedMP3Index != -1) selectedMP3Index = allMP3s.indexOf(song)
+                                    else selectedMP3Index = -1
                                     song.selected = !song.selected
                                 }
                                 .padding(top = 10.dp)
@@ -111,24 +107,24 @@ fun ViewFiles(
         ) {
             Button(
                 onClick = {
-                    if (slectedMP3Index > -1){ onAddSong(allMP3s.get(slectedMP3Index))
-                        slectedMP3Index = -1 } else {}
+                    if (selectedMP3Index > -1){ onAddSong(allMP3s[selectedMP3Index])
+                        selectedMP3Index = -1 } else {}
                 }
             ) {
                 Text("Add Songs\n("+allSongs.mp3s.size+")")
             }
             Button(
                 onClick = {
-                    if (slectedMP3Index > -1){ onAddTrash(allMP3s.get(slectedMP3Index))
-                        slectedMP3Index = -1 } else {}
+                    if (selectedMP3Index > -1){ onAddTrash(allMP3s[selectedMP3Index])
+                        selectedMP3Index = -1 } else {}
                 }
             ) {
                 Text("Trash\n("+allTrash.mp3s.size+")")
             }
             Button(
                 onClick = {
-                    if (slectedMP3Index > -1){ onAddPod(allMP3s.get(slectedMP3Index))
-                        slectedMP3Index = -1 } else {}
+                    if (selectedMP3Index > -1){ onAddPod(allMP3s[selectedMP3Index])
+                        selectedMP3Index = -1 } else {}
                 }
             ) {
                 Text("Add Pod\n("+allPodcast.mp3s.size+")")

@@ -46,27 +46,23 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             NewTheme {
-                val context = LocalContext.current
+//                val context = LocalContext.current
 
+                // These values set the Top and Bottom of phone colors to match
                 val window = this.window
                 val statColor = Color(0xFF0191B3)
                 val navColor = Color(0xFF196D8A)
-
                 SideEffect {
                     window.statusBarColor = statColor.toArgb()
                     window.navigationBarColor = navColor.toArgb()
                 }
 
-                var currentScreen by remember { mutableStateOf("home") }
-                var selectedPlaylistId by remember { mutableStateOf<Int?>(null) }
-                
+                // These are the main list
                 val allMP3s = remember { loadDownloadMP3s() }
                 val allSongs = SnapshotStateList<MP3>()
                 val allPodcast = SnapshotStateList<MP3>()
                 val allTrash =  SnapshotStateList<MP3>() // COME UP WITH BETTER NAME
-
                 val initialized = remember { mutableStateOf(false) }
-
                 if (!initialized.value) {
                     PoP.playlistOfPlaylist.clear()
                     PoP.playlistOfPlaylist.add(Playlist(id = 0, name = "All Songs", mp3s = allSongs, type = PlaylistType.Song))
@@ -74,6 +70,10 @@ class MainActivity : ComponentActivity() {
                     PoP.playlistOfPlaylist.add(Playlist(id = 2, name = "All Trash", mp3s = allTrash, type = PlaylistType.Trash))
                     initialized.value = true
                 }
+
+                // These are vars that help perform playlist functions
+                var currentScreen by remember { mutableStateOf("home") }
+                var selectedPlaylistId by remember { mutableStateOf<Int?>(null) }
                 var nextPlaylistId by remember { mutableIntStateOf(1) }
 
                 Scaffold(
@@ -88,11 +88,13 @@ class MainActivity : ComponentActivity() {
 
                             onViewFilesClick = {currentScreen = "view"},
 
-                            onPlaylistClick = { playlist,  ->
+                            // Goes to playlist page when clicking on a playlist
+                            onPlaylistClick = { playlist  ->
                                 selectedPlaylistId = playlist.id
                                 currentScreen = "playlist"
                             },
 
+                            // Checks if playlist name is not already taken, if so adds playlist to PoP
                             onAddPlaylist = { name, labels ->
                                 if(PoP.playlistOfPlaylist.none {it.name == name}){
                                     PoP.playlistOfPlaylist.add(Playlist(
@@ -104,16 +106,19 @@ class MainActivity : ComponentActivity() {
                                 }
                             },
 
+                            // Deleted Playlist
                             onDeletePlaylist = { playlistId ->
                                 PoP.playlistOfPlaylist.removeAll { it.id == playlistId }
                             },
 
+                            // Go Home ? (I want to make an animation if you click home and are already home)
                             onHomeClick = { currentScreen = "home" },
                         )
                         "playlist" -> {
                             val playlist = PoP.playlistOfPlaylist.find { it.id == selectedPlaylistId }
                             playlist?.let { currentPlaylist ->
                                 PlaylistPage(
+                                    modifier = Modifier.padding(innerPadding),
 
                                     allSongs = PoP.playlistOfPlaylist.first { it.id == 0 },
 
@@ -138,14 +143,14 @@ class MainActivity : ComponentActivity() {
                                         PoP.playlistOfPlaylist.removeAll { it.id == playlistId }
                                     },
 
+                                    // Go Home
                                     onHomeClick = { currentScreen = "home" },
-
-                                    modifier = Modifier.padding(innerPadding)
                                 )
                             }
                         }
                         "simple" -> {
                             SimpleMode(
+                                // Go Home
                                 onHomeClick = { currentScreen = "home" },
 
                                 modifier = Modifier.padding(innerPadding)
@@ -153,11 +158,16 @@ class MainActivity : ComponentActivity() {
                         }
                         "view" -> {
                             ViewFiles(
+                                // Go Home
                                 onHomeClick = { currentScreen = "home" },
+
+                                // Load the main four file list
                                 allMP3s = allMP3s,
                                 allSongs = PoP.playlistOfPlaylist.first { it.id == 0 },
                                 allPodcast = PoP.playlistOfPlaylist.first { it.id == 1 },
                                 allTrash = PoP.playlistOfPlaylist.first { it.id == 2 },
+
+                                // Manage files
                                 onAddSong = { mp3 ->
                                     PoP.playlistOfPlaylist[0].mp3s.add(mp3)
                                     allMP3s.remove(mp3)
@@ -203,8 +213,9 @@ data class Playlist(
     var labels: List<Label> = emptyList(),
     val mp3s: SnapshotStateList<MP3> = mutableStateListOf(),
     val type: PlaylistType = PlaylistType.Null,
-){}
+)
 
+// Singleton PoP so I can use the same one from all files easily
 object AudioPlayer{
     var mediaPlayer: MediaPlayer? = null
     var currentSong: MP3 = MP3()
@@ -215,10 +226,11 @@ object AudioPlayer{
     var repeatSong = false
 
 
+    // Plays audio, used to jump straight into the selected audio
     fun play(song: MP3, playlist: Playlist, queue: List<MP3>) {
-
+        // If audio is already playing do nothing
         if (currentSong == song) return
-
+        // Else, stop playing audio and load up the next file
         onDispose()
 
         currentSong = song
@@ -231,37 +243,44 @@ object AudioPlayer{
             prepare()
             start()
 
+            // Load next file for autoPlay
             setOnCompletionListener {
                 nextSong()
             }
         }
     }
 
+    // Restarts current audio playing
     fun replay () {
         mediaPlayer?.seekTo(0)
         mediaPlayer?.start()
     }
 
+    // Empties the media player
     fun onDispose() {
         mediaPlayer?.release()
         mediaPlayer = null
     }
 
+    // Pauses (Unneeded Comment but Unneeded is an interesting spelling for a word)
     fun pause() {
         mediaPlayer?.pause()
     }
 
+    // Resumes
     fun resume() {
         mediaPlayer?.start()
     }
 
+    // Checks if media player is playing
     fun isPlaying(): Boolean {
         return mediaPlayer?.isPlaying == true
     }
 
+    // Used to skip to next song or Autoplay or Loop
     //Still need to work on use cases for the following functions
     fun nextSong() {
-        if(repeatSong==true) play(currentSong, currentPlaylist, playQueue)
+        if(repeatSong) play(currentSong, currentPlaylist, playQueue)
 
         if (currentIndex >= playQueue.lastIndex) {
             if (repeatPlaylist) play(playQueue.first(), currentPlaylist, playQueue)
@@ -295,11 +314,13 @@ object AudioPlayer{
 
 }
 
+// Singleton PoP so I can use the same one from all files easily
 object PoP{
     val playlistOfPlaylist = mutableStateListOf<Playlist>()
 }
+
+// Collects all MP3 files from downloaded section of folders
 fun loadDownloadMP3s(): SnapshotStateList<MP3> {
-    //
     val list = mutableStateListOf<MP3>()
     val folder = File("/storage/emulated/0/Download/")
     var idCounter = 0
