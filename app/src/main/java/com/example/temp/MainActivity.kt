@@ -88,10 +88,10 @@ class MainActivity : ComponentActivity() {
                                 currentScreen = "playlist"
                             },
 
-                            onAddPlaylist = { name, labels ->
+                            onAddPlaylist = { name, type, labels ->
                                 if(PoP.playlistOfPlaylist.none {it.name == name}){
                                     PoP.playlistOfPlaylist.add(Playlist(
-                                        id = nextPlaylistId, name = name, labels = labels))
+                                        id = nextPlaylistId, name = name, labels = labels, type = type))
                                     nextPlaylistId++
                                 }
                                 else{
@@ -174,13 +174,6 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-enum class SortType{
-    CUSTOM,
-    AZ,
-    ZA,
-    LABEL
-}
-
 enum class PlaylistType{
     Pod,
     Song,
@@ -192,6 +185,7 @@ data class MP3(
     val id: Int = -1,
     val title: String = "",
     val path: String = "",
+    var selected: Boolean = false,
 )
 
 data class Label(

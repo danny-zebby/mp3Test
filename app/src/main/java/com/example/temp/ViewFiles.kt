@@ -29,6 +29,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -63,7 +64,7 @@ fun ViewFiles(
             style = MaterialTheme.typography.titleLarge
         )
         // Var & vals for SearchBar
-        var slectedMP3 by remember {mutableStateOf(-1)}
+        var slectedMP3Index by remember {mutableStateOf(-1)}
         var searchText by remember { mutableStateOf("") }
         var active by remember { mutableStateOf(true) }
         // Recompute filtered songs whenever user types or adds a song
@@ -71,11 +72,11 @@ fun ViewFiles(
         val filteredSongs = remember(searchText, allSongs.mp3s) {
             allMP3s.filter { song ->
                 song.title.contains(searchText, ignoreCase = true) &&
-                        ( allSongs.mp3s.none { it.id == song.id } )
+                        (allSongs.mp3s.none { it.id == song.id })
             }
         }
         Spacer(modifier = Modifier.height(10.dp))
-        Column(modifier = Modifier.padding(start = 16.dp, end = 16.dp) .height(250.dp)) {
+        Column(modifier = Modifier.padding(start = 16.dp, end = 16.dp) .height(250.dp), verticalArrangement = Arrangement.Top) {
             SearchBar(
                 query = searchText,
                 onQueryChange = { searchText = it },
@@ -95,47 +96,51 @@ fun ViewFiles(
                         )
                     }
                 },
-                modifier = Modifier.fillMaxWidth()
+//                modifier = Modifier.fillMaxWidth()
             ) {
                 LazyColumn {
                     items(filteredSongs, key = {it.id}) { song ->
+                        val bg = if(song.selected) Color.DarkGray else Color.LightGray
                         Text(
                             text = song.title,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable {
                                     // I need to change this so it grabs the song only
-                                     slectedMP3 = song.id
+                                    slectedMP3Index = song.id
+                                    song.selected = !song.selected
                                 }
                                 .padding(16.dp)
+                                .background(bg)
                         )
                     }
                 }
             }
         }
+        Spacer(modifier = Modifier.height(10.dp))
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.SpaceEvenly
         ) {
             Button(
-                onClick = {onAddSong(allMP3s.get(slectedMP3))}
+                onClick = {onAddSong(allMP3s.get(slectedMP3Index))}
             ) {
                 Text("Add Songs\n("+allSongs.mp3s.size+")")
             }
             Button(
-                onClick = {onAddTrash(allMP3s.get(slectedMP3))}
+                onClick = {onAddTrash(allMP3s.get(slectedMP3Index))}
             ) {
-                Text("Trash\n("+allSongs.mp3s.size+")")
+                Text("Trash\n("+allTrash.mp3s.size+")")
             }
             Button(
-                onClick = {onAddPod(allMP3s.get(slectedMP3))}
+                onClick = {onAddPod(allMP3s.get(slectedMP3Index))}
             ) {
                 Text("Add Pod\n("+allPodcast.mp3s.size+")")
             }
         }
-
+        Spacer(modifier = Modifier.height(10.dp))
         BottomButtons()
     }
 }

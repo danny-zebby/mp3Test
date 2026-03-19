@@ -64,7 +64,7 @@ fun MP3Home(
     onSimpleModeClick: () -> Unit = {},
     onViewFilesClick: () -> Unit = {},
     onPlaylistClick: (Playlist) -> Unit = {},
-    onAddPlaylist: (String, List<Label>) -> Unit = { _, _ -> },
+    onAddPlaylist: (String, PlaylistType, List<Label>) -> Unit = { _, _, _ -> },
     onDeletePlaylist: (Int) -> Unit = {},
     onHomeClick: () -> Unit = {}
 ) {
@@ -370,7 +370,7 @@ fun MP3Home(
                 confirmButton = {
                     Button(onClick = {
                         if (newItem.text.isNotBlank()) {
-                            onAddPlaylist(newItem.text, selectedLabels)
+                            onAddPlaylist(newItem.text, PlaylistType.Song, selectedLabels)
                             newItem = TextFieldValue("")
                             selectedLabels = emptyList()
                         }
