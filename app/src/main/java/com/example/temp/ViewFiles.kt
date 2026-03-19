@@ -87,10 +87,28 @@ fun ViewFiles(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable {
-                                    // I need to change this so it grabs the song only
-                                    if(selectedMP3Index != -1) selectedMP3Index = allMP3s.indexOf(song)
-                                    else selectedMP3Index = -1
-                                    song.selected = !song.selected
+                                    // When a song in LazyColumn is clicked:
+                                    val clickedIndex = allMP3s.indexOf(song)
+
+                                    if (clickedIndex != -1) {
+                                        if (selectedMP3Index == clickedIndex) {
+                                            // Clicked the already selected song -> deselect
+                                            selectedMP3Index = -1
+                                            song.selected = false
+                                        } else {
+                                            // Deselect previous selection if any
+                                            if (selectedMP3Index != -1) {
+                                                allMP3s[selectedMP3Index].selected = false
+                                            }
+                                            // Select new song
+                                            selectedMP3Index = clickedIndex
+                                            song.selected = true
+                                        }
+                                    } else {
+                                        // Song not found in allMP3s (edge case)
+                                        selectedMP3Index = -1
+                                        song.selected = false
+                                    }
                                 }
                                 .padding(top = 10.dp)
                                 .background(bg)

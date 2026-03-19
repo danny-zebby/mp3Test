@@ -74,7 +74,7 @@ class MainActivity : ComponentActivity() {
                 // These are vars that help perform playlist functions
                 var currentScreen by remember { mutableStateOf("home") }
                 var selectedPlaylistId by remember { mutableStateOf<Int?>(null) }
-                var nextPlaylistId by remember { mutableIntStateOf(1) }
+                var nextPlaylistId by remember { mutableIntStateOf(3) }
 
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
