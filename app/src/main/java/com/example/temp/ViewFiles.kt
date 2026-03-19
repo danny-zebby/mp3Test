@@ -20,9 +20,11 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -58,46 +60,29 @@ fun ViewFiles(
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.headlineLarge
         )
-        Text(
-            text = "Unassigned Files: (" + allMP3s.size + ")",
-            textAlign = TextAlign.Left,
-            style = MaterialTheme.typography.titleLarge
-        )
         // Var & vals for SearchBar
         var slectedMP3Index by remember {mutableStateOf(-1)}
         var searchText by remember { mutableStateOf("") }
-        var active by remember { mutableStateOf(true) }
+
         // Recompute filtered songs whenever user types or adds a song
-            // I need to rewrite this logic to have it only show for how I want it to
-        val filteredSongs = remember(searchText, allSongs.mp3s) {
-            allMP3s.filter { song ->
-                song.title.contains(searchText, ignoreCase = true) &&
-                        (allSongs.mp3s.none { it.id == song.id })
+        val filteredSongs by remember {
+            derivedStateOf {
+                allMP3s.filter { song ->
+                    song.title.contains(searchText, ignoreCase = true) &&
+                            allSongs.mp3s.none { it.id == song.id } &&
+                            allPodcast.mp3s.none { it.id == song.id } &&
+                            allTrash.mp3s.none { it.id == song.id }
+                }
             }
         }
         Spacer(modifier = Modifier.height(10.dp))
-        Column(modifier = Modifier.padding(start = 16.dp, end = 16.dp) .height(250.dp), verticalArrangement = Arrangement.Top) {
-            SearchBar(
-                query = searchText,
-                onQueryChange = { searchText = it },
-                onSearch = {},
-                active = active,
-                onActiveChange = { active = it },
-                placeholder = { Text("Search songs") },
-                leadingIcon = {
-                    Icon(Icons.Default.Search, contentDescription = null)
-                },
-                trailingIcon = {
-                    if (searchText.isNotEmpty()) {
-                        Icon(
-                            Icons.Default.Close,
-                            contentDescription = "Clear",
-                            modifier = Modifier.clickable { searchText = "" }
-                        )
-                    }
-                },
-//                modifier = Modifier.fillMaxWidth()
-            ) {
+        Column(modifier = Modifier.padding(start = 16.dp, end = 16.dp) .weight(1f) .fillMaxWidth(), verticalArrangement = Arrangement.Top) {
+            OutlinedTextField(
+                value = searchText,
+                onValueChange = { searchText = it },
+                label = { Text("Unassigned Files: (" + allMP3s.size + ")") },
+                modifier = Modifier.fillMaxWidth()
+            )
                 LazyColumn {
                     items(filteredSongs, key = {it.id}) { song ->
                         val bg = if(song.selected) Color.DarkGray else Color.LightGray
@@ -107,16 +92,16 @@ fun ViewFiles(
                                 .fillMaxWidth()
                                 .clickable {
                                     // I need to change this so it grabs the song only
-                                    slectedMP3Index = song.id
+                                    if(slectedMP3Index != -1) slectedMP3Index = allMP3s.indexOf(song)
+                                    else slectedMP3Index = -1
                                     song.selected = !song.selected
                                 }
-                                .padding(16.dp)
+                                .padding(top = 10.dp)
                                 .background(bg)
                         )
                     }
                 }
             }
-        }
         Spacer(modifier = Modifier.height(10.dp))
         Row(
             modifier = Modifier
@@ -125,17 +110,26 @@ fun ViewFiles(
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
             Button(
-                onClick = {onAddSong(allMP3s.get(slectedMP3Index))}
+                onClick = {
+                    if (slectedMP3Index > -1){ onAddSong(allMP3s.get(slectedMP3Index))
+                        slectedMP3Index = -1 } else {}
+                }
             ) {
                 Text("Add Songs\n("+allSongs.mp3s.size+")")
             }
             Button(
-                onClick = {onAddTrash(allMP3s.get(slectedMP3Index))}
+                onClick = {
+                    if (slectedMP3Index > -1){ onAddTrash(allMP3s.get(slectedMP3Index))
+                        slectedMP3Index = -1 } else {}
+                }
             ) {
                 Text("Trash\n("+allTrash.mp3s.size+")")
             }
             Button(
-                onClick = {onAddPod(allMP3s.get(slectedMP3Index))}
+                onClick = {
+                    if (slectedMP3Index > -1){ onAddPod(allMP3s.get(slectedMP3Index))
+                        slectedMP3Index = -1 } else {}
+                }
             ) {
                 Text("Add Pod\n("+allPodcast.mp3s.size+")")
             }

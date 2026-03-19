@@ -60,15 +60,20 @@ class MainActivity : ComponentActivity() {
                 var currentScreen by remember { mutableStateOf("home") }
                 var selectedPlaylistId by remember { mutableStateOf<Int?>(null) }
                 
-                val allMP3s = loadDownloadMP3s()
+                val allMP3s = remember { loadDownloadMP3s() }
                 val allSongs = SnapshotStateList<MP3>()
                 val allPodcast = SnapshotStateList<MP3>()
                 val allTrash =  SnapshotStateList<MP3>() // COME UP WITH BETTER NAME
 
-                PoP.playlistOfPlaylist.add(Playlist(id = 0, name = "All Songs", mp3s = allSongs, type = PlaylistType.Song))
-                PoP.playlistOfPlaylist.add(Playlist(id = 1, name = "All Podcast", mp3s = allPodcast, type = PlaylistType.Pod))
-                PoP.playlistOfPlaylist.add(Playlist(id = 2, name = "All Trash", mp3s = allTrash,type = PlaylistType.Trash))
+                val initialized = remember { mutableStateOf(false) }
 
+                if (!initialized.value) {
+                    PoP.playlistOfPlaylist.clear()
+                    PoP.playlistOfPlaylist.add(Playlist(id = 0, name = "All Songs", mp3s = allSongs, type = PlaylistType.Song))
+                    PoP.playlistOfPlaylist.add(Playlist(id = 1, name = "All Podcast", mp3s = allPodcast, type = PlaylistType.Pod))
+                    PoP.playlistOfPlaylist.add(Playlist(id = 2, name = "All Trash", mp3s = allTrash, type = PlaylistType.Trash))
+                    initialized.value = true
+                }
                 var nextPlaylistId by remember { mutableIntStateOf(1) }
 
                 Scaffold(
@@ -88,10 +93,10 @@ class MainActivity : ComponentActivity() {
                                 currentScreen = "playlist"
                             },
 
-                            onAddPlaylist = { name, type, labels ->
+                            onAddPlaylist = { name, labels ->
                                 if(PoP.playlistOfPlaylist.none {it.name == name}){
                                     PoP.playlistOfPlaylist.add(Playlist(
-                                        id = nextPlaylistId, name = name, labels = labels, type = type))
+                                        id = nextPlaylistId, name = name, labels = labels, type = PlaylistType.Song))
                                     nextPlaylistId++
                                 }
                                 else{
@@ -185,8 +190,7 @@ data class MP3(
     val id: Int = -1,
     val title: String = "",
     val path: String = "",
-    var selected: Boolean = false,
-)
+    ){var selected by mutableStateOf(false)}
 
 data class Label(
     val color: Color,
@@ -199,7 +203,7 @@ data class Playlist(
     var labels: List<Label> = emptyList(),
     val mp3s: SnapshotStateList<MP3> = mutableStateListOf(),
     val type: PlaylistType = PlaylistType.Null,
-)
+){}
 
 object AudioPlayer{
     var mediaPlayer: MediaPlayer? = null
