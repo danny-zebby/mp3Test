@@ -86,13 +86,15 @@ class MainActivity : ComponentActivity() {
 
                             onSimpleModeClick = { currentScreen = "simple" },
 
-                            onViewFilesClick = {currentScreen = "view"},
+                            onViewFilesClick = { currentScreen = "view" },
 
                             // Goes to playlist page when clicking on a playlist
                             onPlaylistClick = { playlist  ->
                                 selectedPlaylistId = playlist.id
                                 currentScreen = "playlist"
                             },
+
+                            onColorCLick = { currentScreen = "color" },
 
                             // Checks if playlist name is not already taken, if so adds playlist to PoP
                             onAddPlaylist = { name, labels ->
@@ -158,6 +160,7 @@ class MainActivity : ComponentActivity() {
                         }
                         "view" -> {
                             ViewFiles(
+                                modifier = Modifier.padding(innerPadding),
                                 // Go Home
                                 onHomeClick = { currentScreen = "home" },
 
@@ -180,6 +183,13 @@ class MainActivity : ComponentActivity() {
                                     PoP.playlistOfPlaylist[1].mp3s.add(mp3)
                                     allMP3s.remove(mp3)
                                 },
+                            )
+                        }
+                        "color" -> {
+                            ColorPick(
+                                modifier = Modifier.padding(innerPadding),
+                                // Go Home
+                                onHomeClick = { currentScreen = "home" },
                             )
                         }
                     }

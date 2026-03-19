@@ -37,6 +37,7 @@ import com.example.compose.secondaryBGLight
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ViewFiles(
+    modifier: Modifier = Modifier,
     onAddSong: (MP3) -> Unit,
     onAddTrash: (MP3) -> Unit,
     onAddPod: (MP3) -> Unit,

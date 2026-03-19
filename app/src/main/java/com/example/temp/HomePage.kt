@@ -68,6 +68,7 @@ fun MP3Home(
     onSimpleModeClick: () -> Unit = {},
     onViewFilesClick: () -> Unit = {},
     onPlaylistClick: (Playlist) -> Unit = {},
+    onColorCLick: () -> Unit = {},
     onAddPlaylist: (String, List<Label>) -> Unit = { _, _ -> },
     onDeletePlaylist: (Int) -> Unit = {},
     onHomeClick: () -> Unit = {}
@@ -137,7 +138,7 @@ fun MP3Home(
             "Button 7", "Button 8", "Button 9")
         val buttonFunctions = listOf(
             {onViewFilesClick()}, {onSimpleModeClick()}, {},
-            {}, {}, {},
+            {onColorCLick()}, {}, {},
             {}, {}, {})
         val pagerState = rememberPagerState(pageCount = { (navButtons.size + 2) / 3 })
 
