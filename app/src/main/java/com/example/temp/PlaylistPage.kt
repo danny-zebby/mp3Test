@@ -18,13 +18,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
@@ -46,17 +43,10 @@ import org.burnoutcrew.reorderable.ReorderableItem
 import org.burnoutcrew.reorderable.detectReorder
 import org.burnoutcrew.reorderable.rememberReorderableLazyListState
 import org.burnoutcrew.reorderable.reorderable
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.compose.primaryBGLight
 import com.example.compose.tertiaryBGLight
@@ -82,23 +72,8 @@ fun PlaylistPage(
     var sortIndex by remember { mutableIntStateOf(0) }                      // 0: Custom, 1: Alpha
     var isAlphaAsc by remember { mutableStateOf(true) }                     // Alphabetical sort trigger
 
-    var newItem by remember { mutableStateOf(TextFieldValue(playlist.name)) }            // This stores text field text
     var editPlaylist by remember { mutableStateOf(false) }                // Tigger for create playlist
     var deletePlaylist by remember { mutableStateOf(false) }                // Tigger for deleting playlist
-
-    var selectedLabels by remember { mutableStateOf(listOf<Label>()) }      // Temporary placement for labels
-    var playlistLabel by remember { mutableStateOf(false) }                 // Tigger for label dropdown (create)
-    val availableLabels = listOf(
-        Label(Color.Red, "Red"), Label(Color.Yellow, "Yellow"), Label(Color.Green, "Green"),
-        Label(Color.Cyan, "Cyan"), Label(Color.Blue, "Blue"), Label(Color.Magenta, "Magenta")
-    )
-    val labelOrderMap = availableLabels.withIndex().associate { it.value.color to it.index }
-    fun sortLabels(labels: List<Label>): List<Label> {
-        return labels.sortedBy { label ->
-            labelOrderMap[label.color] ?: Int.MAX_VALUE
-        }
-    }
-
 
     // How Playlist are sorted
     val displayList =  when (sortIndex) {
@@ -106,6 +81,8 @@ fun PlaylistPage(
         1 -> if (isAlphaAsc) playlist.mp3s.sortedBy { it.title } else playlist.mp3s.sortedByDescending { it.title }
         else -> playlist.mp3s
     }
+    var showGrid by remember { mutableStateOf(false) }
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
@@ -307,143 +284,51 @@ fun PlaylistPage(
                 }
             }
         }
-
+        //Buttons
+        BottomButtons()
+        //
         if (addSong) {
-            var searchText by remember { mutableStateOf("") }
-            var active by remember { mutableStateOf(true) }
-
-            // Recompute filtered songs whenever user types or adds a song
-            val filteredSongs = remember(searchText, playlist.mp3s) {
-                allSongs.mp3s.filter { song ->
-                    song.title.contains(searchText, ignoreCase = true) &&
-                            playlist.mp3s.none { it.id == song.id }
-                }
-            }
-            AlertDialog(
-                onDismissRequest = { addSong = false },
-                confirmButton = {},
-                dismissButton = { Button(onClick = { addSong = false }) { Text("Done") } },
-                text = {
-                    Column {
-                        SearchBar(
-                            query = searchText,
-                            onQueryChange = { searchText = it },
-                            onSearch = {},
-                            active = active,
-                            onActiveChange = { active = it },
-                            placeholder = { Text("Search songs") },
-                            leadingIcon = {
-                                Icon(Icons.Default.Search, contentDescription = null)
-                            },
-                            trailingIcon = {
-                                if (searchText.isNotEmpty()) {
-                                    Icon(
-                                        Icons.Default.Close,
-                                        contentDescription = "Clear",
-                                        modifier = Modifier.clickable { searchText = "" }
-                                    )
-                                }
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            LazyColumn {
-                                items(filteredSongs, key = {it.id}) { song ->
-                                    Text(
-                                        text = song.title,
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .clickable {
-                                                onAddSong(song)
-                                            }
-                                            .padding(16.dp)
-                                    )
-                                }
-                            }
-                        }
-                    }
+            AddSong(
+                onDismiss = {addSong = false},
+                onPlaylist = playlist,
+                onAllSongs = allSongs,
+                onReturnSong = {song->
+                    onAddSong(song)
                 }
             )
         }
-
         // Dialog screen pop up to edit current playlist
         if (editPlaylist) {
-            AlertDialog(
-                onDismissRequest = { editPlaylist = false },
-                // confirmButton
-                confirmButton = {
-                    Button(onClick = {
-                        if (newItem.text.isNotBlank()) {
-                            onEditPlaylist(newItem.text, selectedLabels)
-                            newItem = TextFieldValue("")
-                            selectedLabels = emptyList()
-                        }
-                        editPlaylist = false
-                    }) { Text("Edit") }
+            EditAddPlaylist(
+                onDismiss = { editPlaylist = false },
+                onPlaylistInfo = { name, labels ->
+                    onEditPlaylist(name, labels)
                 },
-                // dismissButton
-                dismissButton = {
-                    Button(onClick = { editPlaylist = false }) { Text("Cancel") }
-                    Button(onClick = { editPlaylist = false }) { Text("Cancel") }
+                onDeletePlaylist = { delete ->
+                    if(delete) deletePlaylist = true
                 },
-                // Text: text field, label dropdown, labels selected
-                text = {
-                    Column(modifier = Modifier.fillMaxWidth()) {
-                        Row(verticalAlignment = Alignment.CenterVertically){
-                            OutlinedTextField(
-                                value = newItem,
-                                onValueChange = { newItem = it },
-                                label = { Text("Playlist Name") }
-                            )
-//                            Spacer(modifier = Modifier.width(3.dp))
-                            Button(onClick = {deletePlaylist = true},shape = RectangleShape){Text("Delete")}
-                        }
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Button(
-                                onClick = { playlistLabel = true},
-                                shape = RectangleShape,
-                                colors = ButtonDefaults.buttonColors(containerColor = Color.DarkGray)
-                            ) {
-                                if (playlistLabel) Text("Label Color v")
-                                else Text("Label Color ^")
-                            }
-                            Spacer(modifier = Modifier.weight(1f))
-                            selectedLabels = sortLabels(selectedLabels)
-                            for(i in selectedLabels.indices){
-                                Box(
-                                    modifier = Modifier
-                                        .size(35.dp)
-                                        .background(selectedLabels[i].color)
-                                        .border(1.dp, Color.Black)
-
-                                ){}
-                            }
-                            // "Red", "Yellow", "Green", "Cyan", "Blue", "Magenta"
-                            DropdownMenu(expanded = playlistLabel, onDismissRequest = { playlistLabel = false }) {
-                                DropdownMenuItem(text = { Text("None") }, onClick = {
-                                    selectedLabels = emptyList(); playlistLabel = false })
-                                availableLabels.forEach { label ->
-                                    DropdownMenuItem(
-                                        text = { Text(label.name) },
-                                        onClick = {
-                                            if(!selectedLabels.any { it.color == label.color }) {
-                                                selectedLabels = selectedLabels + label
-                                            } else {
-                                                selectedLabels = selectedLabels.filterNot { it.color == label.color }
-                                            }
-                                            playlistLabel = false
-                                        }
-                                    )
-                                }
-                            }
-                        }
+                onShowGrid = { grid ->
+                    if(grid) showGrid = true
+                },
+                onPlaylist = playlist,
+                onEdit = true
+            )
+        }
+        //
+        if(showGrid){
+            ColorPick(
+                onDismiss = { showGrid = false },
+                onColorPicked = { label ->
+                    if (label.color != Color.Transparent){
+                        PoP.playlistOfPlaylist[0].labels.add(label)
                     }
+                    showGrid = false
                 }
             )
         }
         // delete playlist pop up
         if (deletePlaylist){
-            DeletPlaylist(
+            DeletePlaylist(
                 onDismiss = { deletePlaylist = false},
                 onDeletePlaylist = { delete ->
                     if(delete) onDeletePlaylist(playlist.id)
@@ -451,15 +336,11 @@ fun PlaylistPage(
                 onId = playlist.id
             )
         }
-
-        //Buttons
-        BottomButtons()
     }
 }
 
 
 //Preview App
-@SuppressLint("UnrememberedMutableState")
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun PlaylistPagePreview() {
@@ -472,7 +353,7 @@ fun PlaylistPagePreview() {
             playlist = Playlist(
                 id = 1,
                 name = "Some Songs",
-                mp3s = listOf<MP3>( MP3(1,"Preview", "yes"), MP3(2,"These Nuts","") ) as SnapshotStateList<MP3>,
+                mp3s = listOf( MP3(1,"Preview", "yes"), MP3(2,"These Nuts","") ) as SnapshotStateList<MP3>,
             ),
             onAddSong = {},
             onRemoveSong = {},

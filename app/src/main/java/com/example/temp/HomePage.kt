@@ -21,13 +21,11 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ElevatedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
@@ -44,12 +42,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.compose.gridColors
 import com.example.compose.primaryBGLight
 import com.example.compose.tertiaryBGLight
 import com.example.temp.ui.theme.NewTheme
@@ -75,22 +71,11 @@ fun MP3Home(
     onHomeClick: () -> Unit = {}
 ) {
     // temp vars
-    var newItem by remember { mutableStateOf(TextFieldValue()) }            // This stores text field text
     var createPlaylist by remember { mutableStateOf(false) }                // Tigger for create playlist
 
     // trigger vars
     var deletePlaylist by remember { mutableStateOf(false) }                // Tigger for deleting playlist
     var playlistToDelete by remember {mutableIntStateOf(-1)}                // Temp placement for deleted playlist
-    var playlistLabel by remember { mutableStateOf(false) }                 // Tigger for label dropdown (create)
-
-    // label values
-    var selectedLabels by remember { mutableStateOf(listOf<Label>()) }      // Temporary placement for labels
-    val labelOrderMap = PoP.playlistOfPlaylist[0].labels.withIndex().associate { it.value.color to it.index }
-    fun sortLabels(labels: List<Label>): List<Label> {
-        return labels.sortedBy { label ->
-            labelOrderMap[label.color] ?: Int.MAX_VALUE
-        }
-    }
 
     // Vars used to create three playlist sorts
     var sortIndex by remember { mutableIntStateOf(0) }                      // 0: Custom, 1: Alpha, 2: Label
@@ -117,7 +102,6 @@ fun MP3Home(
         }
         if (allSongs != null) listOf(allSongs) + sortedOthers else sortedOthers
     }
-
 
     var showGrid by remember { mutableStateOf(false) }
 
@@ -388,7 +372,6 @@ fun MP3Home(
                 onShowGrid = { grid ->
                     if(grid) showGrid = true
                 },
-                onPlaylist = PoP.playlistOfPlaylist[0],
                 onEdit = false
             )
         }
@@ -405,7 +388,7 @@ fun MP3Home(
         }
         // delete playlist pop up
         if (deletePlaylist){
-            DeletPlaylist(
+            DeletePlaylist(
                 onDismiss = { deletePlaylist = false},
                 onDeletePlaylist = { delete ->
                     if(delete) onDeletePlaylist(playlistToDelete)
