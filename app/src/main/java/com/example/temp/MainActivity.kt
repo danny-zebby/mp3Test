@@ -94,13 +94,11 @@ class MainActivity : ComponentActivity() {
                                 currentScreen = "playlist"
                             },
 
-                            onColorCLick = { currentScreen = "color" },
-
                             // Checks if playlist name is not already taken, if so adds playlist to PoP
                             onAddPlaylist = { name, labels ->
                                 if(PoP.playlistOfPlaylist.none {it.name == name}){
                                     PoP.playlistOfPlaylist.add(Playlist(
-                                        id = nextPlaylistId, name = name, labels = labels, type = PlaylistType.Song))
+                                        id = nextPlaylistId, name = name, type = PlaylistType.Song))
                                     nextPlaylistId++
                                 }
                                 else{
@@ -136,9 +134,9 @@ class MainActivity : ComponentActivity() {
                                         currentPlaylist.mp3s.removeAll{ it.id == mp3.id }
                                     },
 
-                                    onEditPlaylist = {name, label ->
+                                    onEditPlaylist = {name, labels ->
                                         currentPlaylist.name = name
-                                        currentPlaylist.labels = label
+                                        currentPlaylist.setLabels(labels)
                                     },
 
                                     onDeletePlaylist = {playlistId ->
@@ -185,13 +183,6 @@ class MainActivity : ComponentActivity() {
                                 },
                             )
                         }
-                        "color" -> {
-                            ColorPick(
-                                modifier = Modifier.padding(innerPadding),
-                                // Go Home
-                                onHomeClick = { currentScreen = "home" },
-                            )
-                        }
                     }
                 }
             }
@@ -220,10 +211,15 @@ data class Label(
 data class Playlist(
     val id: Int = -1,
     var name: String = "",
-    var labels: List<Label> = emptyList(),
+    val labels: SnapshotStateList<Label> = mutableStateListOf(),
     val mp3s: SnapshotStateList<MP3> = mutableStateListOf(),
     val type: PlaylistType = PlaylistType.Null,
-)
+){
+    fun setLabels(newLabels: List<Label>){
+        labels.clear()
+        labels.addAll(newLabels)
+    }
+}
 
 // Singleton PoP so I can use the same one from all files easily
 object AudioPlayer{

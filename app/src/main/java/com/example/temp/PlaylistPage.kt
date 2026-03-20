@@ -322,9 +322,7 @@ fun PlaylistPage(
             AlertDialog(
                 onDismissRequest = { addSong = false },
                 confirmButton = {},
-                dismissButton = {
-                    Button(onClick = { addSong = false }) { Text("Done") }
-                },
+                dismissButton = { Button(onClick = { addSong = false }) { Text("Done") } },
                 text = {
                     Column {
                         SearchBar(
@@ -385,6 +383,7 @@ fun PlaylistPage(
                 // dismissButton
                 dismissButton = {
                     Button(onClick = { editPlaylist = false }) { Text("Cancel") }
+                    Button(onClick = { editPlaylist = false }) { Text("Cancel") }
                 },
                 // Text: text field, label dropdown, labels selected
                 text = {
@@ -444,23 +443,12 @@ fun PlaylistPage(
         }
         // delete playlist pop up
         if (deletePlaylist){
-            AlertDialog(
-                onDismissRequest = { deletePlaylist = false },
-                // confirmButton
-                confirmButton = {
-                    Button(onClick = {
-                        onDeletePlaylist(playlist.id)
-                        deletePlaylist = false
-                    }) { Text("Delete") }
+            DeletPlaylist(
+                onDismiss = { deletePlaylist = false},
+                onDeletePlaylist = { delete ->
+                    if(delete) onDeletePlaylist(playlist.id)
                 },
-                // dismissButton
-                dismissButton = {
-                    Button(onClick = { deletePlaylist = false }) { Text("Cancel") }
-                },
-                // Text: text field, label dropdown, labels selected
-                text = {
-                    Text(text = "Are you sure you want to delete " + PoP.playlistOfPlaylist.find { it.id ==  playlist.id}?.name)
-                }
+                onId = playlist.id
             )
         }
 
@@ -480,12 +468,10 @@ fun PlaylistPagePreview() {
             allSongs = Playlist(
                 id = 0,
                 name = "All Songs",
-                labels = emptyList(),
             ),
             playlist = Playlist(
                 id = 1,
                 name = "Some Songs",
-                labels = emptyList(),
                 mp3s = listOf<MP3>( MP3(1,"Preview", "yes"), MP3(2,"These Nuts","") ) as SnapshotStateList<MP3>,
             ),
             onAddSong = {},

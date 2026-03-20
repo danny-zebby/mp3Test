@@ -163,17 +163,14 @@ fun ViewFilesPreview(){
         allSongs = Playlist(
         id = 0,
         name = "All Songs",
-        labels = emptyList(),
         ),
         allPodcast = Playlist(
             id = 1,
             name = "All Pods",
-            labels = emptyList(),
         ),
         allTrash = Playlist(
             id = 2,
             name = "All Trash",
-            labels = emptyList(),
         ),
         onAddSong = {},
         onAddTrash = {},

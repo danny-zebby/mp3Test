@@ -21,6 +21,7 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
@@ -48,6 +49,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.compose.gridColors
 import com.example.compose.primaryBGLight
 import com.example.compose.tertiaryBGLight
 import com.example.temp.ui.theme.NewTheme
@@ -68,7 +70,6 @@ fun MP3Home(
     onSimpleModeClick: () -> Unit = {},
     onViewFilesClick: () -> Unit = {},
     onPlaylistClick: (Playlist) -> Unit = {},
-    onColorCLick: () -> Unit = {},
     onAddPlaylist: (String, List<Label>) -> Unit = { _, _ -> },
     onDeletePlaylist: (Int) -> Unit = {},
     onHomeClick: () -> Unit = {}
@@ -84,11 +85,7 @@ fun MP3Home(
 
     // label values
     var selectedLabels by remember { mutableStateOf(listOf<Label>()) }      // Temporary placement for labels
-    val availableLabels = listOf(
-        Label(Color.Red, "Red"), Label(Color.Yellow, "Yellow"), Label(Color.Green, "Green"),
-        Label(Color.Cyan, "Cyan"), Label(Color.Blue, "Blue"), Label(Color.Magenta, "Magenta")
-    )
-    val labelOrderMap = availableLabels.withIndex().associate { it.value.color to it.index }
+    val labelOrderMap = PoP.playlistOfPlaylist[0].labels.withIndex().associate { it.value.color to it.index }
     fun sortLabels(labels: List<Label>): List<Label> {
         return labels.sortedBy { label ->
             labelOrderMap[label.color] ?: Int.MAX_VALUE
@@ -121,6 +118,9 @@ fun MP3Home(
         if (allSongs != null) listOf(allSongs) + sortedOthers else sortedOthers
     }
 
+
+    var showGrid by remember { mutableStateOf(false) }
+
     // The whole page
     Column(
         modifier = modifier
@@ -138,7 +138,7 @@ fun MP3Home(
             "Button 7", "Button 8", "Button 9")
         val buttonFunctions = listOf(
             {onViewFilesClick()}, {onSimpleModeClick()}, {},
-            {onColorCLick()}, {}, {},
+            {}, {}, {},
             {}, {}, {})
         val pagerState = rememberPagerState(pageCount = { (navButtons.size + 2) / 3 })
 
@@ -256,7 +256,7 @@ fun MP3Home(
                                 expanded = showColorMenu,
                                 onDismissRequest = { showColorMenu = false }
                             ) {
-                                availableLabels.forEach { label ->
+                                PoP.playlistOfPlaylist[0].labels.forEach { label ->
                                     DropdownMenuItem(
                                         text = {
                                             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -377,7 +377,7 @@ fun MP3Home(
         }
         // Dialog screen pop up to create a new playlist
         if (createPlaylist) {
-            androidx.compose.material3.AlertDialog(
+            AlertDialog(
                 onDismissRequest = { createPlaylist = false },
                 // confirmButton
                 confirmButton = {
@@ -400,7 +400,8 @@ fun MP3Home(
                         OutlinedTextField(
                             value = newItem,
                             onValueChange = { newItem = it },
-                            label = { Text("Playlist Name") }
+                            label = { Text("Playlist Name") },
+                            modifier = Modifier.fillMaxWidth(),
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Row {
@@ -427,7 +428,8 @@ fun MP3Home(
                             DropdownMenu(expanded = playlistLabel, onDismissRequest = { playlistLabel = false }) {
                                 DropdownMenuItem(text = { Text("None") }, onClick = {
                                     selectedLabels = emptyList(); playlistLabel = false })
-                                availableLabels.forEach { label ->
+                                DropdownMenuItem(text = { Text("New") }, onClick = { showGrid = true } )
+                                PoP.playlistOfPlaylist[0].labels.forEach { label ->
                                     DropdownMenuItem(
                                         text = { Text(label.name) },
                                         onClick = {
@@ -446,27 +448,28 @@ fun MP3Home(
                 }
             )
         }
-        // delete playlist pop up
-        if (deletePlaylist){
-            androidx.compose.material3.AlertDialog(
-                onDismissRequest = { deletePlaylist = false },
-                // confirmButton
-                confirmButton = {
-                    Button(onClick = {
-                        onDeletePlaylist(playlistToDelete)
-                        deletePlaylist = false
-                    }) { Text("Delete") }
-                },
-                // dismissButton
-                dismissButton = {
-                    Button(onClick = { deletePlaylist = false }) { Text("Cancel") }
-                },
-                // Text: text field, label dropdown, labels selected
-                text = {
-                    Text(text = "Are you sure you want to delete " + PoP.playlistOfPlaylist.find { it.id ==  playlistToDelete}?.name)
+        if(showGrid){
+            ColorPick(
+                onDismiss = { showGrid = false },
+                onColorPicked = { label ->
+                    if (label.color != Color.Transparent){
+                        PoP.playlistOfPlaylist[0].labels.add(label)
+                    }
+                    showGrid = false
                 }
             )
         }
+        // delete playlist pop up
+        if (deletePlaylist){
+            DeletPlaylist(
+                onDismiss = { deletePlaylist = false},
+                onDeletePlaylist = { delete ->
+                    if(delete) onDeletePlaylist(playlistToDelete)
+                },
+                onId = playlistToDelete
+            )
+        }
+
         BottomButtons()
     }
 }
