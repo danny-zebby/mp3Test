@@ -110,8 +110,10 @@ fun DeletPlaylist(
 @Composable
 fun EditAddPlaylist(
     onDismiss: () -> Unit,
-    onPlaylistInfo: (String, List<Label>) ->Unit,
-    onPlaylist: Playlist,
+    onPlaylistInfo: (String, List<Label>) -> Unit,
+    onDeletePlaylist: (Boolean) -> Unit,
+    onShowGrid: (Boolean) -> Unit,
+    onPlaylist: Playlist, // neeed to edit this for laylist page only, not home
     onEdit: Boolean
 ){
     var newItem by remember { mutableStateOf(TextFieldValue(onPlaylist.name)) }            // This stores text field text
@@ -134,7 +136,7 @@ fun EditAddPlaylist(
         // dismissButton
         dismissButton = {
             if(onEdit){
-                Button(onClick = {deletePlaylist = true},shape = RectangleShape){Text("Delete")}
+                Button(onClick = {onDeletePlaylist(true)},shape = RectangleShape){Text("Delete")}
             }
             Button(onClick = { onDismiss() }) { Text("Cancel") }
         },
@@ -157,7 +159,7 @@ fun EditAddPlaylist(
                         else Text("Label Color ^")
                     }
                     Spacer(modifier = Modifier.weight(1f))
-                    selectedLabels = sortLabels(selectedLabels)
+//                    selectedLabels = sortLabels(selectedLabels)
                     for(i in selectedLabels.indices){
                         Box(
                             modifier = Modifier
@@ -171,7 +173,7 @@ fun EditAddPlaylist(
                     DropdownMenu(expanded = playlistLabel, onDismissRequest = { playlistLabel = false }) {
                         DropdownMenuItem(text = { Text("None") }, onClick = {
                             selectedLabels = emptyList(); playlistLabel = false })
-                        DropdownMenuItem(text = { Text("New") }, onClick = { showGrid = true } )
+                        DropdownMenuItem(text = { Text("New") }, onClick = { onShowGrid(true) } )
                         PoP.playlistOfPlaylist[0].labels.forEach { label ->
                             DropdownMenuItem(
                                 text = { Text(label.name) },

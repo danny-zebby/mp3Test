@@ -377,75 +377,19 @@ fun MP3Home(
         }
         // Dialog screen pop up to create a new playlist
         if (createPlaylist) {
-            AlertDialog(
-                onDismissRequest = { createPlaylist = false },
-                // confirmButton
-                confirmButton = {
-                    Button(onClick = {
-                        if (newItem.text.isNotBlank()) {
-                            onAddPlaylist(newItem.text, selectedLabels)
-                            newItem = TextFieldValue("")
-                            selectedLabels = emptyList()
-                        }
-                        createPlaylist = false
-                    }) { Text("Add") }
+            EditAddPlaylist(
+                onDismiss = { createPlaylist = false },
+                onPlaylistInfo = { name, labels ->
+                    onAddPlaylist(name, labels)
                 },
-                // dismissButton
-                dismissButton = {
-                    Button(onClick = { createPlaylist = false }) { Text("Cancel") }
+                onDeletePlaylist = { delete ->
+                    if(delete) deletePlaylist = true
                 },
-                // Text: text field, label dropdown, labels selected
-                text = {
-                    Column {
-                        OutlinedTextField(
-                            value = newItem,
-                            onValueChange = { newItem = it },
-                            label = { Text("Playlist Name") },
-                            modifier = Modifier.fillMaxWidth(),
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Row {
-                            Button(
-                                onClick = { playlistLabel = true},
-                                shape = RectangleShape,
-                                colors = ButtonDefaults.buttonColors(containerColor = Color.DarkGray)
-                            ) {
-                                if (playlistLabel) Text("Label Color V")
-                                else Text("Label Color ^")
-                            }
-                            Spacer(modifier = Modifier.weight(1f))
-                            selectedLabels = sortLabels(selectedLabels)
-                            for(i in selectedLabels.indices){
-                                Box(
-                                    modifier = Modifier
-                                        .size(35.dp)
-                                        .background(selectedLabels[i].color)
-                                        .border(1.dp, Color.Black)
-
-                                ){}
-                            }
-                            // "Red", "Yellow", "Green", "Cyan", "Blue", "Magenta"
-                            DropdownMenu(expanded = playlistLabel, onDismissRequest = { playlistLabel = false }) {
-                                DropdownMenuItem(text = { Text("None") }, onClick = {
-                                    selectedLabels = emptyList(); playlistLabel = false })
-                                DropdownMenuItem(text = { Text("New") }, onClick = { showGrid = true } )
-                                PoP.playlistOfPlaylist[0].labels.forEach { label ->
-                                    DropdownMenuItem(
-                                        text = { Text(label.name) },
-                                        onClick = {
-                                            if(!selectedLabels.any { it.color == label.color }) {
-                                                selectedLabels = selectedLabels + label
-                                            } else {
-                                                selectedLabels = selectedLabels.filterNot { it.color == label.color }
-                                            }
-                                            playlistLabel = false
-                                        }
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
+                onShowGrid = { grid ->
+                    if(grid) showGrid = true
+                },
+                onPlaylist = PoP.playlistOfPlaylist[0],
+                onEdit = false
             )
         }
         if(showGrid){
