@@ -64,17 +64,16 @@ class MainActivity : ComponentActivity() {
                 val allTrash =  SnapshotStateList<MP3>() // COME UP WITH BETTER NAME
                 val initialized = remember { mutableStateOf(false) }
                 if (!initialized.value) {
-                    PoP.playlistOfPlaylist.clear()
-                    PoP.playlistOfPlaylist.add(Playlist(id = 0, name = "All Songs", mp3s = allSongs, type = PlaylistType.Song))
-                    PoP.playlistOfPlaylist.add(Playlist(id = 1, name = "All Podcast", mp3s = allPodcast, type = PlaylistType.Pod))
-                    PoP.playlistOfPlaylist.add(Playlist(id = 2, name = "All Trash", mp3s = allTrash, type = PlaylistType.Trash))
+                    pOP.playlistOfPlaylist.clear()
+                    pOP.playlistOfPlaylist.add(Playlist(id = 0, name = "All Songs", mp3s = allSongs, type = PlaylistType.Song))
+                    pOP.playlistOfPlaylist.add(Playlist(id = 1, name = "All Podcast", mp3s = allPodcast, type = PlaylistType.Pod))
+                    pOP.playlistOfPlaylist.add(Playlist(id = 2, name = "All Trash", mp3s = allTrash, type = PlaylistType.Trash))
                     initialized.value = true
                 }
 
                 // These are vars that help perform playlist functions
                 var currentScreen by remember { mutableStateOf("home") }
                 var selectedPlaylistId by remember { mutableStateOf<Int?>(null) }
-                var nextPlaylistId by remember { mutableIntStateOf(3) }
 
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
@@ -94,12 +93,13 @@ class MainActivity : ComponentActivity() {
                                 currentScreen = "playlist"
                             },
 
-                            // Checks if playlist name is not already taken, if so adds playlist to PoP
+                            // Checks if playlist name is not already taken, if so adds playlist to pOP
                             onAddPlaylist = { name, labels ->
-                                if(PoP.playlistOfPlaylist.none {it.name == name}){
-                                    PoP.playlistOfPlaylist.add(Playlist(
-                                        id = nextPlaylistId, name = name, type = PlaylistType.Song))
-                                    nextPlaylistId++
+                                if(pOP.playlistOfPlaylist.none {it.name == name}){
+                                    pOP.playlistOfPlaylist.add(Playlist(
+                                        id = pOP.nextPlaylistId, name = name, type = PlaylistType.Song))
+                                    pOP.playlistOfPlaylist[pOP.nextPlaylistId].setLabels(labels)
+                                    pOP.nextPlaylistId++
                                 }
                                 else{
                                     // some code it's like hey this name already exist try again
@@ -108,19 +108,17 @@ class MainActivity : ComponentActivity() {
 
                             // Deleted Playlist
                             onDeletePlaylist = { playlistId ->
-                                PoP.playlistOfPlaylist.removeAll { it.id == playlistId }
+                                pOP.playlistOfPlaylist.removeAll { it.id == playlistId }
                             },
 
                             // Go Home ? (I want to make an animation if you click home and are already home)
                             onHomeClick = { currentScreen = "home" },
                         )
                         "playlist" -> {
-                            val playlist = PoP.playlistOfPlaylist.find { it.id == selectedPlaylistId }
+                            val playlist = pOP.playlistOfPlaylist.find { it.id == selectedPlaylistId }
                             playlist?.let { currentPlaylist ->
                                 PlaylistPage(
                                     modifier = Modifier.padding(innerPadding),
-
-                                    allSongs = PoP.playlistOfPlaylist.first { it.id == 0 },
 
                                     playlist = currentPlaylist,
 
@@ -140,7 +138,7 @@ class MainActivity : ComponentActivity() {
                                     },
 
                                     onDeletePlaylist = {playlistId ->
-                                        PoP.playlistOfPlaylist.removeAll { it.id == playlistId }
+                                        pOP.playlistOfPlaylist.removeAll { it.id == playlistId }
                                     },
 
                                     // Go Home
@@ -164,21 +162,21 @@ class MainActivity : ComponentActivity() {
 
                                 // Load the main four file list
                                 allMP3s = allMP3s,
-                                allSongs = PoP.playlistOfPlaylist.first { it.id == 0 },
-                                allPodcast = PoP.playlistOfPlaylist.first { it.id == 1 },
-                                allTrash = PoP.playlistOfPlaylist.first { it.id == 2 },
+                                allSongs = pOP.playlistOfPlaylist.first { it.id == 0 },
+                                allPodcast = pOP.playlistOfPlaylist.first { it.id == 1 },
+                                allTrash = pOP.playlistOfPlaylist.first { it.id == 2 },
 
                                 // Manage files
                                 onAddSong = { mp3 ->
-                                    PoP.playlistOfPlaylist[0].mp3s.add(mp3)
+                                    pOP.playlistOfPlaylist[0].mp3s.add(mp3)
                                     allMP3s.remove(mp3)
                                 },
                                 onAddTrash = { mp3 ->
-                                    PoP.playlistOfPlaylist[2].mp3s.add(mp3)
+                                    pOP.playlistOfPlaylist[2].mp3s.add(mp3)
                                     allMP3s.remove(mp3)
                                 },
                                 onAddPod = { mp3 ->
-                                    PoP.playlistOfPlaylist[1].mp3s.add(mp3)
+                                    pOP.playlistOfPlaylist[1].mp3s.add(mp3)
                                     allMP3s.remove(mp3)
                                 },
                             )
@@ -221,7 +219,13 @@ data class Playlist(
     }
 }
 
-// Singleton PoP so I can use the same one from all files easily
+// Singleton pOP so I can use the same one from all files easily (playlistOfPlaylist)
+object pOP{
+    val playlistOfPlaylist = mutableStateListOf<Playlist>()
+    var nextPlaylistId: Int = 3
+}
+
+// Singleton pOP so I can use the same one from all files easily
 object AudioPlayer{
     var mediaPlayer: MediaPlayer? = null
     var currentSong: MP3 = MP3()
@@ -303,26 +307,21 @@ object AudioPlayer{
     }
 
     fun nextPlaylist() {
-        val currentIndex = PoP.playlistOfPlaylist.indexOf(currentPlaylist)
-        if (currentIndex == PoP.playlistOfPlaylist.lastIndex) return
-        val nextPlaylist = PoP.playlistOfPlaylist[currentIndex + 1]
+        val currentIndex = pOP.playlistOfPlaylist.indexOf(currentPlaylist)
+        if (currentIndex == pOP.playlistOfPlaylist.lastIndex) return
+        val nextPlaylist = pOP.playlistOfPlaylist[currentIndex + 1]
         if (nextPlaylist.mp3s.isEmpty()) return
         play(nextPlaylist.mp3s[0], nextPlaylist, playQueue)
     }
 
     fun prevPlaylist() {
-        val currentIndex = PoP.playlistOfPlaylist.indexOf(currentPlaylist)
+        val currentIndex = pOP.playlistOfPlaylist.indexOf(currentPlaylist)
         if (currentIndex == 0) return
-        val nextPlaylist = PoP.playlistOfPlaylist[currentIndex - 1]
+        val nextPlaylist = pOP.playlistOfPlaylist[currentIndex - 1]
         if (nextPlaylist.mp3s.isEmpty()) return
         play(nextPlaylist.mp3s[0], nextPlaylist, playQueue)
     }
 
-}
-
-// Singleton PoP so I can use the same one from all files easily (playlistOfPlaylist)
-object PoP{
-    val playlistOfPlaylist = mutableStateListOf<Playlist>()
 }
 
 // Collects all MP3 files from downloaded section of folders

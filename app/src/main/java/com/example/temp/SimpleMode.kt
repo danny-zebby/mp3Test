@@ -40,7 +40,7 @@ fun SimpleMode(onHomeClick: () -> Unit, modifier: Modifier = Modifier) {
         ) {
             Button(onClick = { AudioPlayer.replay() }, shape = RectangleShape, modifier = controlModifier)  { Text("Repeat") }
             Button(onClick = {
-                if(AudioPlayer.mediaPlayer == null) { AudioPlayer.play(PoP.playlistOfPlaylist[0].mp3s[0], PoP.playlistOfPlaylist[0], PoP.playlistOfPlaylist[0].mp3s ) }
+                if(AudioPlayer.mediaPlayer == null) { AudioPlayer.play(pOP.playlistOfPlaylist[0].mp3s[0], pOP.playlistOfPlaylist[0], pOP.playlistOfPlaylist[0].mp3s ) }
                 else { if(AudioPlayer.isPlaying()) { AudioPlayer.pause() }else{ AudioPlayer.resume() } } },
                 shape = RectangleShape, modifier = controlModifier)  { Text("Pause") }
             Button(onClick = { AudioPlayer.nextPlaylist() }, shape = RectangleShape, modifier = controlModifier)  { Text("Next Play") }

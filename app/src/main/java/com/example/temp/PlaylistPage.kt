@@ -57,7 +57,6 @@ import com.example.temp.ui.theme.NewTheme
 @Composable
 fun PlaylistPage(
     modifier: Modifier = Modifier,
-    allSongs: Playlist,
     playlist: Playlist,
     onAddSong: (MP3) -> Unit,
     onRemoveSong: (MP3) -> Unit,
@@ -67,7 +66,6 @@ fun PlaylistPage(
 ) {
     // Tigger booleans vars
     var isAlphaAsc by remember { mutableStateOf(true) }         // Trigger for Alphabetical sort
-    var showGrid by remember { mutableStateOf(false) }          // Tigger for color grid
     var editPlaylist by remember { mutableStateOf(false) }      // Tigger for edit playlist
     var deletePlaylist by remember { mutableStateOf(false) }    // Tigger for deleting playlist
     var addSong by remember { mutableStateOf(false) }           // Tigger for adding a song
@@ -76,7 +74,8 @@ fun PlaylistPage(
     var sortIndex by remember { mutableIntStateOf(0) }          // 0: Custom, 1: Alpha
     val displayList =  when (sortIndex) {                               // Playlist sorter
         0 -> playlist.mp3s
-        1 -> if (isAlphaAsc) playlist.mp3s.sortedBy { it.title } else playlist.mp3s.sortedByDescending { it.title }
+        1 -> if (isAlphaAsc) playlist.mp3s.sortedBy { it.title }
+            else playlist.mp3s.sortedByDescending { it.title }
         else -> playlist.mp3s
     }
     val reorderState = rememberReorderableLazyListState(
@@ -107,7 +106,8 @@ fun PlaylistPage(
                 .fillMaxWidth()
                 .padding(8.dp)
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(start = 10.dp, end = 8.dp)
+            Row(verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(start = 10.dp, end = 8.dp)
             ){
                 Text(
                     text = playlist.name,
@@ -278,7 +278,6 @@ fun PlaylistPage(
             AddSong(
                 onDismiss = {addSong = false},
                 onPlaylist = playlist,
-                onAllSongs = allSongs,
                 onReturnSong = {song->
                     onAddSong(song)
                 }
@@ -295,24 +294,8 @@ fun PlaylistPage(
                 onDeletePlaylist = { delete ->
                     if(delete) deletePlaylist = true
                 },
-                onShowGrid = { grid ->
-                    if(grid) showGrid = true
-                },
                 onPlaylist = playlist,
                 onEdit = true
-            )
-        }
-
-        // Color select from color grid PU
-        if(showGrid){
-            ColorPick(
-                onDismiss = { showGrid = false },
-                onColorPicked = { label ->
-                    if (label.color != Color.Transparent){
-                        PoP.playlistOfPlaylist[0].labels.add(label)
-                    }
-                    showGrid = false
-                }
             )
         }
 
@@ -335,10 +318,6 @@ fun PlaylistPage(
 fun PlaylistPagePreview() {
     NewTheme {
         PlaylistPage(
-            allSongs = Playlist(
-                id = 0,
-                name = "All Songs",
-            ),
             playlist = Playlist(
                 id = 1,
                 name = "Some Songs",

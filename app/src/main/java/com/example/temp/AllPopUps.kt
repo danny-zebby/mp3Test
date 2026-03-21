@@ -37,7 +37,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import com.example.compose.gridColors
 
-val labelOrderMap = PoP.playlistOfPlaylist[0].labels.withIndex().associate { it.value.color to it.index }
+val labelOrderMap = pOP.playlistOfPlaylist[0].labels.withIndex().associate { it.value.color to it.index }
 fun sortLabels(labels: List<Label>): List<Label> {
     return labels.sortedBy { label ->
         labelOrderMap[label.color] ?: Int.MAX_VALUE
@@ -46,17 +46,20 @@ fun sortLabels(labels: List<Label>): List<Label> {
 
 //
 @Composable
-fun ColorPick(
+fun CreateLabel(
     onDismiss: () -> Unit,
-    onColorPicked: (Label) -> Unit
+    onColorPicked: (Label) -> Unit,
 ){
-    var labelName by remember { mutableStateOf(TextFieldValue()) }            // This stores text field text
     var colorSelected by remember { mutableStateOf(Color.Transparent) }
+    var labelName by remember { mutableStateOf(TextFieldValue()) }
+    val label = pOP.playlistOfPlaylist[0].labels.find { it.color == colorSelected }
+    if (label != null) labelName = TextFieldValue(label.name)
+    else labelName = TextFieldValue("")
 
     AlertDialog(
         onDismissRequest = onDismiss,
         confirmButton = {Button(onClick = {
-            if(labelName.text.isNotBlank() && colorSelected != Color.Transparent){
+            if(labelName.text.isNotBlank() && colorSelected != Color.Transparent && label == null){
                 onColorPicked(Label(colorSelected, labelName.text))
                 labelName = TextFieldValue("")
                 colorSelected = Color.Transparent
@@ -72,7 +75,7 @@ fun ColorPick(
                 Spacer(modifier = Modifier.height(10.dp))
                 OutlinedTextField(
                     value = labelName,
-                    onValueChange = { labelName = it },
+                    onValueChange = { if(label == null) labelName = it else labelName = labelName },
                     label = { Text("Label Name") },
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -116,7 +119,7 @@ fun DeletePlaylist(
         },
         // Text: text field, label dropdown, labels selected
         text = {
-            Text(text = "Are you sure you want to delete " + PoP.playlistOfPlaylist.find { it.id ==  onId}?.name)
+            Text(text = "Are you sure you want to delete " + pOP.playlistOfPlaylist.find { it.id ==  onId}?.name)
         }
     )
 }
@@ -127,7 +130,6 @@ fun EditAddPlaylist(
     onDismiss: () -> Unit,
     onPlaylistInfo: (String, List<Label>) -> Unit,
     onDeletePlaylist: (Boolean) -> Unit,
-    onShowGrid: (Boolean) -> Unit,
     onPlaylist: Playlist? = null, // need to edit this for laylist page only, not home
     onEdit: Boolean
 ){
@@ -135,6 +137,8 @@ fun EditAddPlaylist(
     if(onPlaylist != null) newItem = TextFieldValue(onPlaylist.name)         // When edit, playlist already has a name
     var selectedLabels by remember { mutableStateOf(listOf<Label>()) }      // Temporary placement for labels
     var playlistLabel by remember { mutableStateOf(false) }                 // Tigger for label dropdown (create)
+    var showGrid by remember { mutableStateOf(false) }                      // Tigger for color grid
+
 
     AlertDialog(
         // Confirm & Dismiss Button Logic
@@ -185,8 +189,8 @@ fun EditAddPlaylist(
                     DropdownMenu(expanded = playlistLabel, onDismissRequest = { playlistLabel = false }) {
                         DropdownMenuItem(text = { Text("None") }, onClick = {
                             selectedLabels = emptyList(); playlistLabel = false })
-                        DropdownMenuItem(text = { Text("New") }, onClick = { onShowGrid(true) } )
-                        PoP.playlistOfPlaylist[0].labels.forEach { label ->
+                        DropdownMenuItem(text = { Text("New") }, onClick = { showGrid = true } )
+                        pOP.playlistOfPlaylist[0].labels.forEach { label ->
                             DropdownMenuItem(
                                 text = { Text(label.name) },
                                 onClick = {
@@ -204,6 +208,19 @@ fun EditAddPlaylist(
             }
         }
     )
+    // Color select from color grid PU
+    if(showGrid){
+        CreateLabel(
+            onDismiss = { showGrid = false },
+            onColorPicked = { label ->
+                if (label.color != Color.Transparent){
+                    pOP.playlistOfPlaylist[0].labels.add(label)
+                    selectedLabels = selectedLabels + label
+                }
+                showGrid = false
+            }
+        )
+    }
 }
 
 //
@@ -212,7 +229,6 @@ fun EditAddPlaylist(
 fun AddSong(
     onDismiss: () -> Unit,
     onPlaylist: Playlist,
-    onAllSongs: Playlist,
     onReturnSong: (MP3) -> Unit,
 ){
     var searchText by remember { mutableStateOf("") }
@@ -220,7 +236,7 @@ fun AddSong(
 
     // Recompute filtered songs whenever user types or adds a song
     val filteredSongs = remember(searchText, onPlaylist.mp3s) {
-        onAllSongs.mp3s.filter { song ->
+        pOP.playlistOfPlaylist[0].mp3s.filter { song ->
             song.title.contains(searchText, ignoreCase = true) &&
                     onPlaylist.mp3s.none { it.id == song.id }
         }

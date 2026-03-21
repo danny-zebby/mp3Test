@@ -77,15 +77,14 @@ fun MP3Home(
     // trigger vars
     var deletePlaylist by remember { mutableStateOf(false) }    // Tigger for deleting playlist
     var createPlaylist by remember { mutableStateOf(false) }    // Tigger for create playlist
-    var showGrid by remember { mutableStateOf(false) }          // Tigger for color grid
     var isAlphaAsc by remember { mutableStateOf(true) }         // Alphabetical sort trigger
     var showColorMenu by remember { mutableStateOf(false) }     // Label sort trigger
 
     // Lazy col displays order
     var sortIndex by remember { mutableIntStateOf(0) }                      // 0: Custom, 1: Alpha, 2: Label
-    val displayList = remember(PoP.playlistOfPlaylist.size, sortIndex, isAlphaAsc, lFC) {
-        val allSongs = PoP.playlistOfPlaylist.find { it.id == 0 }
-        val others = PoP.playlistOfPlaylist.filter { it.id != 0 }
+    val displayList = remember(pOP.playlistOfPlaylist.size, sortIndex, isAlphaAsc, lFC) {
+        val allSongs = pOP.playlistOfPlaylist.find { it.id == 0 }
+        val others = pOP.playlistOfPlaylist.filter { it.id != 0 }
 
         val sortedOthers = when (sortIndex) {
             0 -> others
@@ -105,7 +104,7 @@ fun MP3Home(
         onMove = { from, to ->
             if (sortIndex != 0) return@rememberReorderableLazyListState
             if (from.index == 0 || to.index == 0) return@rememberReorderableLazyListState
-            PoP.playlistOfPlaylist.add(to.index, PoP.playlistOfPlaylist.removeAt(from.index))
+            pOP.playlistOfPlaylist.add(to.index, pOP.playlistOfPlaylist.removeAt(from.index))
         }
     )
 
@@ -250,7 +249,7 @@ fun MP3Home(
                                 expanded = showColorMenu,
                                 onDismissRequest = { showColorMenu = false }
                             ) {
-                                PoP.playlistOfPlaylist[0].labels.forEach { label ->
+                                pOP.playlistOfPlaylist[0].labels.forEach { label ->
                                     DropdownMenuItem(
                                         text = {
                                             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -271,7 +270,7 @@ fun MP3Home(
                 )
             }
 
-            // Middle: LazyColumn for PoP
+            // Middle: LazyColumn for pOP
             LazyColumn(
                 state = reorderState.listState,
                 contentPadding = PaddingValues(top = 8.dp),
@@ -282,7 +281,7 @@ fun MP3Home(
                     .reorderable(reorderState),
             ) {
                 items(
-                    items = if(sortIndex == 0) PoP.playlistOfPlaylist
+                    items = if(sortIndex == 0) pOP.playlistOfPlaylist
                     else displayList,
                     key = { it.id }
                 ) { playlist ->
@@ -322,7 +321,7 @@ fun MP3Home(
                                     )
                                     Spacer(modifier = Modifier.weight(1f))
                                     // This adds the labels
-                                    if (playlist.labels.isNotEmpty()) { // Checking if playlist has labels
+                                    if (playlist.labels.isNotEmpty() && playlist.id != 0 ) { // Checking if playlist has labels
                                         Row {
                                             playlist.labels.forEach { label ->
                                                 Box(
@@ -346,7 +345,6 @@ fun MP3Home(
                                 }
                             }
                         }
-
                     }
                 }
             }
@@ -379,23 +377,7 @@ fun MP3Home(
                 onDeletePlaylist = { delete ->
                     if(delete) deletePlaylist = true
                 },
-                onShowGrid = { grid ->
-                    if(grid) showGrid = true
-                },
                 onEdit = false
-            )
-        }
-
-        // Color select from color grid PU
-        if(showGrid){
-            ColorPick(
-                onDismiss = { showGrid = false },
-                onColorPicked = { label ->
-                    if (label.color != Color.Transparent){
-                        PoP.playlistOfPlaylist[0].labels.add(label)
-                    }
-                    showGrid = false
-                }
             )
         }
 
