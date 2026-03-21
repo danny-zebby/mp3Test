@@ -252,7 +252,7 @@ fun PlaylistPage(
             }
 
             // Bottom: Floating + button to create add songs
-            if(playlist.id != 0){
+            if(playlist.id != 2){
                 Box(modifier = Modifier
                     .fillMaxWidth()
                     .background(tertiaryBGLight)
@@ -321,12 +321,14 @@ fun PlaylistPagePreview() {
             playlist = Playlist(
                 id = 1,
                 name = "Some Songs",
-                mp3s = listOf( MP3(1,"Preview", "yes"),
-                    MP3(2,"These Nuts","") ) as SnapshotStateList<MP3>
+                mp3s = listOf(
+                    MP3(1, "Preview", "yes"),
+                    MP3(2, "These Nuts", "")
+                ) as SnapshotStateList<MP3>
             ),
             onAddSong = {},
             onRemoveSong = {},
-            onHomeClick = {}
+            onHomeClick = {},
         )
     }
 }

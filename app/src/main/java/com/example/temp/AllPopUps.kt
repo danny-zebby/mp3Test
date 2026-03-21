@@ -52,7 +52,7 @@ fun CreateLabel(
 ){
     var colorSelected by remember { mutableStateOf(Color.Transparent) }
     var labelName by remember { mutableStateOf(TextFieldValue()) }
-    val label = pOP.playlistOfPlaylist[0].labels.find { it.color == colorSelected }
+    val label = pOP.playlistOfPlaylist[2].labels.find { it.color == colorSelected }
     if (label != null) labelName = TextFieldValue(label.name)
     else labelName = TextFieldValue("")
 
@@ -214,7 +214,7 @@ fun EditAddPlaylist(
             onDismiss = { showGrid = false },
             onColorPicked = { label ->
                 if (label.color != Color.Transparent){
-                    pOP.playlistOfPlaylist[0].labels.add(label)
+                    pOP.playlistOfPlaylist[2].labels.add(label)
                     selectedLabels = selectedLabels + label
                 }
                 showGrid = false
@@ -236,7 +236,7 @@ fun AddSong(
 
     // Recompute filtered songs whenever user types or adds a song
     val filteredSongs = remember(searchText, onPlaylist.mp3s) {
-        pOP.playlistOfPlaylist[0].mp3s.filter { song ->
+        pOP.playlistOfPlaylist[2].mp3s.filter { song ->
             song.title.contains(searchText, ignoreCase = true) &&
                     onPlaylist.mp3s.none { it.id == song.id }
         }

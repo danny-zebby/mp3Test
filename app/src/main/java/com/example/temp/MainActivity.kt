@@ -17,7 +17,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.mutableIntStateOf
 import com.example.temp.ui.theme.NewTheme
 import java.io.File
 import android.Manifest
@@ -65,9 +64,9 @@ class MainActivity : ComponentActivity() {
                 val initialized = remember { mutableStateOf(false) }
                 if (!initialized.value) {
                     pOP.playlistOfPlaylist.clear()
-                    pOP.playlistOfPlaylist.add(Playlist(id = 0, name = "All Songs", mp3s = allSongs, type = PlaylistType.Song))
-                    pOP.playlistOfPlaylist.add(Playlist(id = 1, name = "All Podcast", mp3s = allPodcast, type = PlaylistType.Pod))
-                    pOP.playlistOfPlaylist.add(Playlist(id = 2, name = "All Trash", mp3s = allTrash, type = PlaylistType.Trash))
+                    pOP.playlistOfPlaylist.add(Playlist(id = 0, name = "All Podcast", mp3s = allPodcast))
+                    pOP.playlistOfPlaylist.add(Playlist(id = 1, name = "All Trash", mp3s = allTrash))
+                    pOP.playlistOfPlaylist.add(Playlist(id = 2, name = "All Songs", mp3s = allSongs))
                     initialized.value = true
                 }
 
@@ -93,11 +92,13 @@ class MainActivity : ComponentActivity() {
                                 currentScreen = "playlist"
                             },
 
+                            onPodcastClick = { currentScreen = "pod" },
+
                             // Checks if playlist name is not already taken, if so adds playlist to pOP
                             onAddPlaylist = { name, labels ->
                                 if(pOP.playlistOfPlaylist.none {it.name == name}){
                                     pOP.playlistOfPlaylist.add(Playlist(
-                                        id = pOP.nextPlaylistId, name = name, type = PlaylistType.Song))
+                                        id = pOP.nextPlaylistId, name = name))
                                     pOP.playlistOfPlaylist[pOP.nextPlaylistId].setLabels(labels)
                                     pOP.nextPlaylistId++
                                 }
@@ -162,23 +163,30 @@ class MainActivity : ComponentActivity() {
 
                                 // Load the main four file list
                                 allMP3s = allMP3s,
-                                allSongs = pOP.playlistOfPlaylist.first { it.id == 0 },
-                                allPodcast = pOP.playlistOfPlaylist.first { it.id == 1 },
-                                allTrash = pOP.playlistOfPlaylist.first { it.id == 2 },
+                                allSongs = pOP.playlistOfPlaylist.first { it.id == 2 },
+                                allPodcast = pOP.playlistOfPlaylist.first { it.id == 0 },
+                                allTrash = pOP.playlistOfPlaylist.first { it.id == 1 },
 
                                 // Manage files
                                 onAddSong = { mp3 ->
-                                    pOP.playlistOfPlaylist[0].mp3s.add(mp3)
-                                    allMP3s.remove(mp3)
-                                },
-                                onAddTrash = { mp3 ->
                                     pOP.playlistOfPlaylist[2].mp3s.add(mp3)
                                     allMP3s.remove(mp3)
                                 },
-                                onAddPod = { mp3 ->
+                                onAddTrash = { mp3 ->
                                     pOP.playlistOfPlaylist[1].mp3s.add(mp3)
                                     allMP3s.remove(mp3)
                                 },
+                                onAddPod = { mp3 ->
+                                    pOP.playlistOfPlaylist[0].mp3s.add(mp3)
+                                    allMP3s.remove(mp3)
+                                },
+                            )
+                        }
+                        "pod" -> {
+                            PodcastPage(
+                                modifier = Modifier.padding(innerPadding),
+                                // Go Home
+                                onHomeClick = { currentScreen = "home" },
                             )
                         }
                     }
@@ -188,18 +196,12 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-enum class PlaylistType{
-    Pod,
-    Song,
-    Trash,
-    Null,
-}
-
 data class MP3(
     val id: Int = -1,
     val title: String = "",
     val path: String = "",
-    ){var selected by mutableStateOf(false)}
+    val labels: SnapshotStateList<Label> = mutableStateListOf(),
+    ) { var selected by mutableStateOf(false) }
 
 data class Label(
     val color: Color,
@@ -211,7 +213,6 @@ data class Playlist(
     var name: String = "",
     val labels: SnapshotStateList<Label> = mutableStateListOf(),
     val mp3s: SnapshotStateList<MP3> = mutableStateListOf(),
-    val type: PlaylistType = PlaylistType.Null,
 ){
     fun setLabels(newLabels: List<Label>){
         labels.clear()

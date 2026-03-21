@@ -3,7 +3,6 @@ package com.example.temp
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -17,15 +16,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ElevatedButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
@@ -53,54 +50,34 @@ import org.burnoutcrew.reorderable.ReorderableItem
 import org.burnoutcrew.reorderable.detectReorder
 import org.burnoutcrew.reorderable.rememberReorderableLazyListState
 import org.burnoutcrew.reorderable.reorderable
-import kotlin.collections.plus
 
-// The home page is mainly the Playlist of Playlist page
-// Displays all the different types of playlist in custom order, A-Z, Z-A, or by Labels
-//      Labels are the Genre (Ill make the name switch later)
-// It also has a swipeable row of buttons, currently at 9 buttons
-// All pages, including the home page has the top bar and bottom buttons
+// I need to fix the label sorting and stuff
+// General Page finished
 @Composable
-fun MP3Home(
+fun PodcastPage(
     modifier: Modifier = Modifier,
-    onSimpleModeClick: () -> Unit = {},
-    onViewFilesClick: () -> Unit = {},
-    onPlaylistClick: (Playlist) -> Unit = {},
-    onPodcastClick: () -> Unit = {},
-    onAddPlaylist: (String, List<Label>) -> Unit = { _, _ -> },
-    onDeletePlaylist: (Int) -> Unit = {},
-    onHomeClick: () -> Unit = {}
-) {
-    // temp vars
-    var playlistToDelete by remember {mutableIntStateOf(-1)}   // Temp placement for deleted playlist
-    var lFC by remember { mutableStateOf(Color.Transparent) }  // Color to sort by
-    
-    // trigger vars
-    var deletePlaylist by remember { mutableStateOf(false) }    // Tigger for deleting playlist
-    var createPlaylist by remember { mutableStateOf(false) }    // Tigger for create playlist
+    onHomeClick: () -> Unit = {},
+){
+
     var isAlphaAsc by remember { mutableStateOf(true) }         // Alphabetical sort trigger
+    var lFC by remember { mutableStateOf(Color.Transparent) }  // Color to sort by
     var showColorMenu by remember { mutableStateOf(false) }     // Label sort trigger
 
-    // Lazy col displays order
     var sortIndex by remember { mutableIntStateOf(0) }                      // 0: Custom, 1: Alpha, 2: Label
-    val displayList = remember(pOP.playlistOfPlaylist.size, sortIndex, isAlphaAsc, lFC) {
-        val allSongs = pOP.playlistOfPlaylist.find { it.id == 0 }
-        val others = pOP.playlistOfPlaylist.filter { it.id != 0 }
-
-        val sortedOthers = when (sortIndex) {
-            0 -> others
-            1 -> if (isAlphaAsc) others.sortedBy { it.name } else others.sortedByDescending { it.name }
-            2 -> {
-                others.sortedWith(
-                    compareByDescending<Playlist> { p -> p.labels.any { it.color == lFC } }
-                        .thenBy { it.labels.joinToString { l -> l.name } }
-                        .thenBy { it.name }
-                )
-            }
-            else -> others
+    val displayList = when (sortIndex) {
+        0 -> pOP.playlistOfPlaylist[0].mp3s
+        1 -> if (isAlphaAsc) pOP.playlistOfPlaylist[0].mp3s.sortedBy { it.title }
+            else pOP.playlistOfPlaylist[0].mp3s.sortedByDescending { it.title }
+        2 -> {
+            pOP.playlistOfPlaylist[0].mp3s.sortedWith(
+                compareByDescending<MP3> { p -> p.labels.any { it.color == lFC } }
+                    .thenBy { it.labels.joinToString { l -> l.name } }
+                    .thenBy { it.title }
+            )
         }
-        if (allSongs != null) listOf(allSongs) + sortedOthers else sortedOthers
+        else -> pOP.playlistOfPlaylist[0].mp3s
     }
+
     val reorderState = rememberReorderableLazyListState(
         onMove = { from, to ->
             if (sortIndex != 0) return@rememberReorderableLazyListState
@@ -111,6 +88,7 @@ fun MP3Home(
 
     // The whole page
     Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
             .fillMaxSize()
             .background(primaryBGLight)
@@ -119,68 +97,14 @@ fun MP3Home(
         TopBar(onHomeClick = onHomeClick)
         Spacer(modifier = Modifier.height(10.dp))
 
-        // vals for HorizontalPager
-        val navButtons = listOf(
-            "View Files", "Simple Mode", "Podcast Mode",
-            "Button 4", "Button 5", "Button 6",
-            "Button 7", "Button 8", "Button 9")
-        val buttonFunctions = listOf(
-            {onViewFilesClick()}, {onSimpleModeClick()}, {onPodcastClick()},
-            {}, {}, {},
-            {}, {}, {})
-        val pagerState = rememberPagerState(pageCount = { (navButtons.size + 2) / 3 })
+        Text(
+            text = pOP.playlistOfPlaylist[0].name,
+            textAlign = TextAlign.Center,
+            style = MaterialTheme.typography.headlineLarge,
+        )
 
-        HorizontalPager(
-            state = pagerState,
-            modifier = Modifier.fillMaxWidth()
-        ) { page ->
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                val startIndex = page * 3
-                for (i in 0 until 3) {
-                    val index = startIndex + i
-                    if (index < navButtons.size) {
-                        Button(
-                            onClick = buttonFunctions[index],
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(125.dp)
-                        ) {
-                            Text(
-                                text = navButtons[index],
-                                textAlign = TextAlign.Center
-                            )
-                        }
-                    } else {
-                        Spacer(modifier = Modifier.weight(1f))
-                    }
-                }
-            }
-        }
-        // Horizontal pager page icon
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 8.dp),
-            horizontalArrangement = Arrangement.Center
-        ) {
-            repeat(pagerState.pageCount) { iteration ->
-                val color = if (pagerState.currentPage == iteration) Color(0xFF196D8A) else Color.LightGray
-                Box(
-                    modifier = Modifier
-                        .padding(4.dp)
-                        .clip(CircleShape)
-                        .background(color)
-                        .size(8.dp)
-                )
-            }
-        }
 
-        // Playlist Area: top, mid, bot
+        // Pod Area: top, mid, bot
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -282,17 +206,17 @@ fun MP3Home(
                     .reorderable(reorderState),
             ) {
                 items(
-                    items = if(sortIndex == 0) pOP.playlistOfPlaylist
+                    items = if(sortIndex == 0) pOP.playlistOfPlaylist[0].mp3s
                     else displayList,
                     key = { it.id }
-                ) { playlist ->
+                ) { podcast ->
                     ReorderableItem(
                         state = reorderState,
-                        key = playlist.id
+                        key = podcast.id
                     ) { isDragging ->
-                        if( playlist.id >= 2 ){
+                        if( podcast.id >= 2 ){
                             Button(
-                                onClick = { onPlaylistClick(playlist) },
+                                onClick = { AudioPlayer.play(podcast, pOP.playlistOfPlaylist[0], displayList) },
                                 shape = RectangleShape,
                                 contentPadding = PaddingValues(start = 10.dp, end = 10.dp),
                                 modifier = Modifier
@@ -306,7 +230,7 @@ fun MP3Home(
                                     verticalAlignment = Alignment.CenterVertically,
                                 ) {
                                     // Makes the playlist draggable
-                                    if(sortIndex == 0 && playlist.id != 2){ // Checking if the sort is custom and not for All Songs
+                                    if(sortIndex == 0 && podcast.id != 2){ // Checking if the sort is custom and not for All Songs
                                         Box(
                                             modifier = Modifier
                                                 .size(24.dp)
@@ -315,16 +239,16 @@ fun MP3Home(
                                     }
                                     Spacer(modifier = Modifier.width(5.dp))
                                     Text( // Playlist names
-                                        text = playlist.name,
+                                        text = podcast.title,
                                         maxLines = 1,
                                         overflow = TextOverflow.Ellipsis,
                                         modifier = Modifier.width(250.dp)
                                     )
                                     Spacer(modifier = Modifier.weight(1f))
                                     // This adds the labels
-                                    if (playlist.labels.isNotEmpty() && playlist.id != 2) { // Checking if playlist has labels
+                                    if (podcast.labels.isNotEmpty() && podcast.id != 2) { // Checking if playlist has labels
                                         Row {
-                                            playlist.labels.forEach { label ->
+                                            podcast.labels.forEach { label ->
                                                 Box(
                                                     modifier = Modifier
                                                         .size(20.dp)
@@ -335,71 +259,24 @@ fun MP3Home(
                                             }
                                         }
                                     }
-                                    if(playlist.id != 2){ // Delete option for playlist, !allSongs
-                                        Text(
-                                            text = "X",
-                                            modifier = Modifier.clickable{
-                                                playlistToDelete = playlist.id
-                                                deletePlaylist = true}
-                                        )
-                                    }
                                 }
                             }
                         }
                     }
                 }
             }
-
-            // Bottom: Floating + button to create a new playlist
-            Box(modifier = Modifier.fillMaxWidth()
-                .background(tertiaryBGLight)
-            ) {
-                ElevatedButton(
-                    onClick = { createPlaylist = true },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDCF2F4)),
-                    modifier = Modifier.align(Alignment.BottomEnd)
-                        .padding(10.dp)
-                ) {
-                    Text("+")
-                }
-            }
         }
 
         // Buttons
         BottomButtons()
-
-        // Create a new playlist pop up (PU)
-        if (createPlaylist) {
-            EditAddPlaylist(
-                onDismiss = { createPlaylist = false },
-                onPlaylistInfo = { name, labels ->
-                    onAddPlaylist(name, labels)
-                },
-                onDeletePlaylist = { delete ->
-                    if(delete) deletePlaylist = true
-                },
-                onEdit = false
-            )
-        }
-
-        // Delete playlist PU
-        if (deletePlaylist){
-            DeletePlaylist(
-                onDismiss = { deletePlaylist = false},
-                onDeletePlaylist = { delete ->
-                    if(delete) onDeletePlaylist(playlistToDelete)
-                    playlistToDelete = -1
-                },
-                onId = playlistToDelete
-            )
-        }
     }
 }
 
+// Preview PodPage
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
-fun MP3Preview() {
+fun PodcastPagePreview() {
     NewTheme {
-        MP3Home()
+        PodcastPage()
     }
 }
