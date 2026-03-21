@@ -320,7 +320,7 @@ object AudioPlayer{
 
 }
 
-// Singleton PoP so I can use the same one from all files easily
+// Singleton PoP so I can use the same one from all files easily (playlistOfPlaylist)
 object PoP{
     val playlistOfPlaylist = mutableStateListOf<Playlist>()
 }

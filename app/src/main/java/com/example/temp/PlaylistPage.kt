@@ -150,7 +150,7 @@ fun PlaylistPage(
             }
         }
 
-        // Song Area, top mid, bot
+        // Song Area: top, mid, bot
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -270,7 +270,7 @@ fun PlaylistPage(
             }
         }
 
-        //Buttons
+        // Buttons
         BottomButtons()
 
         // Add songs pop up (PU)

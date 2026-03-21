@@ -71,20 +71,19 @@ fun MP3Home(
     onHomeClick: () -> Unit = {}
 ) {
     // temp vars
-    var createPlaylist by remember { mutableStateOf(false) }                // Tigger for create playlist
-
+    var playlistToDelete by remember {mutableIntStateOf(-1)}   // Temp placement for deleted playlist
+    var lFC by remember { mutableStateOf(Color.Transparent) }  // Color to sort by
+    
     // trigger vars
-    var deletePlaylist by remember { mutableStateOf(false) }                // Tigger for deleting playlist
-    var playlistToDelete by remember {mutableIntStateOf(-1)}                // Temp placement for deleted playlist
-
-    // Vars used to create three playlist sorts
-    var sortIndex by remember { mutableIntStateOf(0) }                      // 0: Custom, 1: Alpha, 2: Label
-    var isAlphaAsc by remember { mutableStateOf(true) }                     // Alphabetical sort trigger
-    var labelFilterColor by remember { mutableStateOf(Color.Transparent) }  // Color to sort by
-    var showColorMenu by remember { mutableStateOf(false) }                 // Label sort trigger
+    var deletePlaylist by remember { mutableStateOf(false) }    // Tigger for deleting playlist
+    var createPlaylist by remember { mutableStateOf(false) }    // Tigger for create playlist
+    var showGrid by remember { mutableStateOf(false) }          // Tigger for color grid
+    var isAlphaAsc by remember { mutableStateOf(true) }         // Alphabetical sort trigger
+    var showColorMenu by remember { mutableStateOf(false) }     // Label sort trigger
 
     // Lazy col displays order
-    val displayList = remember(PoP.playlistOfPlaylist.size, sortIndex, isAlphaAsc, labelFilterColor) {
+    var sortIndex by remember { mutableIntStateOf(0) }                      // 0: Custom, 1: Alpha, 2: Label
+    val displayList = remember(PoP.playlistOfPlaylist.size, sortIndex, isAlphaAsc, lFC) {
         val allSongs = PoP.playlistOfPlaylist.find { it.id == 0 }
         val others = PoP.playlistOfPlaylist.filter { it.id != 0 }
 
@@ -93,7 +92,7 @@ fun MP3Home(
             1 -> if (isAlphaAsc) others.sortedBy { it.name } else others.sortedByDescending { it.name }
             2 -> {
                 others.sortedWith(
-                    compareByDescending<Playlist> { p -> p.labels.any { it.color == labelFilterColor } }
+                    compareByDescending<Playlist> { p -> p.labels.any { it.color == lFC } }
                         .thenBy { it.labels.joinToString { l -> l.name } }
                         .thenBy { it.name }
                 )
@@ -102,8 +101,13 @@ fun MP3Home(
         }
         if (allSongs != null) listOf(allSongs) + sortedOthers else sortedOthers
     }
-
-    var showGrid by remember { mutableStateOf(false) }
+    val reorderState = rememberReorderableLazyListState(
+        onMove = { from, to ->
+            if (sortIndex != 0) return@rememberReorderableLazyListState
+            if (from.index == 0 || to.index == 0) return@rememberReorderableLazyListState
+            PoP.playlistOfPlaylist.add(to.index, PoP.playlistOfPlaylist.removeAt(from.index))
+        }
+    )
 
     // The whole page
     Column(
@@ -157,7 +161,7 @@ fun MP3Home(
                 }
             }
         }
-
+        // Horizontal pager page icon
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -176,6 +180,7 @@ fun MP3Home(
             }
         }
 
+        // Playlist Area: top, mid, bot
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -188,12 +193,15 @@ fun MP3Home(
                     shape = RoundedCornerShape(12.dp)
                 )
         ) {
+            // Top: Segmented buttons
             SingleChoiceSegmentedButtonRow(
                 modifier = Modifier.fillMaxWidth()
                     .background(tertiaryBGLight)
             ) {
                 val count = 3
                 val theShape = RoundedCornerShape(0.dp)
+
+                // Custom (Draggable)
                 SegmentedButton(
                     selected = sortIndex == 0,
                     onClick = { sortIndex = 0 },
@@ -204,6 +212,7 @@ fun MP3Home(
                     )
                 ) { Text("Custom") }
 
+                // Alphabetical (A-Z & Z-A)
                 SegmentedButton(
                     selected = sortIndex == 1,
                     onClick = {
@@ -217,6 +226,7 @@ fun MP3Home(
                     )
                 ) { Text(if (sortIndex == 1) if (isAlphaAsc) "A-Z" else "Z-A" else "Alphabetical") }
 
+                // Label grouping
                 SegmentedButton(
                     selected = sortIndex == 2,
                     onClick = {
@@ -233,7 +243,7 @@ fun MP3Home(
                             Text("Label")
                             if (sortIndex == 2) {
                                 Spacer(Modifier.width(4.dp))
-                                Box(Modifier.size(12.dp).background(labelFilterColor).border(0.5.dp, Color.Black))
+                                Box(Modifier.size(12.dp).background(lFC).border(0.5.dp, Color.Black))
                             }
                             // DropdownMenu to pick label to sort by
                             DropdownMenu(
@@ -250,7 +260,7 @@ fun MP3Home(
                                             }
                                         },
                                         onClick = {
-                                            labelFilterColor = label.color
+                                            lFC = label.color
                                             showColorMenu = false
                                         }
                                     )
@@ -260,13 +270,8 @@ fun MP3Home(
                     }
                 )
             }
-            val reorderState = rememberReorderableLazyListState(
-                onMove = { from, to ->
-                    if (sortIndex != 0) return@rememberReorderableLazyListState
-                    if (from.index == 0 || to.index == 0) return@rememberReorderableLazyListState
-                    PoP.playlistOfPlaylist.add(to.index, PoP.playlistOfPlaylist.removeAt(from.index))
-                }
-            )
+
+            // Middle: LazyColumn for PoP
             LazyColumn(
                 state = reorderState.listState,
                 contentPadding = PaddingValues(top = 8.dp),
@@ -309,7 +314,7 @@ fun MP3Home(
                                         ) { Text("=", fontWeight = FontWeight.Bold) }
                                     }
                                     Spacer(modifier = Modifier.width(5.dp))
-                                    Text(
+                                    Text( // Playlist names
                                         text = playlist.name,
                                         maxLines = 1,
                                         overflow = TextOverflow.Ellipsis,
@@ -330,7 +335,7 @@ fun MP3Home(
                                             }
                                         }
                                     }
-                                    if(playlist.id != 0){
+                                    if(playlist.id != 0){ // Delete option for playlist, !allSongs
                                         Text(
                                             text = "X",
                                             modifier = Modifier.clickable{
@@ -345,7 +350,8 @@ fun MP3Home(
                     }
                 }
             }
-            // Floating + button: button selected to create a new playlist
+
+            // Bottom: Floating + button to create a new playlist
             Box(modifier = Modifier.fillMaxWidth()
                 .background(tertiaryBGLight)
             ) {
@@ -359,8 +365,11 @@ fun MP3Home(
                 }
             }
         }
+
+        // Buttons
         BottomButtons()
-        // Dialog screen pop up to create a new playlist
+
+        // Create a new playlist pop up (PU)
         if (createPlaylist) {
             EditAddPlaylist(
                 onDismiss = { createPlaylist = false },
@@ -376,6 +385,8 @@ fun MP3Home(
                 onEdit = false
             )
         }
+
+        // Color select from color grid PU
         if(showGrid){
             ColorPick(
                 onDismiss = { showGrid = false },
@@ -387,12 +398,14 @@ fun MP3Home(
                 }
             )
         }
-        // delete playlist pop up
+
+        // Delete playlist PU
         if (deletePlaylist){
             DeletePlaylist(
                 onDismiss = { deletePlaylist = false},
                 onDeletePlaylist = { delete ->
                     if(delete) onDeletePlaylist(playlistToDelete)
+                    playlistToDelete = -1
                 },
                 onId = playlistToDelete
             )

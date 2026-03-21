@@ -34,7 +34,6 @@ android {
 }
 
 dependencies {
-    implementation("com.github.KvColorPalette:KvColorPicker-Android:3.0.1")
     implementation(platform("androidx.compose:compose-bom:2024.04.01"))
     implementation("androidx.compose.material:material-icons-extended")
     implementation("org.burnoutcrew.composereorderable:reorderable:0.9.6")
