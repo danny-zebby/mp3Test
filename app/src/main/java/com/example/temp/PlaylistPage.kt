@@ -65,35 +65,42 @@ fun PlaylistPage(
     onDeletePlaylist: (Int) -> Unit = {},
     onHomeClick: () -> Unit
 ) {
-    // Values use to create playlist
-    var addSong by remember { mutableStateOf(false) }
-
-    // Values used to create three playlist sorts
-    var sortIndex by remember { mutableIntStateOf(0) }                      // 0: Custom, 1: Alpha
-    var isAlphaAsc by remember { mutableStateOf(true) }                     // Alphabetical sort trigger
-
-    var editPlaylist by remember { mutableStateOf(false) }                // Tigger for create playlist
-    var deletePlaylist by remember { mutableStateOf(false) }                // Tigger for deleting playlist
+    // Tigger booleans vars
+    var isAlphaAsc by remember { mutableStateOf(true) }         // Trigger for Alphabetical sort
+    var showGrid by remember { mutableStateOf(false) }          // Tigger for color grid
+    var editPlaylist by remember { mutableStateOf(false) }      // Tigger for edit playlist
+    var deletePlaylist by remember { mutableStateOf(false) }    // Tigger for deleting playlist
+    var addSong by remember { mutableStateOf(false) }           // Tigger for adding a song
 
     // How Playlist are sorted
-    val displayList =  when (sortIndex) {
+    var sortIndex by remember { mutableIntStateOf(0) }          // 0: Custom, 1: Alpha
+    val displayList =  when (sortIndex) {                               // Playlist sorter
         0 -> playlist.mp3s
         1 -> if (isAlphaAsc) playlist.mp3s.sortedBy { it.title } else playlist.mp3s.sortedByDescending { it.title }
         else -> playlist.mp3s
     }
-    var showGrid by remember { mutableStateOf(false) }
+    val reorderState = rememberReorderableLazyListState(
+        onMove = { from, to ->
+            if (sortIndex == 0) {
+                playlist.mp3s.add(
+                    to.index, playlist.mp3s.removeAt(from.index)
+                )
+            }
+        }
+    )
 
+    // The whole page
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
             .fillMaxSize()
             .background(primaryBGLight)
     ) {
-        //Home
+        // Home
         TopBar(onHomeClick = { onHomeClick() })
         Spacer(modifier = Modifier.height(10.dp))
 
-        // Playlist Description
+        // Playlist Description, title and labels
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
@@ -143,7 +150,7 @@ fun PlaylistPage(
             }
         }
 
-        // Song Area
+        // Song Area, top mid, bot
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -164,52 +171,29 @@ fun PlaylistPage(
             ) {
                 val count = 2
                 val theShape = RoundedCornerShape(0.dp)
+
                 // Custom (Draggable)
                 SegmentedButton(
                     selected = sortIndex == 0,
-                    onClick = {
-                                sortIndex = 0
-//                                playlist.relist(sortIndex)
-                              },
+                    onClick = { sortIndex = 0 },
                     shape = SegmentedButtonDefaults.itemShape(index = 0, count, baseShape = theShape),
                     colors = SegmentedButtonDefaults.colors(
                         activeContainerColor = Color(0xFF196D8A),
-                        activeContentColor = Color.White
-                    )
+                        activeContentColor = Color.White )
                 ) { Text("Custom") }
 
                 // Alphabetical (A-Z & Z-A)
                 SegmentedButton(
                     selected = sortIndex == 1,
-                    onClick = {
-                        if (sortIndex == 1) {
-                            isAlphaAsc = !isAlphaAsc
-//                            if (!isAlphaAsc) playlist.relist(sortIndex+1)
-//                            else playlist.relist(sortIndex)
-                        }
-                        else {sortIndex = 1
-//                            playlist.relist(sortIndex)
-                        } },
+                    onClick = { if (sortIndex == 1) isAlphaAsc = !isAlphaAsc },
                     shape = SegmentedButtonDefaults.itemShape(index = 1, count, baseShape = theShape),
                     colors = SegmentedButtonDefaults.colors(
                         activeContainerColor = Color(0xFF196D8A),
-                        activeContentColor = Color.White
-                    )
+                        activeContentColor = Color.White )
                 ) { Text(if (sortIndex == 1) if (isAlphaAsc) "A-Z" else "Z-A" else "Alphabetical") }
-
             }
-            // Middle: LazyColumn for playlists
-            val reorderState = rememberReorderableLazyListState(
-                onMove = { from, to ->
-                    if (sortIndex == 0) {
-                        playlist.mp3s.add(
-                            to.index,
-                            playlist.mp3s.removeAt(from.index)
-                        )
-                    }
-                }
-            )
 
+            // Middle: LazyColumn for playlists
             LazyColumn(
                 state = reorderState.listState,
                 contentPadding = PaddingValues(top = 8.dp),
@@ -266,7 +250,8 @@ fun PlaylistPage(
                     }
                 }
             }
-            // Floating + button: button selected to create a new playlist
+
+            // Bottom: Floating + button to create add songs
             if(playlist.id != 0){
                 Box(modifier = Modifier
                     .fillMaxWidth()
@@ -284,9 +269,11 @@ fun PlaylistPage(
                 }
             }
         }
+
         //Buttons
         BottomButtons()
-        //
+
+        // Add songs pop up (PU)
         if (addSong) {
             AddSong(
                 onDismiss = {addSong = false},
@@ -297,7 +284,8 @@ fun PlaylistPage(
                 }
             )
         }
-        // Dialog screen pop up to edit current playlist
+
+        // Edit current playlist PU
         if (editPlaylist) {
             EditAddPlaylist(
                 onDismiss = { editPlaylist = false },
@@ -314,7 +302,8 @@ fun PlaylistPage(
                 onEdit = true
             )
         }
-        //
+
+        // Color select from color grid PU
         if(showGrid){
             ColorPick(
                 onDismiss = { showGrid = false },
@@ -326,7 +315,8 @@ fun PlaylistPage(
                 }
             )
         }
-        // delete playlist pop up
+
+        // Delete playlist PU
         if (deletePlaylist){
             DeletePlaylist(
                 onDismiss = { deletePlaylist = false},
@@ -339,8 +329,7 @@ fun PlaylistPage(
     }
 }
 
-
-//Preview App
+//Preview PlaylistPage ( IDK why no work )
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun PlaylistPagePreview() {
@@ -353,7 +342,8 @@ fun PlaylistPagePreview() {
             playlist = Playlist(
                 id = 1,
                 name = "Some Songs",
-                mp3s = listOf( MP3(1,"Preview", "yes"), MP3(2,"These Nuts","") ) as SnapshotStateList<MP3>,
+                mp3s = listOf( MP3(1,"Preview", "yes"),
+                    MP3(2,"These Nuts","") ) as SnapshotStateList<MP3>
             ),
             onAddSong = {},
             onRemoveSong = {},

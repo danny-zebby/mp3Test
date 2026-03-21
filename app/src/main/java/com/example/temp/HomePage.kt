@@ -359,6 +359,7 @@ fun MP3Home(
                 }
             }
         }
+        BottomButtons()
         // Dialog screen pop up to create a new playlist
         if (createPlaylist) {
             EditAddPlaylist(
@@ -396,8 +397,6 @@ fun MP3Home(
                 onId = playlistToDelete
             )
         }
-
-        BottomButtons()
     }
 }
 
