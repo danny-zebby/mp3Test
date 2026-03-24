@@ -1,3 +1,26 @@
 <resources>
-    <string name="app_name">temp</string>
+    <string name="app_name">MP3Player</string>
+    <string name="add">Add</string>
+    <string name="edit">Edit</string>
+    <string name="cancel">Cancel</string>
+    <string name="delete">Delete</string>
+    <string name="deleteSure">Are you sure you want to delete</string>
+    <string name="file">File Viewer</string>
+    <string name="files">Unassigned Files: (</string>
+    <string name="none">None</string>
+    <string name="wen">New</string>
+    <string name="searchSong">Search Song</string>
+    <string name="playlistName">Playlist Name</string>
+    <string name="label">Label</string>
+    <string name="labelName">Label Name</string>
+    <string name="labelUp">Label Color ^</string>
+    <string name="labelDown">Label Color V</string>
+    <string name="pickColorLabel">Name and pick a color for new label</string>
+    <string name="custom">Custom</string>
+    <string name="AZ">A-Z</string>
+    <string name="ZA">Z-A</string>
+    <string name="alphabetical">Alphabetical</string>
+    <string name="view">View Files</string>
+    <string name="simple">Simple Mode</string>
+    <string name="pod">Podcast Mode</string>
 </resources>

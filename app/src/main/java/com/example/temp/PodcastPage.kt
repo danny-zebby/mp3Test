@@ -38,6 +38,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -57,12 +58,20 @@ import org.burnoutcrew.reorderable.reorderable
 fun PodcastPage(
     modifier: Modifier = Modifier,
     onHomeClick: () -> Unit = {},
+    onRemovePod: (MP3) -> Unit,
+    onPodLabels: (MP3, List<Label>) -> Unit
 ){
+    // Tigger vars
+    var isAlphaAsc by remember { mutableStateOf(true) }             // Alphabetical sort trigger
+    var showColorMenu by remember { mutableStateOf(false) }         // Label sort trigger
+    var expandedPodcastId by remember { mutableStateOf<Int?>(null) }//
+    var podLabels by remember { mutableStateOf(false) }             // Trigger for labels
 
-    var isAlphaAsc by remember { mutableStateOf(true) }         // Alphabetical sort trigger
-    var lFC by remember { mutableStateOf(Color.Transparent) }  // Color to sort by
-    var showColorMenu by remember { mutableStateOf(false) }     // Label sort trigger
+    // Temp vars
+    var lFC by remember { mutableStateOf(Color.Transparent) }   // Color to sort by
+    var selectedLabels by remember { mutableStateOf(listOf<Label>()) }      // Temporary placement for labels
 
+    // Sorting vars
     var sortIndex by remember { mutableIntStateOf(0) }                      // 0: Custom, 1: Alpha, 2: Label
     val displayList = when (sortIndex) {
         0 -> pOP.playlistOfPlaylist[0].mp3s
@@ -77,12 +86,11 @@ fun PodcastPage(
         }
         else -> pOP.playlistOfPlaylist[0].mp3s
     }
-
     val reorderState = rememberReorderableLazyListState(
         onMove = { from, to ->
             if (sortIndex != 0) return@rememberReorderableLazyListState
             if (from.index == 0 || to.index == 0) return@rememberReorderableLazyListState
-            pOP.playlistOfPlaylist.add(to.index, pOP.playlistOfPlaylist.removeAt(from.index))
+            pOP.playlistOfPlaylist[0].mp3s.add(to.index, pOP.playlistOfPlaylist[0].mp3s.removeAt(from.index))
         }
     )
 
@@ -104,7 +112,7 @@ fun PodcastPage(
         )
 
 
-        // Pod Area: top, mid, bot
+        // Pod Area: top, mid
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -134,7 +142,7 @@ fun PodcastPage(
                         activeContainerColor = Color(0xFF196D8A),
                         activeContentColor = Color.White
                     )
-                ) { Text("Custom") }
+                ) { Text(stringResource(R.string.custom)) }
 
                 // Alphabetical (A-Z & Z-A)
                 SegmentedButton(
@@ -148,7 +156,8 @@ fun PodcastPage(
                         activeContainerColor = Color(0xFF196D8A),
                         activeContentColor = Color.White
                     )
-                ) { Text(if (sortIndex == 1) if (isAlphaAsc) "A-Z" else "Z-A" else "Alphabetical") }
+                ) { Text(if (sortIndex == 1) if (isAlphaAsc) stringResource(R.string.AZ)
+                else stringResource(R.string.ZA) else stringResource(R.string.alphabetical)) }
 
                 // Label grouping
                 SegmentedButton(
@@ -164,7 +173,7 @@ fun PodcastPage(
                     ),
                     label = {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("Label")
+                            Text(stringResource(R.string.label))
                             if (sortIndex == 2) {
                                 Spacer(Modifier.width(4.dp))
                                 Box(Modifier.size(12.dp).background(lFC).border(0.5.dp, Color.Black))
@@ -214,50 +223,74 @@ fun PodcastPage(
                         state = reorderState,
                         key = podcast.id
                     ) { isDragging ->
-                        if( podcast.id >= 2 ){
-                            Button(
-                                onClick = { AudioPlayer.play(podcast, pOP.playlistOfPlaylist[0], displayList) },
-                                shape = RectangleShape,
-                                contentPadding = PaddingValues(start = 10.dp, end = 10.dp),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 5.dp)
-                                    .background(if (isDragging) Color.LightGray else Color.Transparent)
-                                    .clip(RoundedCornerShape(10.dp))
+                        Button(
+                            onClick = { AudioPlayer.play(podcast, pOP.playlistOfPlaylist[0], displayList) },
+                            shape = RectangleShape,
+                            contentPadding = PaddingValues(start = 10.dp, end = 10.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 5.dp)
+                                .background(if (isDragging) Color.LightGray else Color.Transparent)
+                                .clip(RoundedCornerShape(10.dp))
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
                             ) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                ) {
-                                    // Makes the playlist draggable
-                                    if(sortIndex == 0 && podcast.id != 2){ // Checking if the sort is custom and not for All Songs
+                                // Makes the playlist draggable
+                                if(sortIndex == 0){ // Checking if the sort is custom and not for All Songs
+                                    Box(
+                                        modifier = Modifier
+                                            .size(24.dp)
+                                            .detectReorder(reorderState)
+                                    ) { Text("=", fontWeight = FontWeight.Bold) }
+                                }
+                                Spacer(modifier = Modifier.width(5.dp))
+                                Text( // Playlist names
+                                    text = podcast.title,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.width(250.dp)
+                                )
+                                Spacer(modifier = Modifier.weight(1f))
+                                // This adds the labels
+                                if (podcast.labels.isNotEmpty()) { // Checking if playlist has labels
+                                    podcast.labels.forEach { label ->
                                         Box(
                                             modifier = Modifier
-                                                .size(24.dp)
-                                                .detectReorder(reorderState)
-                                        ) { Text("=", fontWeight = FontWeight.Bold) }
+                                                .size(20.dp)
+                                                .background(label.color)
+                                                .border(1.dp, Color.Black)
+                                        )
+                                        Spacer(modifier = Modifier.width(4.dp))
                                     }
-                                    Spacer(modifier = Modifier.width(5.dp))
-                                    Text( // Playlist names
-                                        text = podcast.title,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis,
-                                        modifier = Modifier.width(250.dp)
-                                    )
-                                    Spacer(modifier = Modifier.weight(1f))
-                                    // This adds the labels
-                                    if (podcast.labels.isNotEmpty() && podcast.id != 2) { // Checking if playlist has labels
-                                        Row {
-                                            podcast.labels.forEach { label ->
-                                                Box(
-                                                    modifier = Modifier
-                                                        .size(20.dp)
-                                                        .background(label.color)
-                                                        .border(1.dp, Color.Black)
-                                                )
-                                                Spacer(modifier = Modifier.width(4.dp))
+                                }
+                                val options = listOf(
+                                    stringResource(R.string.delete) to { onRemovePod(podcast) },
+                                    stringResource(R.string.label) to {
+                                        selectedLabels = emptyList()
+                                        podLabels = true
+                                        onPodLabels(podcast, selectedLabels)
+                                    }
+                                )
+                                Text(
+                                    ":",
+                                    modifier = Modifier.clickable {
+                                        expandedPodcastId = podcast.id
+                                    }
+                                )
+                                DropdownMenu(
+                                    expanded = expandedPodcastId == podcast.id,
+                                    onDismissRequest = { expandedPodcastId = null }
+                                ) {
+                                    options.forEach { (label, action) ->
+                                        DropdownMenuItem(
+                                            text = { Text(text = label) },
+                                            onClick = {
+                                                action()
+                                                expandedPodcastId = null
                                             }
-                                        }
+                                        )
                                     }
                                 }
                             }
@@ -269,6 +302,15 @@ fun PodcastPage(
 
         // Buttons
         BottomButtons()
+
+        if(podLabels){
+            PodLabels(
+                onDismiss = { podLabels = false },
+                onPodLabels = { labels ->
+                    selectedLabels = selectedLabels + labels
+                }
+            )
+        }
     }
 }
 
@@ -277,6 +319,9 @@ fun PodcastPage(
 @Composable
 fun PodcastPagePreview() {
     NewTheme {
-        PodcastPage()
+        PodcastPage(
+            onRemovePod = {},
+            onPodLabels = {mP3, labels -> }
+        )
     }
 }

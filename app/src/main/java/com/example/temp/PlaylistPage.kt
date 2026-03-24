@@ -47,6 +47,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.compose.primaryBGLight
 import com.example.compose.tertiaryBGLight
@@ -116,7 +117,7 @@ fun PlaylistPage(
                 )
                 if(playlist.id != 0){
                     Spacer(modifier = Modifier.weight(1f))
-                    Button(onClick = {editPlaylist = true}) { Text("Edit")}
+                    Button(onClick = {editPlaylist = true}) { Text(stringResource(R.string.edit))}
                 }
             }
             // First row for even Labels
@@ -180,7 +181,7 @@ fun PlaylistPage(
                     colors = SegmentedButtonDefaults.colors(
                         activeContainerColor = Color(0xFF196D8A),
                         activeContentColor = Color.White )
-                ) { Text("Custom") }
+                ) { Text(stringResource(R.string.custom)) }
 
                 // Alphabetical (A-Z & Z-A)
                 SegmentedButton(
@@ -190,7 +191,8 @@ fun PlaylistPage(
                     colors = SegmentedButtonDefaults.colors(
                         activeContainerColor = Color(0xFF196D8A),
                         activeContentColor = Color.White )
-                ) { Text(if (sortIndex == 1) if (isAlphaAsc) "A-Z" else "Z-A" else "Alphabetical") }
+                ) { Text(if (sortIndex == 1) if (isAlphaAsc) stringResource(R.string.AZ)
+                else stringResource(R.string.ZA) else stringResource(R.string.alphabetical)) }
             }
 
             // Middle: LazyColumn for playlists
@@ -276,7 +278,7 @@ fun PlaylistPage(
         // Add songs pop up (PU)
         if (addSong) {
             AddSong(
-                onDismiss = {addSong = false},
+                onDismiss = { addSong = false },
                 onPlaylist = playlist,
                 onReturnSong = {song->
                     onAddSong(song)

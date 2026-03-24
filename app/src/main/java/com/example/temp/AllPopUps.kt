@@ -33,11 +33,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import com.example.compose.gridColors
+import kotlin.collections.plus
 
-val labelOrderMap = pOP.playlistOfPlaylist[0].labels.withIndex().associate { it.value.color to it.index }
+val labelOrderMap = pOP.playlistOfPlaylist[2].labels.withIndex().associate { it.value.color to it.index }
 fun sortLabels(labels: List<Label>): List<Label> {
     return labels.sortedBy { label ->
         labelOrderMap[label.color] ?: Int.MAX_VALUE
@@ -63,20 +65,19 @@ fun CreateLabel(
                 onColorPicked(Label(colorSelected, labelName.text))
                 labelName = TextFieldValue("")
                 colorSelected = Color.Transparent
-                onDismiss() } } ) { Text("Done") }},
+                onDismiss() } } ) { Text(stringResource(R.string.add)) }},
         dismissButton = { Button(onClick = {
-            onColorPicked(Label(Color.Transparent, labelName.text))
             labelName = TextFieldValue("")
             colorSelected = Color.Transparent
-            onDismiss()}) { Text("Cancel") } },
+            onDismiss()}) { Text(stringResource(R.string.cancel)) } },
         text = {
             Column {
-                Text("Name and pick a color for new label")
+                Text(stringResource(R.string.pickColorLabel))
                 Spacer(modifier = Modifier.height(10.dp))
                 OutlinedTextField(
                     value = labelName,
                     onValueChange = { if(label == null) labelName = it else labelName = labelName },
-                    label = { Text("Label Name") },
+                    label = { Text(stringResource(R.string.labelName)) },
                     modifier = Modifier.fillMaxWidth(),
                 )
                 Spacer(modifier = Modifier.height(10.dp))
@@ -111,15 +112,18 @@ fun DeletePlaylist(
         onDismissRequest = onDismiss,
         // confirmButton
         confirmButton = {
-            Button(onClick = { onDeletePlaylist(true); onDismiss() }) { Text("Delete") }
+            Button(onClick = { onDeletePlaylist(true); onDismiss() })
+            { Text(stringResource(R.string.delete)) }
         },
         // dismissButton
         dismissButton = {
-            Button(onClick = { onDeletePlaylist(false); onDismiss() }) { Text("Cancel") }
+            Button(onClick = { onDeletePlaylist(false); onDismiss() })
+            { Text(stringResource(R.string.cancel)) }
         },
         // Text: text field, label dropdown, labels selected
         text = {
-            Text(text = "Are you sure you want to delete " + pOP.playlistOfPlaylist.find { it.id ==  onId}?.name)
+            Text(text = stringResource(R.string.deleteSure) +
+                    pOP.playlistOfPlaylist.find { it.id ==  onId}?.name)
         }
     )
 }
@@ -151,11 +155,13 @@ fun EditAddPlaylist(
                     selectedLabels = emptyList()
                 }
                 onDismiss()
-            }) { if(onEdit) Text("Edit") else Text("Add")}
+            }) { if(onEdit) Text(stringResource(R.string.edit))
+            else Text(stringResource(R.string.add)) }
         },
         dismissButton = {
-            if(onEdit) { Button( onClick = { onDeletePlaylist(true) } ) { Text("Delete") } }
-            Button(onClick = { onDismiss() }) { Text("Cancel") }
+            if(onEdit) { Button( onClick = { onDeletePlaylist(true) } )
+            { Text(stringResource(R.string.delete)) } }
+            Button(onClick = { onDismiss() }) { Text(stringResource(R.string.cancel)) }
         },
         // Text: text field, label dropdown, labels selected, label creation
         text = {
@@ -163,7 +169,7 @@ fun EditAddPlaylist(
                 OutlinedTextField(
                     value = newItem,
                     onValueChange = { newItem = it },
-                    label = { Text("Playlist Name") }
+                    label = { Text(stringResource(R.string.playlistName)) }
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Row {
@@ -171,8 +177,8 @@ fun EditAddPlaylist(
                         onClick = { playlistLabel = true},
                         colors = ButtonDefaults.buttonColors(containerColor = Color.DarkGray)
                     ) {
-                        if (playlistLabel) Text("Label Color V")
-                        else Text("Label Color ^")
+                        if (playlistLabel) Text(stringResource(R.string.labelDown))
+                        else Text(stringResource(R.string.labelUp))
                     }
                     Spacer(modifier = Modifier.weight(1f))
                     selectedLabels = sortLabels(selectedLabels)
@@ -187,10 +193,10 @@ fun EditAddPlaylist(
                     }
                     // None, New, etc
                     DropdownMenu(expanded = playlistLabel, onDismissRequest = { playlistLabel = false }) {
-                        DropdownMenuItem(text = { Text("None") }, onClick = {
+                        DropdownMenuItem(text = { Text(stringResource(R.string.none)) }, onClick = {
                             selectedLabels = emptyList(); playlistLabel = false })
-                        DropdownMenuItem(text = { Text("New") }, onClick = { showGrid = true } )
-                        pOP.playlistOfPlaylist[0].labels.forEach { label ->
+                        DropdownMenuItem(text = { Text(stringResource(R.string.wen)) }, onClick = { showGrid = true } )
+                        pOP.playlistOfPlaylist[2].labels.forEach { label ->
                             DropdownMenuItem(
                                 text = { Text(label.name) },
                                 onClick = {
@@ -217,7 +223,6 @@ fun EditAddPlaylist(
                     pOP.playlistOfPlaylist[2].labels.add(label)
                     selectedLabels = selectedLabels + label
                 }
-                showGrid = false
             }
         )
     }
@@ -244,7 +249,7 @@ fun AddSong(
     AlertDialog(
         onDismissRequest = onDismiss,
         confirmButton = {},
-        dismissButton = { Button(onClick = { onDismiss() }) { Text("Done") } },
+        dismissButton = { Button(onClick = { onDismiss() }) { Text(stringResource(R.string.add)) } },
         text = {
             Column {
                 SearchBar(
@@ -253,7 +258,7 @@ fun AddSong(
                     onSearch = {},
                     active = active,
                     onActiveChange = { active = it },
-                    placeholder = { Text("Search songs") },
+                    placeholder = { Text(stringResource(R.string.searchSong)) },
                     leadingIcon = {
                         Icon(Icons.Default.Search, contentDescription = null)
                     },
@@ -285,4 +290,80 @@ fun AddSong(
             }
         }
     )
+}
+
+@Composable
+fun PodLabels(
+    onDismiss: () -> Unit,
+    onPodLabels: (List<Label>) -> Unit,
+){
+    var selectedLabels by remember { mutableStateOf(listOf<Label>()) }      // Temporary placement for labels
+    var podLabel by remember { mutableStateOf(false) }                      // Tigger for label dropdown (create)
+    var showGrid by remember { mutableStateOf(false) }                      // Tigger for color grid
+
+    AlertDialog(
+        // Confirm & Dismiss Button Logic
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            Button(onClick = {
+                onPodLabels(selectedLabels)
+                selectedLabels = emptyList()
+                onDismiss()
+            } ) { Text(stringResource(R.string.add)) }
+        },
+        // Text: text field, label dropdown, labels selected, label creation
+        text = {
+            Row {
+                Button(
+                    onClick = { podLabel = true},
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.DarkGray)
+                ) {
+                    if (podLabel) Text(stringResource(R.string.labelUp))
+                    else Text(stringResource(R.string.labelDown))
+                }
+                Spacer(modifier = Modifier.weight(1f))
+                selectedLabels = sortLabels(selectedLabels)
+                for(i in selectedLabels.indices){
+                    Box(
+                        modifier = Modifier
+                            .size(35.dp)
+                            .background(selectedLabels[i].color)
+                            .border(1.dp, Color.Black)
+
+                    ){}
+                }
+                // None, New, etc
+                DropdownMenu(expanded = podLabel, onDismissRequest = { podLabel = false }) {
+                    DropdownMenuItem(text = { Text(stringResource(R.string.none)) }, onClick = {
+                        selectedLabels = emptyList(); podLabel = false })
+                    DropdownMenuItem(text = { Text(stringResource(R.string.wen)) }, onClick = { showGrid = true } )
+                    pOP.playlistOfPlaylist[0].labels.forEach { label ->
+                        DropdownMenuItem(
+                            text = { Text(label.name) },
+                            onClick = {
+                                if(!selectedLabels.any { it.color == label.color }) {
+                                    selectedLabels = selectedLabels + label
+                                } else {
+                                    selectedLabels = selectedLabels.filterNot { it.color == label.color }
+                                }
+                                podLabel = false
+                            }
+                        )
+                    }
+                }
+            }
+        }
+    )
+    // Color select from color grid PU
+    if(showGrid){
+        CreateLabel(
+            onDismiss = { showGrid = false },
+            onColorPicked = { label ->
+                if (label.color != Color.Transparent){
+                    pOP.playlistOfPlaylist[0].labels.add(label)
+                    selectedLabels = selectedLabels + label
+                }
+            }
+        )
+    }
 }

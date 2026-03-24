@@ -28,6 +28,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -53,7 +54,7 @@ fun ViewFiles(
         TopBar(onHomeClick = onHomeClick)
         Spacer(modifier = Modifier.height(10.dp))
         Text(
-            text = "File Viewer",
+            text = stringResource(R.string.file),
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.headlineLarge
         )
@@ -77,7 +78,7 @@ fun ViewFiles(
             OutlinedTextField(
                 value = searchText,
                 onValueChange = { searchText = it },
-                label = { Text("Unassigned Files: (" + allMP3s.size + ")") },
+                label = { Text(stringResource(R.string.files) + allMP3s.size + ")") },
                 modifier = Modifier.fillMaxWidth()
             )
                 LazyColumn {

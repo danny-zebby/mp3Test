@@ -187,6 +187,14 @@ class MainActivity : ComponentActivity() {
                                 modifier = Modifier.padding(innerPadding),
                                 // Go Home
                                 onHomeClick = { currentScreen = "home" },
+                                onRemovePod = { pod ->
+                                    pOP.playlistOfPlaylist[0].mp3s.removeAll{ it.id == pod.id }
+                                    allMP3s.add(pod)
+                                },
+                                onPodLabels ={ pod, labels ->
+                                    pOP.playlistOfPlaylist[0].mp3s[pOP.playlistOfPlaylist[0].mp3s.indexOf(pod)].setLabels(labels)
+
+                                }
                             )
                         }
                     }
@@ -201,7 +209,13 @@ data class MP3(
     val title: String = "",
     val path: String = "",
     val labels: SnapshotStateList<Label> = mutableStateListOf(),
-    ) { var selected by mutableStateOf(false) }
+    ) {
+    var selected by mutableStateOf(false)
+    fun setLabels(newLabels: List<Label>){
+        labels.clear()
+        labels.addAll(newLabels)
+    }
+}
 
 data class Label(
     val color: Color,

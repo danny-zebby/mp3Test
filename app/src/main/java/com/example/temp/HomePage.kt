@@ -41,6 +41,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -84,8 +85,8 @@ fun MP3Home(
     // Lazy col displays order
     var sortIndex by remember { mutableIntStateOf(0) }                      // 0: Custom, 1: Alpha, 2: Label
     val displayList = remember(pOP.playlistOfPlaylist.size, sortIndex, isAlphaAsc, lFC) {
-        val allSongs = pOP.playlistOfPlaylist.find { it.id == 0 }
-        val others = pOP.playlistOfPlaylist.filter { it.id != 0 }
+        val allSongs = pOP.playlistOfPlaylist.find { it.id == 2 }
+        val others = pOP.playlistOfPlaylist.filter { it.id != 2 }
 
         val sortedOthers = when (sortIndex) {
             0 -> others
@@ -121,7 +122,7 @@ fun MP3Home(
 
         // vals for HorizontalPager
         val navButtons = listOf(
-            "View Files", "Simple Mode", "Podcast Mode",
+            stringResource(R.string.view), stringResource(R.string.simple), stringResource(R.string.pod),
             "Button 4", "Button 5", "Button 6",
             "Button 7", "Button 8", "Button 9")
         val buttonFunctions = listOf(
@@ -210,7 +211,7 @@ fun MP3Home(
                         activeContainerColor = Color(0xFF196D8A),
                         activeContentColor = Color.White
                     )
-                ) { Text("Custom") }
+                ) { Text(stringResource(R.string.custom)) }
 
                 // Alphabetical (A-Z & Z-A)
                 SegmentedButton(
@@ -224,7 +225,8 @@ fun MP3Home(
                         activeContainerColor = Color(0xFF196D8A),
                         activeContentColor = Color.White
                     )
-                ) { Text(if (sortIndex == 1) if (isAlphaAsc) "A-Z" else "Z-A" else "Alphabetical") }
+                ) { Text(if (sortIndex == 1) if (isAlphaAsc) stringResource(R.string.AZ)
+                else stringResource(R.string.ZA) else stringResource(R.string.alphabetical)) }
 
                 // Label grouping
                 SegmentedButton(
@@ -240,7 +242,7 @@ fun MP3Home(
                     ),
                     label = {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("Label")
+                            Text(stringResource(R.string.label))
                             if (sortIndex == 2) {
                                 Spacer(Modifier.width(4.dp))
                                 Box(Modifier.size(12.dp).background(lFC).border(0.5.dp, Color.Black))
@@ -250,7 +252,7 @@ fun MP3Home(
                                 expanded = showColorMenu,
                                 onDismissRequest = { showColorMenu = false }
                             ) {
-                                pOP.playlistOfPlaylist[0].labels.forEach { label ->
+                                pOP.playlistOfPlaylist[2].labels.forEach { label ->
                                     DropdownMenuItem(
                                         text = {
                                             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -306,7 +308,7 @@ fun MP3Home(
                                     verticalAlignment = Alignment.CenterVertically,
                                 ) {
                                     // Makes the playlist draggable
-                                    if(sortIndex == 0 && playlist.id != 2){ // Checking if the sort is custom and not for All Songs
+                                    if(sortIndex == 0 && playlist.id > 2){ // Checking if the sort is custom and not for All Songs
                                         Box(
                                             modifier = Modifier
                                                 .size(24.dp)
@@ -322,20 +324,18 @@ fun MP3Home(
                                     )
                                     Spacer(modifier = Modifier.weight(1f))
                                     // This adds the labels
-                                    if (playlist.labels.isNotEmpty() && playlist.id != 2) { // Checking if playlist has labels
-                                        Row {
-                                            playlist.labels.forEach { label ->
-                                                Box(
-                                                    modifier = Modifier
-                                                        .size(20.dp)
-                                                        .background(label.color)
-                                                        .border(1.dp, Color.Black)
-                                                )
-                                                Spacer(modifier = Modifier.width(4.dp))
-                                            }
+                                    if (playlist.labels.isNotEmpty() && playlist.id > 2) { // Checking if playlist has labels
+                                        playlist.labels.forEach { label ->
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(20.dp)
+                                                    .background(label.color)
+                                                    .border(1.dp, Color.Black)
+                                            )
+                                            Spacer(modifier = Modifier.width(4.dp))
                                         }
                                     }
-                                    if(playlist.id != 2){ // Delete option for playlist, !allSongs
+                                    if(playlist.id > 2){ // Delete option for playlist, !allSongs
                                         Text(
                                             text = "X",
                                             modifier = Modifier.clickable{
