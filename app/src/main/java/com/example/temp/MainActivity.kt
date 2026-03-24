@@ -243,7 +243,7 @@ object pOP{
 // Singleton pOP so I can use the same one from all files easily
 object AudioPlayer{
     var mediaPlayer: MediaPlayer? = null
-    var currentSong: MP3 = MP3()
+    var currentSong by mutableStateOf(MP3())
     var currentPlaylist: Playlist = Playlist()
     var playQueue: List<MP3> = emptyList()
     var currentIndex: Int = -1

@@ -96,7 +96,6 @@ fun TopBar(
             modifier = Modifier.weight(1f).height(75.dp)
         ) {
             // Get the Audio Manager
-            // Get the Audio Manager
             val context = LocalContext.current
             val audioManager = remember { context.getSystemService(Context.AUDIO_SERVICE) as AudioManager }
             val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
@@ -104,19 +103,23 @@ fun TopBar(
             // Initialize slider position
             var sliderPosition by remember { mutableFloatStateOf(0f) }
 
-            // This effect runs whenever the "Playing" state changes
-            LaunchedEffect(AudioPlayer.isPlaying()) {
-                if (AudioPlayer.isPlaying()) {
-                    // MUSIC MODE: Update slider position every 200ms
-                    while (AudioPlayer.isPlaying()) {
-                        val player = AudioPlayer.mediaPlayer
-                        val duration = player?.duration ?: 1
-                        val position = player?.currentPosition ?: 0
-                        sliderPosition = position.toFloat() / duration
+            val isSongLoaded = AudioPlayer.currentSong.id != -1
+
+            // This effect runs whenever the song or mode changes
+            LaunchedEffect(isSongLoaded, AudioPlayer.currentSong) {
+                if (isSongLoaded) {
+                    // MUSIC MODE: Stay in this mode even if paused
+                    while (true) {
+                        if (AudioPlayer.isPlaying()) {
+                            val player = AudioPlayer.mediaPlayer
+                            val duration = player?.duration ?: 1
+                            val position = player?.currentPosition ?: 0
+                            sliderPosition = position.toFloat() / duration
+                        }
                         delay(200)
                     }
                 } else {
-                    // VOLUME MODE: Set slider to current system volume
+                    // VOLUME MODE: Initial state
                     val currentVol = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
                     sliderPosition = currentVol.toFloat() / maxVolume
                 }
@@ -125,12 +128,9 @@ fun TopBar(
             DisposableEffect(context) {
                 val receiver = object : BroadcastReceiver() {
                     override fun onReceive(context: Context?, intent: Intent?) {
-
-                        if (!AudioPlayer.isPlaying()) {
-
+                        if (!isSongLoaded) {
                             val newVolume =
                                 audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
-
                             sliderPosition = newVolume.toFloat() / maxVolume
                         }
                     }
@@ -147,26 +147,15 @@ fun TopBar(
                 Row {
                     Slider(
                         value = sliderPosition,
-
                         onValueChange = { newValue ->
-
                             sliderPosition = newValue
-
-                            if (AudioPlayer.isPlaying()) {
-
+                            if (isSongLoaded) {
                                 val player = AudioPlayer.mediaPlayer
                                 val duration = player?.duration ?: 0
-
-                                val seekPosition =
-                                    (newValue * duration).toInt()
-
+                                val seekPosition = (newValue * duration).toInt()
                                 player?.seekTo(seekPosition)
-
                             } else {
-
-                                val newVolume =
-                                    (newValue * maxVolume).toInt()
-
+                                val newVolume = (newValue * maxVolume).toInt()
                                 audioManager.setStreamVolume(
                                     AudioManager.STREAM_MUSIC,
                                     newVolume,
@@ -174,9 +163,7 @@ fun TopBar(
                                 )
                             }
                         },
-
                         valueRange = 0f..1f,
-
                         colors = SliderDefaults.colors(
                             thumbColor = MaterialTheme.colorScheme.primary,
                             activeTrackColor = MaterialTheme.colorScheme.primary,
@@ -184,28 +171,17 @@ fun TopBar(
                         )
                     )
                 }
-                Row{
-                    if (AudioPlayer.isPlaying()) {
-
+                Row {
+                    if (isSongLoaded) {
                         val player = AudioPlayer.mediaPlayer
                         val position = player?.currentPosition ?: 0
                         val duration = player?.duration ?: 1
 
-                        Text(
-                            text = "   " + formatTime(position),
-                        )
-
+                        Text(text = "   " + formatTime(position))
                         Spacer(modifier = Modifier.weight(1f))
-
-                        Text(
-                            text = formatTime(duration) + "   ",
-                        )
-
+                        Text(text = formatTime(duration) + "   ")
                     } else {
-
-                        Text(
-                            text = "   ${(sliderPosition * 100).toInt()}"
-                        )
+                        Text(text = "   ${(sliderPosition * 100).toInt()}")
                     }
                 }
             }
@@ -213,11 +189,6 @@ fun TopBar(
         }
 
         // Profile Button
-        /*
-        Stats of songs played
-        Stats of time listening to (etc)
-        Show device storage
-        */
         OutlinedButton(
             onClick = onProfileClick,
             modifier = Modifier.size(60.dp)
