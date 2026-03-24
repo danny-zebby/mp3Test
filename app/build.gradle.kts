@@ -35,6 +35,7 @@ android {
 
 dependencies {
     implementation(platform("androidx.compose:compose-bom:2024.04.01"))
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
     implementation("androidx.compose.material:material-icons-extended")
     implementation("org.burnoutcrew.composereorderable:reorderable:0.9.6")
     implementation(libs.androidx.core.ktx)

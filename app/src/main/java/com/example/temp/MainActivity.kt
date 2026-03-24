@@ -23,13 +23,10 @@ import android.Manifest
 import android.media.MediaPlayer
 import androidx.core.app.ActivityCompat
 import android.content.Context
-import java.io.FileOutputStream
-import java.io.IOException
-import java.io.BufferedReader
-import java.io.FileInputStream
-import java.io.InputStreamReader
-import java.lang.StringBuilder
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.runtime.toMutableStateList
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 class MainActivity : ComponentActivity() {
     @SuppressLint("UnrememberedMutableState")
@@ -42,6 +39,18 @@ class MainActivity : ComponentActivity() {
             arrayOf(Manifest.permission.READ_MEDIA_AUDIO),
             1
         )
+
+        val repo = PlaylistRepo(this)
+        val loaded = repo.load()
+        pOP.playlistOfPlaylist.clear()
+        if(loaded.isNotEmpty()){
+            pOP.playlistOfPlaylist.addAll(loaded)
+        }
+        else{
+            pOP.playlistOfPlaylist.add(Playlist(id = 0, name = "All Podcast", mp3s = SnapshotStateList<MP3>()))
+            pOP.playlistOfPlaylist.add(Playlist(id = 1, name = "All Trash", mp3s = SnapshotStateList<MP3>()))
+            pOP.playlistOfPlaylist.add(Playlist(id = 2, name = "All Songs", mp3s = SnapshotStateList<MP3>()))
+        }
 
         setContent {
             NewTheme {
@@ -58,17 +67,6 @@ class MainActivity : ComponentActivity() {
 
                 // These are the main list
                 val allMP3s = remember { loadDownloadMP3s() }
-                val allSongs = SnapshotStateList<MP3>()
-                val allPodcast = SnapshotStateList<MP3>()
-                val allTrash =  SnapshotStateList<MP3>() // COME UP WITH BETTER NAME
-                val initialized = remember { mutableStateOf(false) }
-                if (!initialized.value) {
-                    pOP.playlistOfPlaylist.clear()
-                    pOP.playlistOfPlaylist.add(Playlist(id = 0, name = "All Podcast", mp3s = allPodcast))
-                    pOP.playlistOfPlaylist.add(Playlist(id = 1, name = "All Trash", mp3s = allTrash))
-                    pOP.playlistOfPlaylist.add(Playlist(id = 2, name = "All Songs", mp3s = allSongs))
-                    initialized.value = true
-                }
 
                 // These are vars that help perform playlist functions
                 var currentScreen by remember { mutableStateOf("home") }
@@ -101,6 +99,7 @@ class MainActivity : ComponentActivity() {
                                         id = pOP.nextPlaylistId, name = name))
                                     pOP.playlistOfPlaylist[pOP.nextPlaylistId].setLabels(labels)
                                     pOP.nextPlaylistId++
+                                    repo.save(pOP.playlistOfPlaylist)
                                 }
                                 else{
                                     // some code it's like hey this name already exist try again
@@ -110,6 +109,7 @@ class MainActivity : ComponentActivity() {
                             // Deleted Playlist
                             onDeletePlaylist = { playlistId ->
                                 pOP.playlistOfPlaylist.removeAll { it.id == playlistId }
+                                repo.save(pOP.playlistOfPlaylist)
                             },
 
                             // Go Home ? (I want to make an animation if you click home and are already home)
@@ -126,20 +126,24 @@ class MainActivity : ComponentActivity() {
                                     onAddSong = { mp3 ->
                                         if (currentPlaylist.mp3s.none { it.id == mp3.id }) {
                                             currentPlaylist.mp3s.add(mp3)
+                                            repo.save(pOP.playlistOfPlaylist)
                                         }
                                     },
 
                                     onRemoveSong = { mp3 ->
                                         currentPlaylist.mp3s.removeAll{ it.id == mp3.id }
+                                        repo.save(pOP.playlistOfPlaylist)
                                     },
 
                                     onEditPlaylist = {name, labels ->
                                         currentPlaylist.name = name
                                         currentPlaylist.setLabels(labels)
+                                        repo.save(pOP.playlistOfPlaylist)
                                     },
 
                                     onDeletePlaylist = {playlistId ->
                                         pOP.playlistOfPlaylist.removeAll { it.id == playlistId }
+                                        repo.save(pOP.playlistOfPlaylist)
                                     },
 
                                     // Go Home
@@ -171,14 +175,17 @@ class MainActivity : ComponentActivity() {
                                 onAddSong = { mp3 ->
                                     pOP.playlistOfPlaylist[2].mp3s.add(mp3)
                                     allMP3s.remove(mp3)
+                                    repo.save(pOP.playlistOfPlaylist)
                                 },
                                 onAddTrash = { mp3 ->
                                     pOP.playlistOfPlaylist[1].mp3s.add(mp3)
                                     allMP3s.remove(mp3)
+                                    repo.save(pOP.playlistOfPlaylist)
                                 },
                                 onAddPod = { mp3 ->
                                     pOP.playlistOfPlaylist[0].mp3s.add(mp3)
                                     allMP3s.remove(mp3)
+                                    repo.save(pOP.playlistOfPlaylist)
                                 },
                             )
                         }
@@ -190,9 +197,11 @@ class MainActivity : ComponentActivity() {
                                 onRemovePod = { pod ->
                                     pOP.playlistOfPlaylist[0].mp3s.removeAll{ it.id == pod.id }
                                     allMP3s.add(pod)
+                                    repo.save(pOP.playlistOfPlaylist)
                                 },
                                 onPodLabels ={ pod, labels ->
                                     pOP.playlistOfPlaylist[0].mp3s[pOP.playlistOfPlaylist[0].mp3s.indexOf(pod)].setLabels(labels)
+                                    repo.save(pOP.playlistOfPlaylist)
 
                                 }
                             )
@@ -204,12 +213,33 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+data class Label(
+    val color: Color,
+    val name: String,
+)
+
+@Serializable
+data class LabelDTO(
+    val color: Long,
+    val name: String
+)
+
+fun Label.toDTO() = LabelDTO(
+    color = color.value.toLong(),
+    name = name
+)
+
+fun LabelDTO.toLabel() = Label(
+    color = Color(color),
+    name = name
+)
+
 data class MP3(
     val id: Int = -1,
     val title: String = "",
     val path: String = "",
     val labels: SnapshotStateList<Label> = mutableStateListOf(),
-    ) {
+) {
     var selected by mutableStateOf(false)
     fun setLabels(newLabels: List<Label>){
         labels.clear()
@@ -217,10 +247,27 @@ data class MP3(
     }
 }
 
-data class Label(
-    val color: Color,
-    val name: String,
+@Serializable
+data class MP3DTO(
+    val id: Int,
+    val title: String,
+    val path: String,
+    val labels: List<LabelDTO>
 )
+
+fun MP3.toDTO() = MP3DTO(
+    id = id,
+    title = title,
+    path = path,
+    labels = labels.map { it.toDTO() }
+)
+
+fun MP3DTO.toMP3() = MP3(
+    id = id,
+    title = title,
+    path = path,
+).apply { setLabels(this@toMP3.labels.map { it.toLabel() }) }
+
 
 data class Playlist(
     val id: Int = -1,
@@ -233,6 +280,33 @@ data class Playlist(
         labels.addAll(newLabels)
     }
 }
+
+@Serializable
+data class PlaylistDTO(
+    val id: Int,
+    var name: String,
+    val labels: List<LabelDTO>,
+    val mp3s: List<MP3DTO>,
+)
+
+fun Playlist.toDTO(): PlaylistDTO {
+    return PlaylistDTO(
+        id = id,
+        name = name,
+        labels = labels.map {it.toDTO()},
+        mp3s = mp3s.map { it.toDTO() }
+    )
+}
+
+fun PlaylistDTO.toPlaylist(): Playlist {
+    return Playlist(
+        id = id,
+        name = name).apply{
+            setLabels(this@toPlaylist.labels.map { it.toLabel() })
+            mp3s.addAll(this@toPlaylist.mp3s.map { it.toMP3() })
+    }
+}
+
 
 // Singleton pOP so I can use the same one from all files easily (playlistOfPlaylist)
 object pOP{
@@ -360,36 +434,25 @@ fun loadDownloadMP3s(): SnapshotStateList<MP3> {
     return list
 }
 
-fun writeToFile(context: Context, fileName: String, content: String) {
-    try {
-        // Use Context.openFileOutput for internal storage
-        val fileOutputStream: FileOutputStream =
-            context.openFileOutput(fileName, Context.MODE_PRIVATE)
-        fileOutputStream.write(content.toByteArray())
-        fileOutputStream.close()
-        // Optionally show a Toast or update UI state on success
-    } catch (e: IOException) {
-        e.printStackTrace()
-        // Handle the exception
+class PlaylistRepo(private val context: Context){
+    fun save(playlists: List<Playlist>){
+        try{val dtoList = playlists.map { it.toDTO() }
+            val json = Json.encodeToString(dtoList)
+
+            context.openFileOutput("playlist.json", Context.MODE_PRIVATE).use { it.write(json.toByteArray()) }
+        } catch (e: Exception) { e.printStackTrace() }
     }
-}
+    fun load(): List<Playlist> {
+        return try {
+            val json = context.openFileInput("playlists.json")
+                .bufferedReader()
+                .use { it.readText() }
 
-fun readFromFile(context: Context, fileName: String): String? {
-    val stringBuilder = StringBuilder()
-    try {
-        val fileInputStream: FileInputStream = context.openFileInput(fileName)
-        val inputStreamReader = InputStreamReader(fileInputStream)
-        val bufferedReader = BufferedReader(inputStreamReader)
-        var line: String? = bufferedReader.readLine()
+            val dtoList = Json.decodeFromString<List<PlaylistDTO>>(json)
+            dtoList.map { it.toPlaylist() }
 
-        while (line != null) {
-            stringBuilder.append(line)
-            line = bufferedReader.readLine()
+        } catch (e: Exception) {
+            emptyList()
         }
-        fileInputStream.close()
-    } catch (e: IOException) {
-        e.printStackTrace()
-        // Handle the exception, return null or empty string
     }
-    return stringBuilder.toString()
 }
