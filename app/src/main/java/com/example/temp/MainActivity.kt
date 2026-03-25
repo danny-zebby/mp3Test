@@ -23,10 +23,14 @@ import android.Manifest
 import android.media.MediaPlayer
 import androidx.core.app.ActivityCompat
 import android.content.Context
-import androidx.compose.runtime.toMutableStateList
+import androidx.compose.ui.platform.LocalContext
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
+import java.io.BufferedReader
+import java.io.FileInputStream
+import java.io.FileOutputStream
+import java.io.IOException
+import java.io.InputStreamReader
+
 
 class MainActivity : ComponentActivity() {
     @SuppressLint("UnrememberedMutableState")
@@ -40,21 +44,59 @@ class MainActivity : ComponentActivity() {
             1
         )
 
-        val repo = PlaylistRepo(this)
-        val loaded = repo.load()
-        pOP.playlistOfPlaylist.clear()
-        if(loaded.isNotEmpty()){
-            pOP.playlistOfPlaylist.addAll(loaded)
-        }
-        else{
-            pOP.playlistOfPlaylist.add(Playlist(id = 0, name = "All Podcast", mp3s = SnapshotStateList<MP3>()))
-            pOP.playlistOfPlaylist.add(Playlist(id = 1, name = "All Trash", mp3s = SnapshotStateList<MP3>()))
-            pOP.playlistOfPlaylist.add(Playlist(id = 2, name = "All Songs", mp3s = SnapshotStateList<MP3>()))
-        }
-
         setContent {
             NewTheme {
-//                val context = LocalContext.current
+                // File shit
+                val context = LocalContext.current
+                writeToFile(context, "playlist.txt", "POG: All the small tjins >_<")
+                var words = readFromFile(context, "playlist.txt")
+                println(words)
+                writeToFile(context, "playlist.txt", "POG: blinking so many times")
+                words += readFromFile(context, "playlist.txt")
+                println(words)
+
+                val punkLabel = Label(Color.Red, "PUNKASS")
+                val punkDTO = punkLabel.toDTO()
+                words = punkDTO.name + "<>" + punkLabel.color.toString()
+                writeToFile(context, "playlist.txt",words)
+                var newWords = readFromFile(context, "playlist.txt")?.split("<>")
+                newWords?.forEach { word->
+                    println(word)
+                }
+                val remasteredLabel = LabelDTO(name = newWords?.get(0), color = newWords?.get(1).toLong())
+
+//                val loaded = loadPlaylists(this)
+//                pOP.playlistOfPlaylist.clear()
+//                if(loaded.isNotEmpty()){
+//                    pOP.playlistOfPlaylist.addAll(loaded)
+//                    pOP.nextPlaylistId = (pOP.playlistOfPlaylist.maxOfOrNull { it.id } ?: -1) + 1 }
+//                else{
+                pOP.playlistOfPlaylist.add(
+                    Playlist(
+                        id = 0,
+                        name = "All Podcast",
+                        mp3s = SnapshotStateList<MP3>()
+                    )
+                )
+                pOP.playlistOfPlaylist.add(
+                    Playlist(
+                        id = 1,
+                        name = "All Trash",
+                        mp3s = SnapshotStateList<MP3>()
+                    )
+                )
+                pOP.playlistOfPlaylist.add(
+                    Playlist(
+                        id = 2,
+                        name = "All Songs",
+                        mp3s = SnapshotStateList<MP3>()
+                    )
+                )
+//                    pOP.nextPlaylistId = 3
+//                }
+
+//                pOP.playlistOfPlaylist[2].setLabels(listOf(remasteredLabel.toLabel()))
+                println("Loaded playlists: ${pOP.playlistOfPlaylist.map { it.name to it.id }}")
 
                 // These values set the Top and Bottom of phone colors to match
                 val window = this.window
@@ -85,23 +127,24 @@ class MainActivity : ComponentActivity() {
                             onViewFilesClick = { currentScreen = "view" },
 
                             // Goes to playlist page when clicking on a playlist
-                            onPlaylistClick = { playlist  ->
+                            onPlaylistClick = { playlist ->
                                 selectedPlaylistId = playlist.id
                                 currentScreen = "playlist"
                             },
 
                             onPodcastClick = { currentScreen = "pod" },
 
+                            onTempClick = { currentScreen = "temp"},
+
                             // Checks if playlist name is not already taken, if so adds playlist to pOP
                             onAddPlaylist = { name, labels ->
-                                if(pOP.playlistOfPlaylist.none {it.name == name}){
-                                    pOP.playlistOfPlaylist.add(Playlist(
-                                        id = pOP.nextPlaylistId, name = name))
-                                    pOP.playlistOfPlaylist[pOP.nextPlaylistId].setLabels(labels)
+                                if (pOP.playlistOfPlaylist.none { it.name == name }) {
+                                    val newPlaylist = Playlist(id = pOP.nextPlaylistId, name = name)
+                                    newPlaylist.setLabels(labels)
+                                    pOP.playlistOfPlaylist.add(newPlaylist)
                                     pOP.nextPlaylistId++
-                                    repo.save(pOP.playlistOfPlaylist)
-                                }
-                                else{
+//                                    savePlaylists(this, pOP.playlistOfPlaylist)
+                                } else {
                                     // some code it's like hey this name already exist try again
                                 }
                             },
@@ -109,14 +152,16 @@ class MainActivity : ComponentActivity() {
                             // Deleted Playlist
                             onDeletePlaylist = { playlistId ->
                                 pOP.playlistOfPlaylist.removeAll { it.id == playlistId }
-                                repo.save(pOP.playlistOfPlaylist)
+//                                savePlaylists(this, pOP.playlistOfPlaylist)
                             },
 
                             // Go Home ? (I want to make an animation if you click home and are already home)
                             onHomeClick = { currentScreen = "home" },
                         )
+
                         "playlist" -> {
-                            val playlist = pOP.playlistOfPlaylist.find { it.id == selectedPlaylistId }
+                            val playlist =
+                                pOP.playlistOfPlaylist.find { it.id == selectedPlaylistId }
                             playlist?.let { currentPlaylist ->
                                 PlaylistPage(
                                     modifier = Modifier.padding(innerPadding),
@@ -126,24 +171,24 @@ class MainActivity : ComponentActivity() {
                                     onAddSong = { mp3 ->
                                         if (currentPlaylist.mp3s.none { it.id == mp3.id }) {
                                             currentPlaylist.mp3s.add(mp3)
-                                            repo.save(pOP.playlistOfPlaylist)
+//                                            savePlaylists(this, pOP.playlistOfPlaylist)
                                         }
                                     },
 
                                     onRemoveSong = { mp3 ->
-                                        currentPlaylist.mp3s.removeAll{ it.id == mp3.id }
-                                        repo.save(pOP.playlistOfPlaylist)
+                                        currentPlaylist.mp3s.removeAll { it.id == mp3.id }
+//                                        savePlaylists(this, pOP.playlistOfPlaylist)
                                     },
 
-                                    onEditPlaylist = {name, labels ->
+                                    onEditPlaylist = { name, labels ->
                                         currentPlaylist.name = name
                                         currentPlaylist.setLabels(labels)
-                                        repo.save(pOP.playlistOfPlaylist)
+//                                        savePlaylists(this, pOP.playlistOfPlaylist)
                                     },
 
-                                    onDeletePlaylist = {playlistId ->
+                                    onDeletePlaylist = { playlistId ->
                                         pOP.playlistOfPlaylist.removeAll { it.id == playlistId }
-                                        repo.save(pOP.playlistOfPlaylist)
+//                                        savePlaylists(this, pOP.playlistOfPlaylist)
                                     },
 
                                     // Go Home
@@ -151,6 +196,7 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
                         }
+
                         "simple" -> {
                             SimpleMode(
                                 // Go Home
@@ -159,6 +205,7 @@ class MainActivity : ComponentActivity() {
                                 modifier = Modifier.padding(innerPadding)
                             )
                         }
+
                         "view" -> {
                             ViewFiles(
                                 modifier = Modifier.padding(innerPadding),
@@ -167,43 +214,55 @@ class MainActivity : ComponentActivity() {
 
                                 // Load the main four file list
                                 allMP3s = allMP3s,
-                                allSongs = pOP.playlistOfPlaylist.first { it.id == 2 },
-                                allPodcast = pOP.playlistOfPlaylist.first { it.id == 0 },
-                                allTrash = pOP.playlistOfPlaylist.first { it.id == 1 },
+                                allSongs = pOP.playlistOfPlaylist.first { it.id == 2 }!!,
+                                allPodcast = pOP.playlistOfPlaylist.first { it.id == 0 }!!,
+                                allTrash = pOP.playlistOfPlaylist.first { it.id == 1 }!!,
 
                                 // Manage files
+                                // Save example
                                 onAddSong = { mp3 ->
-                                    pOP.playlistOfPlaylist[2].mp3s.add(mp3)
+                                    val playlist = pOP.playlistOfPlaylist.first { it.id == 2 }
+                                    playlist.mp3s.add(mp3)
                                     allMP3s.remove(mp3)
-                                    repo.save(pOP.playlistOfPlaylist)
+//                                    savePlaylists(this, pOP.playlistOfPlaylist)
                                 },
                                 onAddTrash = { mp3 ->
                                     pOP.playlistOfPlaylist[1].mp3s.add(mp3)
                                     allMP3s.remove(mp3)
-                                    repo.save(pOP.playlistOfPlaylist)
+//                                    savePlaylists(this, pOP.playlistOfPlaylist)
                                 },
                                 onAddPod = { mp3 ->
                                     pOP.playlistOfPlaylist[0].mp3s.add(mp3)
                                     allMP3s.remove(mp3)
-                                    repo.save(pOP.playlistOfPlaylist)
+//                                    savePlaylists(this, pOP.playlistOfPlaylist)
                                 },
                             )
                         }
+
                         "pod" -> {
                             PodcastPage(
                                 modifier = Modifier.padding(innerPadding),
                                 // Go Home
                                 onHomeClick = { currentScreen = "home" },
                                 onRemovePod = { pod ->
-                                    pOP.playlistOfPlaylist[0].mp3s.removeAll{ it.id == pod.id }
+                                    pOP.playlistOfPlaylist[0].mp3s.removeAll { it.id == pod.id }
                                     allMP3s.add(pod)
-                                    repo.save(pOP.playlistOfPlaylist)
+//                                    savePlaylists(this, pOP.playlistOfPlaylist)
                                 },
-                                onPodLabels ={ pod, labels ->
-                                    pOP.playlistOfPlaylist[0].mp3s[pOP.playlistOfPlaylist[0].mp3s.indexOf(pod)].setLabels(labels)
-                                    repo.save(pOP.playlistOfPlaylist)
+                                onPodLabels = { pod, labels ->
+                                    pOP.playlistOfPlaylist[0].mp3s[pOP.playlistOfPlaylist[0].mp3s.indexOf(
+                                        pod
+                                    )].setLabels(labels)
+//                                    savePlaylists(this, pOP.playlistOfPlaylist)
 
                                 }
+                            )
+                        }
+                        "temp" ->{
+                            temp(
+                                modifier = Modifier.padding(innerPadding),
+                                // Go Home
+                                onHomeClick = { currentScreen = "home" },
                             )
                         }
                     }
@@ -215,13 +274,13 @@ class MainActivity : ComponentActivity() {
 
 data class Label(
     val color: Color,
-    val name: String,
+    val name: String?,
 )
 
 @Serializable
 data class LabelDTO(
     val color: Long,
-    val name: String
+    val name: String?
 )
 
 fun Label.toDTO() = LabelDTO(
@@ -266,7 +325,8 @@ fun MP3DTO.toMP3() = MP3(
     id = id,
     title = title,
     path = path,
-).apply { setLabels(this@toMP3.labels.map { it.toLabel() }) }
+).also { mp3 ->
+    mp3.setLabels(labels.map { it.toLabel() }) }
 
 
 data class Playlist(
@@ -301,9 +361,9 @@ fun Playlist.toDTO(): PlaylistDTO {
 fun PlaylistDTO.toPlaylist(): Playlist {
     return Playlist(
         id = id,
-        name = name).apply{
-            setLabels(this@toPlaylist.labels.map { it.toLabel() })
-            mp3s.addAll(this@toPlaylist.mp3s.map { it.toMP3() })
+        name = name).also{ playlist ->
+            playlist.setLabels(labels.map { it.toLabel() })
+            playlist.mp3s.addAll(mp3s.map { it.toMP3() })
     }
 }
 
@@ -434,25 +494,159 @@ fun loadDownloadMP3s(): SnapshotStateList<MP3> {
     return list
 }
 
-class PlaylistRepo(private val context: Context){
-    fun save(playlists: List<Playlist>){
-        try{val dtoList = playlists.map { it.toDTO() }
-            val json = Json.encodeToString(dtoList)
 
-            context.openFileOutput("playlist.json", Context.MODE_PRIVATE).use { it.write(json.toByteArray()) }
-        } catch (e: Exception) { e.printStackTrace() }
+fun writeToFile(context: Context, fileName: String, content: String) {
+    try {
+        // Use Context.openFileOutput for internal storage
+        val fileOutputStream: FileOutputStream =
+            context.openFileOutput(fileName, Context.MODE_PRIVATE)
+        fileOutputStream.write(content.toByteArray())
+        fileOutputStream.close()
+        // Optionally show a Toast or update UI state on success
+    } catch (e: IOException) {
+        e.printStackTrace()
+        // Handle the exception
     }
+}
+
+fun readFromFile(context: Context, fileName: String): String? {
+    val stringBuilder = StringBuilder()
+    try {
+        val fileInputStream: FileInputStream = context.openFileInput(fileName)
+        val inputStreamReader = InputStreamReader(fileInputStream)
+        val bufferedReader = BufferedReader(inputStreamReader)
+        var line: String? = bufferedReader.readLine()
+
+        while (line != null) {
+            stringBuilder.append(line)
+            line = bufferedReader.readLine()
+        }
+        fileInputStream.close()
+    } catch (e: IOException) {
+        e.printStackTrace()
+        // Handle the exception, return null or empty string
+    }
+    return stringBuilder.toString()
+}
+
+
+/*
+class PlaylistRepo(private val context: Context){
+    private val fileName = "playlists.json"
+
+    fun save(playlists: List<Playlist>) {
+        try {
+            val dtoList = playlists.map { it.toDTO() }
+            println("DTO READY")
+            val json = Json.encodeToString<List<PlaylistDTO>>(dtoList)
+            println("JSON CREATED: $json")
+            context.openFileOutput(fileName, Context.MODE_PRIVATE).use {
+                it.write(json.toByteArray())
+            }
+            println("FILE WRITTEN")
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
     fun load(): List<Playlist> {
         return try {
-            val json = context.openFileInput("playlists.json")
-                .bufferedReader()
-                .use { it.readText() }
-
-            val dtoList = Json.decodeFromString<List<PlaylistDTO>>(json)
-            dtoList.map { it.toPlaylist() }
-
+            val json = context.openFileInput(fileName).bufferedReader().use { it.readText() }
+            println("LOADED JSON: $json")
+            Json.decodeFromString<List<PlaylistDTO>>(json).map { it.toPlaylist() }
         } catch (e: Exception) {
+            e.printStackTrace()
             emptyList()
         }
     }
+}*/
+
+/*
+fun savePlaylists(context: Context, playlists: List<Playlist>) {
+    try {
+        val playlistsJson = mutableListOf<Map<String, Any>>()
+
+        for (playlist in playlists) {
+            val mp3List = mutableListOf<Map<String, Any>>()
+
+            for (mp3 in playlist.mp3s) {
+                val labelList = mp3.labels.map { mapOf("name" to it.name, "color" to it.color.value) }
+                mp3List.add(mapOf(
+                    "id" to mp3.id,
+                    "title" to mp3.title,
+                    "path" to mp3.path,
+                    "labels" to labelList
+                ))
+            }
+
+            val playlistLabels = playlist.labels.map { mapOf("name" to it.name, "color" to it.color.value) }
+
+            playlistsJson.add(mapOf(
+                "id" to playlist.id,
+                "name" to playlist.name,
+                "labels" to playlistLabels,
+                "mp3s" to mp3List
+            ))
+        }
+
+        val jsonString = Json.encodeToString(playlistsJson)
+        context.openFileOutput("playlists.json", Context.MODE_PRIVATE).use { it.write(jsonString.toByteArray()) }
+
+        println("SAVE DONE. JSON: $jsonString")
+    } catch (e: Exception) {
+        e.printStackTrace()
+    }
 }
+
+fun loadPlaylists(context: Context): List<Playlist> {
+    return try {
+        val file = File(context.filesDir, "playlists.json")
+        if (!file.exists()) return emptyList()
+
+        val jsonString = file.readText()
+        println("LOADED JSON: $jsonString")
+
+        val playlistsList = Json.decodeFromString<List<Map<String, Any>>>(jsonString)
+        val result = mutableListOf<Playlist>()
+
+        for (plMap in playlistsList) {
+            val playlist = Playlist(
+                id = (plMap["id"] as Double).toInt(),
+                name = plMap["name"] as String
+            )
+
+            val plLabels = plMap["labels"] as List<Map<String, Any>>
+            playlist.labels.addAll(plLabels.map {
+                Label(
+                    name = it["name"] as String,
+                    color = Color((it["color"] as Double).toLong())
+                )
+            })
+
+            val mp3List = plMap["mp3s"] as List<Map<String, Any>>
+            for (mp3Map in mp3List) {
+                val mp3 = MP3(
+                    id = (mp3Map["id"] as Double).toInt(),
+                    title = mp3Map["title"] as String,
+                    path = mp3Map["path"] as String
+                )
+                val mp3Labels = mp3Map["labels"] as List<Map<String, Any>>
+                mp3.labels.addAll(mp3Labels.map {
+                    Label(
+                        name = it["name"] as String,
+                        color = Color((it["color"] as Double).toLong())
+                    )
+                })
+                playlist.mp3s.add(mp3)
+            }
+
+            result.add(playlist)
+        }
+
+        result
+    } catch (e: Exception) {
+        e.printStackTrace()
+        emptyList()
+    }
+}
+ */
