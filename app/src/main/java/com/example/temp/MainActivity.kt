@@ -57,13 +57,16 @@ class MainActivity : ComponentActivity() {
 
                 val punkLabel = Label(Color.Red, "PUNKASS")
                 val punkDTO = punkLabel.toDTO()
-                words = punkDTO.name + "<>" + punkLabel.color.toString()
+                words = punkDTO.name + "<>" + punkLabel.color.value.toString()
                 writeToFile(context, "playlist.txt",words)
                 var newWords = readFromFile(context, "playlist.txt")?.split("<>")
                 newWords?.forEach { word->
-                    println(word)
+                    println("POG: " + word)
                 }
-                val remasteredLabel = LabelDTO(name = newWords?.get(0), color = newWords?.get(1).toLong())
+                val remasteredLabel = LabelDTO(
+                    name = newWords!![0],
+                    color = newWords[1].toULong())
+                println("POG: Name: " + remasteredLabel.name + " Color(" + remasteredLabel.color)
 
 //                val loaded = loadPlaylists(this)
 //                pOP.playlistOfPlaylist.clear()
@@ -95,7 +98,7 @@ class MainActivity : ComponentActivity() {
 //                    pOP.nextPlaylistId = 3
 //                }
 
-//                pOP.playlistOfPlaylist[2].setLabels(listOf(remasteredLabel.toLabel()))
+                pOP.playlistOfPlaylist[2].setLabels(listOf(remasteredLabel.toLabel()))
                 println("Loaded playlists: ${pOP.playlistOfPlaylist.map { it.name to it.id }}")
 
                 // These values set the Top and Bottom of phone colors to match
@@ -274,13 +277,13 @@ class MainActivity : ComponentActivity() {
 
 data class Label(
     val color: Color,
-    val name: String?,
+    val name: String,
 )
 
 @Serializable
 data class LabelDTO(
     val color: Long,
-    val name: String?
+    val name: String
 )
 
 fun Label.toDTO() = LabelDTO(
