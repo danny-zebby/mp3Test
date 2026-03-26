@@ -108,6 +108,20 @@ class MainActivity : ComponentActivity() {
                 words = words + "}"
                 writeToFile(context, file,words)
 
+                val mp3words = "\\{(.*?)\\}".toRegex()
+                    .findAll(readFromFile(context, file))
+                    .map{ it.groupValues[1] }
+                    .toList()
+                println("POG: " + mp3words)
+                mp3words?.forEach { word->
+                    println("POG: " + word)
+                }
+//                val remasteredMP3 = MP3DTO(
+//                    id = mp3words[0][0].toInt(),
+//                    title = mp3words[0][1],
+//                    path = mp3words[0][2],
+//                    labels = mp3words[0][3]
+//                )
                 /*
                 // Playlist stuff
                 val tempAll = pOP.playlistOfPlaylist[2].toDTO()
@@ -288,6 +302,8 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+
+
 
 data class Label(
     val color: Color,
@@ -526,7 +542,7 @@ fun writeToFile(context: Context, fileName: String, content: String) {
     }
 }
 
-fun readFromFile(context: Context, fileName: String): String? {
+fun readFromFile(context: Context, fileName: String): String {
     val stringBuilder = StringBuilder()
     try {
         val fileInputStream: FileInputStream = context.openFileInput(fileName)
