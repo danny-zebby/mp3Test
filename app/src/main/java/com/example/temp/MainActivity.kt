@@ -116,14 +116,14 @@ class MainActivity : ComponentActivity() {
                 mp3words.forEach { word ->
                     println("POG: " + word)
                 }
-                val id = mp3words[0].toInt()
-                val title = mp3words[1]
-                val path = mp3words[2]
-                val labelBlocks = "\\[(.*?)\\]".toRegex()
+                var id = mp3words[0].toInt()
+                var title = mp3words[1]
+                var path = mp3words[2]
+                var labelBlocks = "\\[(.*?)\\]".toRegex()
                     .findAll(mp3words[3])
                     .map { it.groupValues[1] }
                     .toList()
-                val labels = labelBlocks.map { block ->
+                var labels = labelBlocks.map { block ->
                     val parts = "\\<(.*?)\\>".toRegex()
                         .findAll(block)
                         .map { it.groupValues[1] }
@@ -135,24 +135,50 @@ class MainActivity : ComponentActivity() {
 
 
                 // Playlist stuff
-                pOP.playlistOfPlaylist[2].mp3s.add(mp3)
-                pOP.playlistOfPlaylist[2].mp3s.add(MP3(31,"ALL THE SMALL THINGS!!","over here!!"))
-                pOP.playlistOfPlaylist[2].mp3s.add(MP3(32,"First Date","here too"))
+                val newPlaylist = Playlist(id = 3, name = "Blinking 182 times")
                 val label = labels.map { lab ->
                     lab.toLabel()
                 }
-                pOP.playlistOfPlaylist[2].setLabels(label)
-                val tempAll = pOP.playlistOfPlaylist[2].toDTO()
-                var allPlaylistText = "{" + tempAll.id.toString() + "}{" + tempAll.name + "}{"
+                newPlaylist.setLabels(label)
+                pOP.playlistOfPlaylist.add(newPlaylist)
+                pOP.playlistOfPlaylist[3].mp3s.add(mp3)
+                pOP.playlistOfPlaylist[3].mp3s.add(MP3(31,"ALL THE SMALL THINGS!!","over here!!"))
+                pOP.playlistOfPlaylist[3].mp3s.add(MP3(32,"First Date","here too"))
+                val tempAll = pOP.playlistOfPlaylist[3].toDTO()
+                var tempText = "{" + tempAll.id.toString() + "}{" + tempAll.name + "}{"
                 tempAll.labels.forEach { label ->
-                    allPlaylistText = allPlaylistText + "[<" + label.name + "><" + label.color + ">]"
+                    tempText = tempText + "[<" + label.name + "><" + label.color + ">]"
                 }
-                allPlaylistText = allPlaylistText + "}{"
+                tempText = tempText + "}{"
                 tempAll.mp3s.forEach { song ->
-                    allPlaylistText = allPlaylistText + "[<" + song.id + "><" + song.title + "><" +
+                    tempText = tempText + "[<" + song.id + "><" + song.title + "><" +
                             song.path +">]"
                 }
-                allPlaylistText = allPlaylistText + "}"
+                tempText = tempText + "}"
+                writeToFile(context, file,tempText)
+                val newText = readFromFile(context, file)
+                println("POG: " + text)
+                val tempWords = "\\{(.*?)\\}".toRegex()
+                    .findAll(newText)
+                    .map{ it.groupValues[1] }
+                    .toList()
+                tempWords.forEach { word ->
+                    println("POG: " + word)
+                }
+                id = tempWords[0].toInt()
+                title = tempWords[1]
+                path = tempWords[2]
+                labelBlocks = "\\[(.*?)\\]".toRegex()
+                    .findAll(mp3words[3])
+                    .map { it.groupValues[1] }
+                    .toList()
+                labels = labelBlocks.map { block ->
+                    val parts = "\\<(.*?)\\>".toRegex()
+                        .findAll(block)
+                        .map { it.groupValues[1] }
+                        .toList()
+                    LabelDTO(name = parts[0], color = parts[1])
+                }
 
                 // These values set the Top and Bottom of phone colors to match
                 val window = this.window
