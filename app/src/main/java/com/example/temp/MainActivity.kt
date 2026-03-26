@@ -97,37 +97,62 @@ class MainActivity : ComponentActivity() {
 
 
                 // MP3 testing
-                val blink = MP3(30, "I miss you", "/storage/emulated/0/Download/",
-                    listOf(Label(Color.Blue, "Whinny Bitch"), remasteredLabel.toLabel()) as SnapshotStateList<Label>
-                )
+                val blink = MP3(30, "I miss you", "/storage/emulated/0/Download/")
+                val blinkLabels = listOf<Label>(Label(Color.Blue, "WHINNYASSBITCH") , remasteredLabel.toLabel())
+                blink.setLabels(blinkLabels)
                 val oneDTO = blink.toDTO()
                 words = "{" + oneDTO.id.toString() + "}{" + oneDTO.title + "}{" + oneDTO.path + "}{"
                 oneDTO.labels.forEach{ label ->
-                    words = words + "[(" + label.name + ")(" + label.color + ")]"
+                    words = words + "[<" + label.name + "><" + label.color + ">]"
                 }
                 words = words + "}"
                 writeToFile(context, file,words)
-
+                val text = readFromFile(context, file)
+                println("POG: " + text)
                 val mp3words = "\\{(.*?)\\}".toRegex()
-                    .findAll(readFromFile(context, file))
+                    .findAll(text)
                     .map{ it.groupValues[1] }
                     .toList()
-                println("POG: " + mp3words)
-                mp3words?.forEach { word->
+                mp3words.forEach { word ->
                     println("POG: " + word)
                 }
-//                val remasteredMP3 = MP3DTO(
-//                    id = mp3words[0][0].toInt(),
-//                    title = mp3words[0][1],
-//                    path = mp3words[0][2],
-//                    labels = mp3words[0][3]
-//                )
-                /*
+                val id = mp3words[0].toInt()
+                val title = mp3words[1]
+                val path = mp3words[2]
+                val labelBlocks = "\\[(.*?)\\]".toRegex()
+                    .findAll(mp3words[3])
+                    .map { it.groupValues[1] }
+                    .toList()
+                val labels = labelBlocks.map { block ->
+                    val parts = "\\<(.*?)\\>".toRegex()
+                        .findAll(block)
+                        .map { it.groupValues[1] }
+                        .toList()
+                    LabelDTO(name = parts[0], color = parts[1])
+                }
+                val mp3 = MP3DTO(id, title, path, labels).toMP3()
+                pOP.playlistOfPlaylist[0].mp3s.add(mp3)
+
+
                 // Playlist stuff
+                pOP.playlistOfPlaylist[2].mp3s.add(mp3)
+                pOP.playlistOfPlaylist[2].mp3s.add(MP3(31,"ALL THE SMALL THINGS!!","over here!!"))
+                pOP.playlistOfPlaylist[2].mp3s.add(MP3(32,"First Date","here too"))
+                val label = labels.map { lab ->
+                    lab.toLabel()
+                }
+                pOP.playlistOfPlaylist[2].setLabels(label)
                 val tempAll = pOP.playlistOfPlaylist[2].toDTO()
-                var allPlaylistInText =  tempAll.id.toString() + "}][{" +
-                        tempAll.name + "}][{"
-                 */
+                var allPlaylistText = "{" + tempAll.id.toString() + "}{" + tempAll.name + "}{"
+                tempAll.labels.forEach { label ->
+                    allPlaylistText = allPlaylistText + "[<" + label.name + "><" + label.color + ">]"
+                }
+                allPlaylistText = allPlaylistText + "}{"
+                tempAll.mp3s.forEach { song ->
+                    allPlaylistText = allPlaylistText + "[<" + song.id + "><" + song.title + "><" +
+                            song.path +">]"
+                }
+                allPlaylistText = allPlaylistText + "}"
 
                 // These values set the Top and Bottom of phone colors to match
                 val window = this.window
