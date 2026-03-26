@@ -46,34 +46,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             NewTheme {
-                // File shit
-                val context = LocalContext.current
-                writeToFile(context, "playlist.txt", "POG: All the small tjins >_<")
-                var words = readFromFile(context, "playlist.txt")
-                println(words)
-                writeToFile(context, "playlist.txt", "POG: blinking so many times")
-                words += readFromFile(context, "playlist.txt")
-                println(words)
 
-                val punkLabel = Label(Color.Red, "PUNKASS")
-                val punkDTO = punkLabel.toDTO()
-                words = punkDTO.name + "<>" + punkLabel.color.value.toString()
-                writeToFile(context, "playlist.txt",words)
-                var newWords = readFromFile(context, "playlist.txt")?.split("<>")
-                newWords?.forEach { word->
-                    println("POG: " + word)
-                }
-                val remasteredLabel = LabelDTO(
-                    name = newWords!![0],
-                    color = newWords[1].toULong())
-                println("POG: Name: " + remasteredLabel.name + " Color(" + remasteredLabel.color)
-
-//                val loaded = loadPlaylists(this)
-//                pOP.playlistOfPlaylist.clear()
-//                if(loaded.isNotEmpty()){
-//                    pOP.playlistOfPlaylist.addAll(loaded)
-//                    pOP.nextPlaylistId = (pOP.playlistOfPlaylist.maxOfOrNull { it.id } ?: -1) + 1 }
-//                else{
                 pOP.playlistOfPlaylist.add(
                     Playlist(
                         id = 0,
@@ -95,11 +68,52 @@ class MainActivity : ComponentActivity() {
                         mp3s = SnapshotStateList<MP3>()
                     )
                 )
-//                    pOP.nextPlaylistId = 3
-//                }
 
+                // File shit
+                // General text SHIT
+                val context = LocalContext.current
+                val file = "playlist.txt"
+                writeToFile(context, file, "POG: All the small tjins >_<")
+                var words = readFromFile(context, file)
+                println(words)
+                writeToFile(context, file, "POG: blinking so many times")
+                words += readFromFile(context, file)
+                println(words)
+
+                // label shit
+                val punkLabel = Label(Color.Red, "PUNKASS")
+                val punkDTO = punkLabel.toDTO()
+                words = punkDTO.name + "<>" + punkDTO.color
+                writeToFile(context, file,words)
+                var newWords = readFromFile(context, file)?.split("<>")
+                newWords?.forEach { word->
+                    println("POG: " + word)
+                }
+                val remasteredLabel = LabelDTO(
+                    name = newWords!![0],
+                    color = newWords[1])
+                println("POG: Name: " + remasteredLabel.name + " Color(" + remasteredLabel.color)
                 pOP.playlistOfPlaylist[2].setLabels(listOf(remasteredLabel.toLabel()))
-                println("Loaded playlists: ${pOP.playlistOfPlaylist.map { it.name to it.id }}")
+
+
+                // MP3 testing
+                val blink = MP3(30, "I miss you", "/storage/emulated/0/Download/",
+                    listOf(Label(Color.Blue, "Whinny Bitch"), remasteredLabel.toLabel()) as SnapshotStateList<Label>
+                )
+                val oneDTO = blink.toDTO()
+                words = "{" + oneDTO.id.toString() + "}{" + oneDTO.title + "}{" + oneDTO.path + "}{"
+                oneDTO.labels.forEach{ label ->
+                    words = words + "[(" + label.name + ")(" + label.color + ")]"
+                }
+                words = words + "}"
+                writeToFile(context, file,words)
+
+                /*
+                // Playlist stuff
+                val tempAll = pOP.playlistOfPlaylist[2].toDTO()
+                var allPlaylistInText =  tempAll.id.toString() + "}][{" +
+                        tempAll.name + "}][{"
+                 */
 
                 // These values set the Top and Bottom of phone colors to match
                 val window = this.window
@@ -282,17 +296,17 @@ data class Label(
 
 @Serializable
 data class LabelDTO(
-    val color: Long,
+    val color: String,
     val name: String
 )
 
 fun Label.toDTO() = LabelDTO(
-    color = color.value.toLong(),
+    color = color.value.toString(),
     name = name
 )
 
 fun LabelDTO.toLabel() = Label(
-    color = Color(color),
+    color = Color(color.toULong()),
     name = name
 )
 
@@ -365,8 +379,8 @@ fun PlaylistDTO.toPlaylist(): Playlist {
     return Playlist(
         id = id,
         name = name).also{ playlist ->
-            playlist.setLabels(labels.map { it.toLabel() })
-            playlist.mp3s.addAll(mp3s.map { it.toMP3() })
+        playlist.setLabels(labels.map { it.toLabel() })
+        playlist.mp3s.addAll(mp3s.map { it.toMP3() })
     }
 }
 
