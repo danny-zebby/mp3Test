@@ -86,8 +86,8 @@ fun MP3Home(
     // Lazy col displays order
     var sortIndex by remember { mutableIntStateOf(0) }                      // 0: Custom, 1: Alpha, 2: Label
     val displayList = remember(pOP.playlistOfPlaylist.size, sortIndex, isAlphaAsc, lFC) {
-        val allSongs = pOP.playlistOfPlaylist.find { it.id == 2 }
-        val others = pOP.playlistOfPlaylist.filter { it.id != 2 }
+        val allSongs = pOP.playlistOfPlaylist.find { it.id == 3 }
+        val others = pOP.playlistOfPlaylist.filter { it.id != 3 }
 
         val sortedOthers = when (sortIndex) {
             0 -> others
@@ -253,7 +253,7 @@ fun MP3Home(
                                 expanded = showColorMenu,
                                 onDismissRequest = { showColorMenu = false }
                             ) {
-                                pOP.playlistOfPlaylist[2].labels.forEach { label ->
+                                pOP.playlistOfPlaylist[3].labels.forEach { label ->
                                     DropdownMenuItem(
                                         text = {
                                             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -293,7 +293,7 @@ fun MP3Home(
                         state = reorderState,
                         key = playlist.id
                     ) { isDragging ->
-                        if( playlist.id >= 2 ){
+                        if( playlist.id >= 3 ){
                             Button(
                                 onClick = { onPlaylistClick(playlist) },
                                 shape = RectangleShape,
@@ -309,7 +309,7 @@ fun MP3Home(
                                     verticalAlignment = Alignment.CenterVertically,
                                 ) {
                                     // Makes the playlist draggable
-                                    if(sortIndex == 0 && playlist.id > 2){ // Checking if the sort is custom and not for All Songs
+                                    if(sortIndex == 0 && playlist.id > 3){ // Checking if the sort is custom and not for All Songs
                                         Box(
                                             modifier = Modifier
                                                 .size(24.dp)
@@ -325,7 +325,7 @@ fun MP3Home(
                                     )
                                     Spacer(modifier = Modifier.weight(1f))
                                     // This adds the labels
-                                    if (playlist.labels.isNotEmpty() && playlist.id > 2) { // Checking if playlist has labels
+                                    if (playlist.labels.isNotEmpty() && playlist.id > 3) { // Checking if playlist has labels
                                         playlist.labels.forEach { label ->
                                             Box(
                                                 modifier = Modifier
@@ -336,7 +336,7 @@ fun MP3Home(
                                             Spacer(modifier = Modifier.width(4.dp))
                                         }
                                     }
-                                    if(playlist.id > 2){ // Delete option for playlist, !allSongs
+                                    if(playlist.id > 3){ // Delete option for playlist, !allSongs
                                         Text(
                                             text = "X",
                                             modifier = Modifier.clickable{

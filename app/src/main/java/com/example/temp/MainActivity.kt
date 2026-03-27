@@ -46,14 +46,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             NewTheme {
-
-//                val context = LocalContext.current
-//                if() pOP.creation()
-//                else{
-//                    pOP.loadPlaylists(context)
-//                }
-
-
+                
                 // These values set the Top and Bottom of phone colors to match
                 val window = this.window
                 val statColor = Color(0xFF0191B3)
@@ -64,7 +57,10 @@ class MainActivity : ComponentActivity() {
                 }
 
                 // These are the main list
-                val allMP3s = remember { loadDownloadMP3s() }
+                val context = LocalContext.current
+//                pOP.clearFile(context)
+                if(pOP.checkFile(context)) pOP.creation()
+                else pOP.loadPlaylists(context)
 
                 // These are vars that help perform playlist functions
                 var currentScreen by remember { mutableStateOf("home") }
@@ -95,11 +91,11 @@ class MainActivity : ComponentActivity() {
                             // Checks if playlist name is not already taken, if so adds playlist to pOP
                             onAddPlaylist = { name, labels ->
                                 if (pOP.playlistOfPlaylist.none { it.name == name }) {
-                                    val newPlaylist = Playlist(id = pOP.nextPlaylistId, name = name)
+                                    val newPlaylist = Playlist(id = pOP.playlistIdCounter, name = name)
                                     newPlaylist.setLabels(labels)
                                     pOP.playlistOfPlaylist.add(newPlaylist)
-                                    pOP.nextPlaylistId++
-//                                    savePlaylists(this, pOP.playlistOfPlaylist)
+                                    pOP.playlistIdCounter++
+                                    pOP.savePlaylists(context)
                                 } else {
                                     // some code it's like hey this name already exist try again
                                 }
@@ -108,7 +104,7 @@ class MainActivity : ComponentActivity() {
                             // Deleted Playlist
                             onDeletePlaylist = { playlistId ->
                                 pOP.playlistOfPlaylist.removeAll { it.id == playlistId }
-//                                savePlaylists(this, pOP.playlistOfPlaylist)
+                                pOP.savePlaylists(context)
                             },
 
                             // Go Home ? (I want to make an animation if you click home and are already home)
@@ -127,24 +123,24 @@ class MainActivity : ComponentActivity() {
                                     onAddSong = { mp3 ->
                                         if (currentPlaylist.mp3s.none { it.id == mp3.id }) {
                                             currentPlaylist.mp3s.add(mp3)
-//                                            savePlaylists(this, pOP.playlistOfPlaylist)
+                                            pOP.savePlaylists(context)
                                         }
                                     },
 
                                     onRemoveSong = { mp3 ->
                                         currentPlaylist.mp3s.removeAll { it.id == mp3.id }
-//                                        savePlaylists(this, pOP.playlistOfPlaylist)
+                                        pOP.savePlaylists(context)
                                     },
 
                                     onEditPlaylist = { name, labels ->
                                         currentPlaylist.name = name
                                         currentPlaylist.setLabels(labels)
-//                                        savePlaylists(this, pOP.playlistOfPlaylist)
+                                        pOP.savePlaylists(context)
                                     },
 
                                     onDeletePlaylist = { playlistId ->
                                         pOP.playlistOfPlaylist.removeAll { it.id == playlistId }
-//                                        savePlaylists(this, pOP.playlistOfPlaylist)
+                                        pOP.savePlaylists(context)
                                     },
 
                                     // Go Home
@@ -169,28 +165,27 @@ class MainActivity : ComponentActivity() {
                                 onHomeClick = { currentScreen = "home" },
 
                                 // Load the main four file list
-                                allMP3s = allMP3s,
-                                allSongs = pOP.playlistOfPlaylist.first { it.id == 2 }!!,
+                                allMP3s = pOP.playlistOfPlaylist.first { it.id == 2 }!!,
+                                allSongs = pOP.playlistOfPlaylist.first { it.id == 3 }!!,
                                 allPodcast = pOP.playlistOfPlaylist.first { it.id == 0 }!!,
                                 allTrash = pOP.playlistOfPlaylist.first { it.id == 1 }!!,
 
                                 // Manage files
                                 // Save example
                                 onAddSong = { mp3 ->
-                                    val playlist = pOP.playlistOfPlaylist.first { it.id == 2 }
-                                    playlist.mp3s.add(mp3)
-                                    allMP3s.remove(mp3)
-//                                    savePlaylists(this, pOP.playlistOfPlaylist)
+                                    pOP.playlistOfPlaylist[3].mp3s.add(mp3)
+                                    pOP.playlistOfPlaylist[2].mp3s.remove(mp3)
+                                    pOP.savePlaylists(context)
                                 },
                                 onAddTrash = { mp3 ->
                                     pOP.playlistOfPlaylist[1].mp3s.add(mp3)
-                                    allMP3s.remove(mp3)
-//                                    savePlaylists(this, pOP.playlistOfPlaylist)
+                                    pOP.playlistOfPlaylist[2].mp3s.remove(mp3)
+                                    pOP.savePlaylists(context)
                                 },
                                 onAddPod = { mp3 ->
                                     pOP.playlistOfPlaylist[0].mp3s.add(mp3)
-                                    allMP3s.remove(mp3)
-//                                    savePlaylists(this, pOP.playlistOfPlaylist)
+                                    pOP.playlistOfPlaylist[2].mp3s.remove(mp3)
+                                    pOP.savePlaylists(context)
                                 },
                             )
                         }
@@ -202,15 +197,13 @@ class MainActivity : ComponentActivity() {
                                 onHomeClick = { currentScreen = "home" },
                                 onRemovePod = { pod ->
                                     pOP.playlistOfPlaylist[0].mp3s.removeAll { it.id == pod.id }
-                                    allMP3s.add(pod)
-//                                    savePlaylists(this, pOP.playlistOfPlaylist)
+                                    pOP.playlistOfPlaylist[2].mp3s.add(pod)
+                                    pOP.savePlaylists(context)
                                 },
                                 onPodLabels = { pod, labels ->
                                     pOP.playlistOfPlaylist[0].mp3s[pOP.playlistOfPlaylist[0].mp3s.indexOf(
-                                        pod
-                                    )].setLabels(labels)
-//                                    savePlaylists(this, pOP.playlistOfPlaylist)
-
+                                        pod)].setLabels(labels)
+                                    pOP.savePlaylists(context)
                                 }
                             )
                         }
@@ -330,42 +323,79 @@ fun PlaylistDTO.toPlaylist(): Playlist {
 object pOP{
     val playlistOfPlaylist = mutableStateListOf<Playlist>()
     val file = "PlaylistOfPlaylist.txt"
-    var nextPlaylistId: Int = 3
+    var playlistIdCounter: Int = 3
+    var mp3IdCounter: Int = 0
+    
+    // Collects all MP3 files from downloaded section of folders
+    fun loadDownloadMP3s(): SnapshotStateList<MP3> {
+        val list = mutableStateListOf<MP3>()
+        val folder = File("/storage/emulated/0/Download/")
+
+        folder.listFiles()?.forEach { file ->
+            if (file.extension.lowercase() == "mp3") {
+                if(!checkSong(file.absolutePath))
+                    list.add(
+                        MP3(
+                            id = mp3IdCounter++,
+                            title = file.nameWithoutExtension,
+                            path = file.absolutePath
+                        )
+                    )
+            }
+        }
+        //
+        return list
+    }
+    
+    fun clearFile(context: Context){
+        writeToFile(context,file,"")
+    }
+
+    fun checkSong(path: String): Boolean {
+        playlistOfPlaylist.forEach { playlist ->
+            playlist.mp3s.forEach { audio ->
+                if(audio.path == path) return true
+            }
+        }
+        return false
+    }
 
     fun creation() {
         playlistOfPlaylist.add(Playlist(id = 0, name = "All Podcast", mp3s = SnapshotStateList<MP3>()))
         playlistOfPlaylist.add(Playlist(id = 1, name = "All Trash", mp3s = SnapshotStateList<MP3>()))
-        playlistOfPlaylist.add(Playlist(id = 2, name = "All Songs", mp3s = SnapshotStateList<MP3>()))
-        nextPlaylistId = 3
+        playlistOfPlaylist.add(Playlist(id = 2, name = "Unassigned Files", mp3s = loadDownloadMP3s()))
+        playlistOfPlaylist.add(Playlist(id = 3, name = "All Songs", mp3s = SnapshotStateList<MP3>()))
+
+        playlistIdCounter = 4
     }
 
-//    fun checkFile(): Boolean {
-//
-//    }
+    fun checkFile(context: Context): Boolean {
+        val file = File(context.filesDir, file)
+        return !file.exists() || file.length() == 0L
+    }
 
     fun savePlaylists(context: Context) {
-        var text = "<"
+        var text = ""
         playlistOfPlaylist.forEach { playlist ->
             val tempPlaylist = playlist.toDTO()
-            text = text + "{" + tempPlaylist.id.toString() + "}{" + tempPlaylist.name + "}{"
+            text = text + "^{" + tempPlaylist.id.toString() + "}{" + tempPlaylist.name + "}{"
             tempPlaylist.labels.forEach { label ->
                 text = text + "[<" + label.name + "><" + label.color + ">]"
             }
             text = text + "}{"
             tempPlaylist.mp3s.forEach { song ->
                 text = text + "[<" + song.id + "><" + song.title + "><" +
-                        song.path +">]"
+                        song.path + ">]"
             }
-            text = text + "}"
+            text = text + "}^"
         }
-        text = text + ">"
         writeToFile(context, file,text)
     }
 
     fun loadPlaylists(context: Context) {
-        val text = readFromFile(context, file)
-        val newText = "\\<(.*?)\\>".toRegex()
-            .findAll(text)
+        val texting = readFromFile(context, file)
+        val newText = "\\^(.*?)\\^".toRegex()
+            .findAll(texting)
             .map{ it.groupValues[1] }
             .toList()
         newText.forEach { newText ->
@@ -373,9 +403,6 @@ object pOP{
                 .findAll(newText)
                 .map{ it.groupValues[1] }
                 .toList()
-            tempWords.forEach { word ->
-                println("POG: " + word)
-            }
             val id = tempWords[0].toInt()
             val title = tempWords[1]
             val labelBlocks = "\\[(.*?)\\]".toRegex()
@@ -403,9 +430,8 @@ object pOP{
             val remasteredPlaylist = PlaylistDTO(id = id, name = title, labels = labels, mp3s = theMP3s)
             val rePlay = remasteredPlaylist.toPlaylist()
             playlistOfPlaylist.add(rePlay)
-            nextPlaylistId = (playlistOfPlaylist.maxOfOrNull { it.id } ?: -1) + 1
         }
-
+        playlistIdCounter = (playlistOfPlaylist.maxOfOrNull { it.id } ?: -1) + 1
     }
 }
 
@@ -507,28 +533,6 @@ object AudioPlayer{
     }
 
 }
-
-// Collects all MP3 files from downloaded section of folders
-fun loadDownloadMP3s(): SnapshotStateList<MP3> {
-    val list = mutableStateListOf<MP3>()
-    val folder = File("/storage/emulated/0/Download/")
-    var idCounter = 0
-
-    folder.listFiles()?.forEach { file ->
-        if (file.extension.lowercase() == "mp3") {
-            list.add(
-                MP3(
-                    id = idCounter++,
-                    title = file.nameWithoutExtension,
-                    path = file.absolutePath
-                )
-            )
-        }
-    }
-    //
-    return list
-}
-
 
 fun writeToFile(context: Context, fileName: String, content: String) {
     try {

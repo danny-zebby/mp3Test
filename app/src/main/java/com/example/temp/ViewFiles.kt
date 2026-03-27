@@ -43,7 +43,7 @@ fun ViewFiles(
     onAddTrash: (MP3) -> Unit,
     onAddPod: (MP3) -> Unit,
     onHomeClick: () -> Unit = {},
-    allMP3s: SnapshotStateList<MP3>,
+    allMP3s: Playlist,
     allSongs: Playlist,
     allPodcast: Playlist,
     allTrash:  Playlist,
@@ -65,7 +65,7 @@ fun ViewFiles(
         // Recompute filtered songs whenever user types or adds a song
         val filteredSongs by remember {
             derivedStateOf {
-                allMP3s.filter { song ->
+                allMP3s.mp3s.filter { song ->
                     song.title.contains(searchText, ignoreCase = true) &&
                             allSongs.mp3s.none { it.id == song.id } &&
                             allPodcast.mp3s.none { it.id == song.id } &&
@@ -78,7 +78,7 @@ fun ViewFiles(
             OutlinedTextField(
                 value = searchText,
                 onValueChange = { searchText = it },
-                label = { Text(stringResource(R.string.files) + allMP3s.size + ")") },
+                label = { Text(stringResource(R.string.files) + allMP3s.mp3s.size + ")") },
                 modifier = Modifier.fillMaxWidth()
             )
                 LazyColumn {
@@ -90,7 +90,7 @@ fun ViewFiles(
                                 .fillMaxWidth()
                                 .clickable {
                                     // When a song in LazyColumn is clicked:
-                                    val clickedIndex = allMP3s.indexOf(song)
+                                    val clickedIndex = allMP3s.mp3s.indexOf(song)
 
                                     if (clickedIndex != -1) {
                                         if (selectedMP3Index == clickedIndex) {
@@ -100,7 +100,7 @@ fun ViewFiles(
                                         } else {
                                             // Deselect previous selection if any
                                             if (selectedMP3Index != -1) {
-                                                allMP3s[selectedMP3Index].selected = false
+                                                allMP3s.mp3s[selectedMP3Index].selected = false
                                             }
                                             // Select new song
                                             selectedMP3Index = clickedIndex
@@ -127,7 +127,7 @@ fun ViewFiles(
         ) {
             Button(
                 onClick = {
-                    if (selectedMP3Index > -1){ onAddSong(allMP3s[selectedMP3Index])
+                    if (selectedMP3Index > -1){ onAddSong(allMP3s.mp3s[selectedMP3Index])
                         selectedMP3Index = -1 } else {}
                 }
             ) {
@@ -135,7 +135,7 @@ fun ViewFiles(
             }
             Button(
                 onClick = {
-                    if (selectedMP3Index > -1){ onAddTrash(allMP3s[selectedMP3Index])
+                    if (selectedMP3Index > -1){ onAddTrash(allMP3s.mp3s[selectedMP3Index])
                         selectedMP3Index = -1 } else {}
                 }
             ) {
@@ -143,7 +143,7 @@ fun ViewFiles(
             }
             Button(
                 onClick = {
-                    if (selectedMP3Index > -1){ onAddPod(allMP3s[selectedMP3Index])
+                    if (selectedMP3Index > -1){ onAddPod(allMP3s.mp3s[selectedMP3Index])
                         selectedMP3Index = -1 } else {}
                 }
             ) {
@@ -159,7 +159,7 @@ fun ViewFiles(
 @Composable
 fun ViewFilesPreview(){
     ViewFiles(
-        allMP3s = SnapshotStateList<MP3>(),
+        allMP3s = Playlist(),
 
         allSongs = Playlist(
         id = 0,
