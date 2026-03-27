@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import com.example.compose.gridColors
 import kotlin.collections.plus
 
+//
 val labelOrderMap = pOP.playlistOfPlaylist[3].labels.withIndex().associate { it.value.color to it.index }
 fun sortLabels(labels: List<Label>): List<Label> {
     return labels.sortedBy { label ->
@@ -46,7 +47,8 @@ fun sortLabels(labels: List<Label>): List<Label> {
     }
 }
 
-//
+// This creates a label for songs
+// Returns: label
 @Composable
 fun CreateLabel(
     onDismiss: () -> Unit,
@@ -101,7 +103,8 @@ fun CreateLabel(
     )
 }
 
-//
+// Are you sure? You want to delete your playlist that is
+// // Returns: Boolean; Receives: Int
 @Composable
 fun DeletePlaylist(
     onDismiss: () -> Unit,
@@ -128,7 +131,8 @@ fun DeletePlaylist(
     )
 }
 
-//
+// Playlist editing and creation page
+// Returns: boolean, string and label list; Receives: playlist, boolean
 @Composable
 fun EditAddPlaylist(
     onDismiss: () -> Unit,
@@ -228,7 +232,8 @@ fun EditAddPlaylist(
     }
 }
 
-//
+// Pop up for adding songs
+// Returns: MP3; Receives: Playlist
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddSong(
@@ -292,6 +297,8 @@ fun AddSong(
     )
 }
 
+// Creates labels for Pods
+// Returns: List of Labels
 @Composable
 fun PodLabels(
     onDismiss: () -> Unit,

@@ -52,12 +52,16 @@ import org.burnoutcrew.reorderable.detectReorder
 import org.burnoutcrew.reorderable.rememberReorderableLazyListState
 import org.burnoutcrew.reorderable.reorderable
 
-// I need to fix the label sorting and stuff
-// General Page finished
+// PodcastPage: page that displays all podcast
+// Functions: remove podcast, add labels to podcast
+// Variables: general variables for all pages
+// Made up from text, segmented buttons, and a lazy column
 @Composable
 fun PodcastPage(
+    // variables
     modifier: Modifier = Modifier,
     onHomeClick: () -> Unit = {},
+    // functions
     onRemovePod: (MP3) -> Unit,
     onPodLabels: (MP3, List<Label>) -> Unit
 ){
@@ -97,10 +101,7 @@ fun PodcastPage(
     // The whole page
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = modifier
-            .fillMaxSize()
-            .background(primaryBGLight)
-    ) {
+        modifier = modifier) {
         // Top of page
         TopBar(onHomeClick = onHomeClick)
         Spacer(modifier = Modifier.height(10.dp))

@@ -56,21 +56,27 @@ import org.burnoutcrew.reorderable.rememberReorderableLazyListState
 import org.burnoutcrew.reorderable.reorderable
 import kotlin.collections.plus
 
-// The home page is mainly the Playlist of Playlist page
+// MP3Home: The home page is mainly the Playlist of Playlist page
+// Variables: modifier, creates the padding for this and all pages
+// Functions: add playlist, delete playlist
+// OnClick (Take to different page): simple mode, view files, playlist, podcast, temp, home
 // Displays all the different types of playlist in custom order, A-Z, Z-A, or by Labels
 //      Labels are the Genre (Ill make the name switch later)
 // It also has a swipeable row of buttons, currently at 9 buttons
 // All pages, including the home page has the top bar and bottom buttons
 @Composable
 fun MP3Home(
+    // variables
     modifier: Modifier = Modifier,
+    // functions
+    onAddPlaylist: (String, List<Label>) -> Unit = { _, _ -> },
+    onDeletePlaylist: (Int) -> Unit = {},
+    // onClick
     onSimpleModeClick: () -> Unit = {},
     onViewFilesClick: () -> Unit = {},
     onPlaylistClick: (Playlist) -> Unit = {},
     onPodcastClick: () -> Unit = {},
     onTempClick: () -> Unit = {},
-    onAddPlaylist: (String, List<Label>) -> Unit = { _, _ -> },
-    onDeletePlaylist: (Int) -> Unit = {},
     onHomeClick: () -> Unit = {}
 ) {
     // temp vars
@@ -112,11 +118,7 @@ fun MP3Home(
     )
 
     // The whole page
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(primaryBGLight)
-    ) {
+    Column(modifier = modifier) {
         // Top of page
         TopBar(onHomeClick = onHomeClick)
         Spacer(modifier = Modifier.height(10.dp))

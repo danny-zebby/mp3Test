@@ -48,9 +48,8 @@ fun ViewFiles(
     allPodcast: Playlist,
     allTrash:  Playlist,
 ){
-    Column(modifier = Modifier.fillMaxSize().background(primaryBGLight))
+    Column(modifier = modifier)
     {
-        Box(modifier = Modifier.height(50.dp) .fillMaxWidth() .background(secondaryBGLight)) { }
         TopBar(onHomeClick = onHomeClick)
         Spacer(modifier = Modifier.height(10.dp))
         Text(

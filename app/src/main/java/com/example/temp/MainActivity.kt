@@ -23,7 +23,9 @@ import android.Manifest
 import android.media.MediaPlayer
 import androidx.core.app.ActivityCompat
 import android.content.Context
+import androidx.compose.foundation.background
 import androidx.compose.ui.platform.LocalContext
+import com.example.compose.primaryBGLight
 import kotlinx.serialization.Serializable
 import java.io.BufferedReader
 import java.io.FileInputStream
@@ -46,7 +48,6 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             NewTheme {
-                
                 // These values set the Top and Bottom of phone colors to match
                 val window = this.window
                 val statColor = Color(0xFF0191B3)
@@ -56,9 +57,9 @@ class MainActivity : ComponentActivity() {
                     window.navigationBarColor = navColor.toArgb()
                 }
 
-                // These are the main list
+                // Loads the playlist
                 val context = LocalContext.current
-//                pOP.clearFile(context)
+//                pOP.clearFile(context)                // Commented out to work, but when I want to restart the app to see from a fresh user perspective I use this
                 if(pOP.checkFile(context)) pOP.creation()
                 else pOP.loadPlaylists(context)
 
@@ -72,7 +73,7 @@ class MainActivity : ComponentActivity() {
                 ) { innerPadding ->
                     when (currentScreen) {
                         "home" -> MP3Home(
-                            modifier = Modifier.padding(innerPadding),
+                            modifier = Modifier.padding(innerPadding).fillMaxSize().background(primaryBGLight),
 
                             onSimpleModeClick = { currentScreen = "simple" },
 
@@ -116,12 +117,13 @@ class MainActivity : ComponentActivity() {
                                 pOP.playlistOfPlaylist.find { it.id == selectedPlaylistId }
                             playlist?.let { currentPlaylist ->
                                 PlaylistPage(
-                                    modifier = Modifier.padding(innerPadding),
+                                    modifier = Modifier.padding(innerPadding).fillMaxSize().background(primaryBGLight),
 
                                     playlist = currentPlaylist,
 
+
                                     onAddSong = { mp3 ->
-                                        if (currentPlaylist.mp3s.none { it.id == mp3.id }) {
+                                        if (currentPlaylist.mp3s.none { it.id == mp3.id }) {    // checks if song is not already in playlist then adds
                                             currentPlaylist.mp3s.add(mp3)
                                             pOP.savePlaylists(context)
                                         }
@@ -154,21 +156,21 @@ class MainActivity : ComponentActivity() {
                                 // Go Home
                                 onHomeClick = { currentScreen = "home" },
 
-                                modifier = Modifier.padding(innerPadding)
+                                modifier = Modifier.padding(innerPadding).fillMaxSize().background(primaryBGLight)
                             )
                         }
 
                         "view" -> {
                             ViewFiles(
-                                modifier = Modifier.padding(innerPadding),
+                                modifier = Modifier.padding(innerPadding).fillMaxSize().background(primaryBGLight),
                                 // Go Home
                                 onHomeClick = { currentScreen = "home" },
 
                                 // Load the main four file list
-                                allMP3s = pOP.playlistOfPlaylist.first { it.id == 2 }!!,
-                                allSongs = pOP.playlistOfPlaylist.first { it.id == 3 }!!,
-                                allPodcast = pOP.playlistOfPlaylist.first { it.id == 0 }!!,
-                                allTrash = pOP.playlistOfPlaylist.first { it.id == 1 }!!,
+                                allMP3s = pOP.playlistOfPlaylist.first { it.id == 2 },
+                                allSongs = pOP.playlistOfPlaylist.first { it.id == 3 },
+                                allPodcast = pOP.playlistOfPlaylist.first { it.id == 0 },
+                                allTrash = pOP.playlistOfPlaylist.first { it.id == 1 },
 
                                 // Manage files
                                 // Save example
@@ -192,7 +194,7 @@ class MainActivity : ComponentActivity() {
 
                         "pod" -> {
                             PodcastPage(
-                                modifier = Modifier.padding(innerPadding),
+                                modifier = Modifier.padding(innerPadding).fillMaxSize().background(primaryBGLight),
                                 // Go Home
                                 onHomeClick = { currentScreen = "home" },
                                 onRemovePod = { pod ->
@@ -209,7 +211,7 @@ class MainActivity : ComponentActivity() {
                         }
                         "temp" ->{
                             temp(
-                                modifier = Modifier.padding(innerPadding),
+                                modifier = Modifier.padding(innerPadding).fillMaxSize().background(primaryBGLight),
                                 // Go Home
                                 onHomeClick = { currentScreen = "home" },
                             )
@@ -222,7 +224,8 @@ class MainActivity : ComponentActivity() {
 }
 
 
-
+// Each value has a DTO counterpart and a DTO -> OG and vis versa
+// Labels, for genres of playlist and podcast
 data class Label(
     val color: Color,
     val name: String,
@@ -244,6 +247,7 @@ fun LabelDTO.toLabel() = Label(
     name = name
 )
 
+// MP3s for songs and pods
 data class MP3(
     val id: Int = -1,
     val title: String = "",
@@ -280,6 +284,7 @@ fun MP3DTO.toMP3() = MP3(
     mp3.setLabels(labels.map { it.toLabel() }) }
 
 
+// Playlist collection of songs, pods, or just audio files
 data class Playlist(
     val id: Int = -1,
     var name: String = "",
@@ -321,11 +326,42 @@ fun PlaylistDTO.toPlaylist(): Playlist {
 
 // Singleton pOP so I can use the same one from all files easily (playlistOfPlaylist)
 object pOP{
+    //
     val playlistOfPlaylist = mutableStateListOf<Playlist>()
     val file = "PlaylistOfPlaylist.txt"
     var playlistIdCounter: Int = 3
     var mp3IdCounter: Int = 0
-    
+
+    // Not used b/c it's to restart my data to act as new user when testing
+    fun clearFile(context: Context){
+        writeToFile(context,file,"")
+    }
+
+    // Checks if a song exist in the POP via the mp3 path
+    fun checkSong(path: String): Boolean {
+        playlistOfPlaylist.forEach { playlist ->
+            playlist.mp3s.forEach { audio ->
+                if(audio.path == path) return true
+            }
+        }
+        return false
+    }
+
+    // Checks if the file is empty, so we can know to load new user data or old data
+    fun checkFile(context: Context): Boolean {
+        val file = File(context.filesDir, file)
+        return !file.exists() || file.length() == 0L
+    }
+
+    // Starter function that creates the new user data
+    fun creation() {
+        playlistOfPlaylist.add(Playlist(id = 0, name = "All Podcast", mp3s = SnapshotStateList<MP3>()))
+        playlistOfPlaylist.add(Playlist(id = 1, name = "All Trash", mp3s = SnapshotStateList<MP3>()))
+        playlistOfPlaylist.add(Playlist(id = 2, name = "Unassigned Files", mp3s = loadDownloadMP3s()))
+        playlistOfPlaylist.add(Playlist(id = 3, name = "All Songs", mp3s = SnapshotStateList<MP3>()))
+        playlistIdCounter = 4
+    }
+
     // Collects all MP3 files from downloaded section of folders
     fun loadDownloadMP3s(): SnapshotStateList<MP3> {
         val list = mutableStateListOf<MP3>()
@@ -343,36 +379,9 @@ object pOP{
                     )
             }
         }
-        //
         return list
     }
-    
-    fun clearFile(context: Context){
-        writeToFile(context,file,"")
-    }
-
-    fun checkSong(path: String): Boolean {
-        playlistOfPlaylist.forEach { playlist ->
-            playlist.mp3s.forEach { audio ->
-                if(audio.path == path) return true
-            }
-        }
-        return false
-    }
-
-    fun creation() {
-        playlistOfPlaylist.add(Playlist(id = 0, name = "All Podcast", mp3s = SnapshotStateList<MP3>()))
-        playlistOfPlaylist.add(Playlist(id = 1, name = "All Trash", mp3s = SnapshotStateList<MP3>()))
-        playlistOfPlaylist.add(Playlist(id = 2, name = "Unassigned Files", mp3s = loadDownloadMP3s()))
-        playlistOfPlaylist.add(Playlist(id = 3, name = "All Songs", mp3s = SnapshotStateList<MP3>()))
-
-        playlistIdCounter = 4
-    }
-
-    fun checkFile(context: Context): Boolean {
-        val file = File(context.filesDir, file)
-        return !file.exists() || file.length() == 0L
-    }
+    // Saves all data from POP to file
 
     fun savePlaylists(context: Context) {
         var text = ""
@@ -392,6 +401,7 @@ object pOP{
         writeToFile(context, file,text)
     }
 
+    // Loads all data from file to POP
     fun loadPlaylists(context: Context) {
         val texting = readFromFile(context, file)
         val newText = "\\^(.*?)\\^".toRegex()
@@ -435,7 +445,7 @@ object pOP{
     }
 }
 
-// Singleton pOP so I can use the same one from all files easily
+// Singleton AudioPlayer so audio can be controlled from any page
 object AudioPlayer{
     var mediaPlayer: MediaPlayer? = null
     var currentSong by mutableStateOf(MP3())
@@ -470,18 +480,6 @@ object AudioPlayer{
         }
     }
 
-    // Restarts current audio playing
-    fun replay () {
-        mediaPlayer?.seekTo(0)
-        mediaPlayer?.start()
-    }
-
-    // Empties the media player
-    fun onDispose() {
-        mediaPlayer?.release()
-        mediaPlayer = null
-    }
-
     // Pauses (Unneeded Comment but Unneeded is an interesting spelling for a word)
     fun pause() {
         mediaPlayer?.pause()
@@ -492,9 +490,21 @@ object AudioPlayer{
         mediaPlayer?.start()
     }
 
+    // Empties the media player
+    fun onDispose() {
+        mediaPlayer?.release()
+        mediaPlayer = null
+    }
+
     // Checks if media player is playing
     fun isPlaying(): Boolean {
         return mediaPlayer?.isPlaying == true
+    }
+
+    // Restarts current audio playing
+    fun replay () {
+        mediaPlayer?.seekTo(0)
+        mediaPlayer?.start()
     }
 
     // Used to skip to next song or Autoplay or Loop
@@ -531,9 +541,9 @@ object AudioPlayer{
         if (nextPlaylist.mp3s.isEmpty()) return
         play(nextPlaylist.mp3s[0], nextPlaylist, playQueue)
     }
-
 }
 
+// Save
 fun writeToFile(context: Context, fileName: String, content: String) {
     try {
         // Use Context.openFileOutput for internal storage
@@ -548,6 +558,7 @@ fun writeToFile(context: Context, fileName: String, content: String) {
     }
 }
 
+// Load
 fun readFromFile(context: Context, fileName: String): String {
     val stringBuilder = StringBuilder()
     try {

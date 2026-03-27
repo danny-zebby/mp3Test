@@ -53,17 +53,23 @@ import com.example.compose.primaryBGLight
 import com.example.compose.tertiaryBGLight
 import com.example.temp.ui.theme.NewTheme
 
+// Playlist Page: page that displays a playlist and songs/labels in it
+// Variables: Takes in the current viewed playlist, and a way to the home page
+// Functions: add songs, remove song, edit playlist info, delete playlist
+// Made up from text, segmented buttons, and a lazy column
 @SuppressLint("RememberReturnType")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlaylistPage(
+    // variables
     modifier: Modifier = Modifier,
     playlist: Playlist,
+    onHomeClick: () -> Unit,
+    // functions
     onAddSong: (MP3) -> Unit,
     onRemoveSong: (MP3) -> Unit,
     onEditPlaylist: (String, List<Label>) -> Unit = { _, _ -> },
     onDeletePlaylist: (Int) -> Unit = {},
-    onHomeClick: () -> Unit
 ) {
     // Tigger booleans vars
     var isAlphaAsc by remember { mutableStateOf(true) }         // Trigger for Alphabetical sort
@@ -92,10 +98,7 @@ fun PlaylistPage(
     // The whole page
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = modifier
-            .fillMaxSize()
-            .background(primaryBGLight)
-    ) {
+        modifier = modifier) {
         // Home
         TopBar(onHomeClick = { onHomeClick() })
         Spacer(modifier = Modifier.height(10.dp))
