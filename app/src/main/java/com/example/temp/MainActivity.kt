@@ -47,138 +47,12 @@ class MainActivity : ComponentActivity() {
         setContent {
             NewTheme {
 
-                pOP.playlistOfPlaylist.add(
-                    Playlist(
-                        id = 0,
-                        name = "All Podcast",
-                        mp3s = SnapshotStateList<MP3>()
-                    )
-                )
-                pOP.playlistOfPlaylist.add(
-                    Playlist(
-                        id = 1,
-                        name = "All Trash",
-                        mp3s = SnapshotStateList<MP3>()
-                    )
-                )
-                pOP.playlistOfPlaylist.add(
-                    Playlist(
-                        id = 2,
-                        name = "All Songs",
-                        mp3s = SnapshotStateList<MP3>()
-                    )
-                )
+//                val context = LocalContext.current
+//                if() pOP.creation()
+//                else{
+//                    pOP.loadPlaylists(context)
+//                }
 
-                // File shit
-                // General text SHIT
-                val context = LocalContext.current
-                val file = "playlist.txt"
-                writeToFile(context, file, "POG: All the small tjins >_<")
-                var words = readFromFile(context, file)
-                println(words)
-                writeToFile(context, file, "POG: blinking so many times")
-                words += readFromFile(context, file)
-                println(words)
-
-                // label shit
-                val punkLabel = Label(Color.Red, "PUNKASS")
-                val punkDTO = punkLabel.toDTO()
-                words = punkDTO.name + "<>" + punkDTO.color
-                writeToFile(context, file,words)
-                var newWords = readFromFile(context, file)?.split("<>")
-                newWords?.forEach { word->
-                    println("POG: " + word)
-                }
-                val remasteredLabel = LabelDTO(
-                    name = newWords!![0],
-                    color = newWords[1])
-                println("POG: Name: " + remasteredLabel.name + " Color(" + remasteredLabel.color)
-                pOP.playlistOfPlaylist[2].setLabels(listOf(remasteredLabel.toLabel()))
-
-
-                // MP3 testing
-                val blink = MP3(30, "I miss you", "/storage/emulated/0/Download/")
-                val blinkLabels = listOf<Label>(Label(Color.Blue, "WHINNYASSBITCH") , remasteredLabel.toLabel())
-                blink.setLabels(blinkLabels)
-                val oneDTO = blink.toDTO()
-                words = "{" + oneDTO.id.toString() + "}{" + oneDTO.title + "}{" + oneDTO.path + "}{"
-                oneDTO.labels.forEach{ label ->
-                    words = words + "[<" + label.name + "><" + label.color + ">]"
-                }
-                words = words + "}"
-                writeToFile(context, file,words)
-                val text = readFromFile(context, file)
-                println("POG: " + text)
-                val mp3words = "\\{(.*?)\\}".toRegex()
-                    .findAll(text)
-                    .map{ it.groupValues[1] }
-                    .toList()
-                mp3words.forEach { word ->
-                    println("POG: " + word)
-                }
-                var id = mp3words[0].toInt()
-                var title = mp3words[1]
-                var path = mp3words[2]
-                var labelBlocks = "\\[(.*?)\\]".toRegex()
-                    .findAll(mp3words[3])
-                    .map { it.groupValues[1] }
-                    .toList()
-                var labels = labelBlocks.map { block ->
-                    val parts = "\\<(.*?)\\>".toRegex()
-                        .findAll(block)
-                        .map { it.groupValues[1] }
-                        .toList()
-                    LabelDTO(name = parts[0], color = parts[1])
-                }
-                val mp3 = MP3DTO(id, title, path, labels).toMP3()
-                pOP.playlistOfPlaylist[0].mp3s.add(mp3)
-
-
-                // Playlist stuff
-                val newPlaylist = Playlist(id = 3, name = "Blinking 182 times")
-                val label = labels.map { lab ->
-                    lab.toLabel()
-                }
-                newPlaylist.setLabels(label)
-                pOP.playlistOfPlaylist.add(newPlaylist)
-                pOP.playlistOfPlaylist[3].mp3s.add(mp3)
-                pOP.playlistOfPlaylist[3].mp3s.add(MP3(31,"ALL THE SMALL THINGS!!","over here!!"))
-                pOP.playlistOfPlaylist[3].mp3s.add(MP3(32,"First Date","here too"))
-                val tempAll = pOP.playlistOfPlaylist[3].toDTO()
-                var tempText = "{" + tempAll.id.toString() + "}{" + tempAll.name + "}{"
-                tempAll.labels.forEach { label ->
-                    tempText = tempText + "[<" + label.name + "><" + label.color + ">]"
-                }
-                tempText = tempText + "}{"
-                tempAll.mp3s.forEach { song ->
-                    tempText = tempText + "[<" + song.id + "><" + song.title + "><" +
-                            song.path +">]"
-                }
-                tempText = tempText + "}"
-                writeToFile(context, file,tempText)
-                val newText = readFromFile(context, file)
-                println("POG: " + text)
-                val tempWords = "\\{(.*?)\\}".toRegex()
-                    .findAll(newText)
-                    .map{ it.groupValues[1] }
-                    .toList()
-                tempWords.forEach { word ->
-                    println("POG: " + word)
-                }
-                id = tempWords[0].toInt()
-                title = tempWords[1]
-                path = tempWords[2]
-                labelBlocks = "\\[(.*?)\\]".toRegex()
-                    .findAll(mp3words[3])
-                    .map { it.groupValues[1] }
-                    .toList()
-                labels = labelBlocks.map { block ->
-                    val parts = "\\<(.*?)\\>".toRegex()
-                        .findAll(block)
-                        .map { it.groupValues[1] }
-                        .toList()
-                    LabelDTO(name = parts[0], color = parts[1])
-                }
 
                 // These values set the Top and Bottom of phone colors to match
                 val window = this.window
@@ -395,7 +269,7 @@ data class MP3DTO(
     val id: Int,
     val title: String,
     val path: String,
-    val labels: List<LabelDTO>
+    val labels: List<LabelDTO> = emptyList()
 )
 
 fun MP3.toDTO() = MP3DTO(
@@ -455,7 +329,84 @@ fun PlaylistDTO.toPlaylist(): Playlist {
 // Singleton pOP so I can use the same one from all files easily (playlistOfPlaylist)
 object pOP{
     val playlistOfPlaylist = mutableStateListOf<Playlist>()
+    val file = "PlaylistOfPlaylist.txt"
     var nextPlaylistId: Int = 3
+
+    fun creation() {
+        playlistOfPlaylist.add(Playlist(id = 0, name = "All Podcast", mp3s = SnapshotStateList<MP3>()))
+        playlistOfPlaylist.add(Playlist(id = 1, name = "All Trash", mp3s = SnapshotStateList<MP3>()))
+        playlistOfPlaylist.add(Playlist(id = 2, name = "All Songs", mp3s = SnapshotStateList<MP3>()))
+        nextPlaylistId = 3
+    }
+
+//    fun checkFile(): Boolean {
+//
+//    }
+
+    fun savePlaylists(context: Context) {
+        var text = "<"
+        playlistOfPlaylist.forEach { playlist ->
+            val tempPlaylist = playlist.toDTO()
+            text = text + "{" + tempPlaylist.id.toString() + "}{" + tempPlaylist.name + "}{"
+            tempPlaylist.labels.forEach { label ->
+                text = text + "[<" + label.name + "><" + label.color + ">]"
+            }
+            text = text + "}{"
+            tempPlaylist.mp3s.forEach { song ->
+                text = text + "[<" + song.id + "><" + song.title + "><" +
+                        song.path +">]"
+            }
+            text = text + "}"
+        }
+        text = text + ">"
+        writeToFile(context, file,text)
+    }
+
+    fun loadPlaylists(context: Context) {
+        val text = readFromFile(context, file)
+        val newText = "\\<(.*?)\\>".toRegex()
+            .findAll(text)
+            .map{ it.groupValues[1] }
+            .toList()
+        newText.forEach { newText ->
+            val tempWords = "\\{(.*?)\\}".toRegex()
+                .findAll(newText)
+                .map{ it.groupValues[1] }
+                .toList()
+            tempWords.forEach { word ->
+                println("POG: " + word)
+            }
+            val id = tempWords[0].toInt()
+            val title = tempWords[1]
+            val labelBlocks = "\\[(.*?)\\]".toRegex()
+                .findAll(tempWords[2])
+                .map { it.groupValues[1] }
+                .toList()
+            val labels = labelBlocks.map { block ->
+                val parts = "\\<(.*?)\\>".toRegex()
+                    .findAll(block)
+                    .map { it.groupValues[1] }
+                    .toList()
+                LabelDTO(name = parts[0], color = parts[1])
+            }
+            val mp3Block = "\\[(.*?)\\]".toRegex()
+                .findAll(tempWords[3])
+                .map { it.groupValues[1] }
+                .toList()
+            val theMP3s = mp3Block.map { block ->
+                val parts = "\\<(.*?)\\>".toRegex()
+                    .findAll(block)
+                    .map { it.groupValues[1] }
+                    .toList()
+                MP3DTO(id = parts[0].toInt(), title = parts[1], path = parts[2])
+            }
+            val remasteredPlaylist = PlaylistDTO(id = id, name = title, labels = labels, mp3s = theMP3s)
+            val rePlay = remasteredPlaylist.toPlaylist()
+            playlistOfPlaylist.add(rePlay)
+            nextPlaylistId = (playlistOfPlaylist.maxOfOrNull { it.id } ?: -1) + 1
+        }
+
+    }
 }
 
 // Singleton pOP so I can use the same one from all files easily
@@ -612,125 +563,3 @@ fun readFromFile(context: Context, fileName: String): String {
     }
     return stringBuilder.toString()
 }
-
-
-/*
-class PlaylistRepo(private val context: Context){
-    private val fileName = "playlists.json"
-
-    fun save(playlists: List<Playlist>) {
-        try {
-            val dtoList = playlists.map { it.toDTO() }
-            println("DTO READY")
-            val json = Json.encodeToString<List<PlaylistDTO>>(dtoList)
-            println("JSON CREATED: $json")
-            context.openFileOutput(fileName, Context.MODE_PRIVATE).use {
-                it.write(json.toByteArray())
-            }
-            println("FILE WRITTEN")
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-    }
-
-    fun load(): List<Playlist> {
-        return try {
-            val json = context.openFileInput(fileName).bufferedReader().use { it.readText() }
-            println("LOADED JSON: $json")
-            Json.decodeFromString<List<PlaylistDTO>>(json).map { it.toPlaylist() }
-        } catch (e: Exception) {
-            e.printStackTrace()
-            emptyList()
-        }
-    }
-}*/
-
-/*
-fun savePlaylists(context: Context, playlists: List<Playlist>) {
-    try {
-        val playlistsJson = mutableListOf<Map<String, Any>>()
-
-        for (playlist in playlists) {
-            val mp3List = mutableListOf<Map<String, Any>>()
-
-            for (mp3 in playlist.mp3s) {
-                val labelList = mp3.labels.map { mapOf("name" to it.name, "color" to it.color.value) }
-                mp3List.add(mapOf(
-                    "id" to mp3.id,
-                    "title" to mp3.title,
-                    "path" to mp3.path,
-                    "labels" to labelList
-                ))
-            }
-
-            val playlistLabels = playlist.labels.map { mapOf("name" to it.name, "color" to it.color.value) }
-
-            playlistsJson.add(mapOf(
-                "id" to playlist.id,
-                "name" to playlist.name,
-                "labels" to playlistLabels,
-                "mp3s" to mp3List
-            ))
-        }
-
-        val jsonString = Json.encodeToString(playlistsJson)
-        context.openFileOutput("playlists.json", Context.MODE_PRIVATE).use { it.write(jsonString.toByteArray()) }
-
-        println("SAVE DONE. JSON: $jsonString")
-    } catch (e: Exception) {
-        e.printStackTrace()
-    }
-}
-
-fun loadPlaylists(context: Context): List<Playlist> {
-    return try {
-        val file = File(context.filesDir, "playlists.json")
-        if (!file.exists()) return emptyList()
-
-        val jsonString = file.readText()
-        println("LOADED JSON: $jsonString")
-
-        val playlistsList = Json.decodeFromString<List<Map<String, Any>>>(jsonString)
-        val result = mutableListOf<Playlist>()
-
-        for (plMap in playlistsList) {
-            val playlist = Playlist(
-                id = (plMap["id"] as Double).toInt(),
-                name = plMap["name"] as String
-            )
-
-            val plLabels = plMap["labels"] as List<Map<String, Any>>
-            playlist.labels.addAll(plLabels.map {
-                Label(
-                    name = it["name"] as String,
-                    color = Color((it["color"] as Double).toLong())
-                )
-            })
-
-            val mp3List = plMap["mp3s"] as List<Map<String, Any>>
-            for (mp3Map in mp3List) {
-                val mp3 = MP3(
-                    id = (mp3Map["id"] as Double).toInt(),
-                    title = mp3Map["title"] as String,
-                    path = mp3Map["path"] as String
-                )
-                val mp3Labels = mp3Map["labels"] as List<Map<String, Any>>
-                mp3.labels.addAll(mp3Labels.map {
-                    Label(
-                        name = it["name"] as String,
-                        color = Color((it["color"] as Double).toLong())
-                    )
-                })
-                playlist.mp3s.add(mp3)
-            }
-
-            result.add(playlist)
-        }
-
-        result
-    } catch (e: Exception) {
-        e.printStackTrace()
-        emptyList()
-    }
-}
- */
